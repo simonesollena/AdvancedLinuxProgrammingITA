@@ -1,0 +1,51 @@
+\documentclass[11pt,a4paper,draft,openright]{book}
+% bozza: evidenzia con una linea vert. il testo che straripa
+%\documentclass[11pt,a4paper,final,openright]{book} % versione finale
+
+
+%\usepackage{latexsym}
+%\usepackage[applemac]{inputenc}
+\usepackage[latin1]{inputenc}		% permette di scrivere le lettere accentate senza \' o \¥
+\usepackage[italian]{babel}
+\usepackage{hyperref}			% per creare l'indice con hyperlink
+\usepackage[T1]{fontenc}			% per ottenere una composizione con font che contenga
+							% lettere accentate e simboli più usati in Europa
+\usepackage{geometry}			% per impostazioni di margini, larghezza testo, ecc.
+\usepackage[final]{listings}
+
+\usepackage{alp}								
+%\setcounter{secnumdepth}{3}			% numera anche \subsubsection
+%\setcounter{tocdepth}{3}				% fa apparire nell'indice anche le \subsubsection
+
+% Impostazioni larghezza note a margine e larghezza testo
+\marginparwidth= 60pt
+\textwidth= 440pt
+
+
+
+% Togliere il segno di commento dalle seguenti due righe
+% per la compilazione con latex2html
+%\renewcommand{\numnameref}[1]{\ref{#1}}
+%\renewcommand{\qnameref}[1]{\ref{#1}}
+
+
+\author{Simone Sollena}
+\title{\Huge{\textbf{Programmazione avanzata su Linux}\\ Traduzione italiana dell'opera\\
+\emph{Advanced Unix Programming}\\di\\Mark Mitchell, Jeffrey Oldham, Alex Samuel}}
+\frenchspacing
+
+\newcommand{\firstsentence}[2]
+{\Huge\textsf{\textbf{#1}}\normalsize\textsc{#2}}
+
+
+\begin{document} 
+\maketitle
+\tableofcontents
+
+\include{cap1}
+\include{cap2}
+\include{cap3}
+\include{cap4}
+\include{cap5}
+
+\end{document}

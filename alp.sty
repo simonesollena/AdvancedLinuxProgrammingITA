@@ -1,0 +1,85 @@
+\ProvidesPackage{alp}
+
+%riferimenti in lingua italiana: section->sezione, Appendix->Appendice, ecc.
+\renewcommand{\chapterautorefname}{\chaptername}
+\renewcommand{\sectionautorefname}{Sezione}
+\renewcommand{\appendixautorefname}{Appendice}
+\renewcommand{\subsectionautorefname}{Sezione}
+\renewcommand{\tableautorefname}{Tabella}
+
+%nome del riferimento tra virgolette
+%\newcommand{\qnameref}[1]{\og\nameref{#1}\fg}
+\newcommand{\qnameref}[1]{``\nameref{#1}''}
+
+%riferimento tipo:
+%	Capitolo 1, "titolo capitolo"
+%	o
+%	Sezione 1.1, "titolo sezione"
+\newcommand{\numnameref}[1]{\autoref{#1}, \qnameref{#1}}
+
+% ============================================================
+% Inizio comandi riguardanti i listati
+
+% traduzione in italiano dei titoli dei listati: Listing->Listato; Listings->Listati
+\renewcommand{\lstlistingname}{Listato} 
+\renewcommand{\lstlistlistingname}{Listati}
+
+% impostazioni dei listati: carattere piccolo, arrotondamento dei riquadri
+\lstset{basicstyle=\small,
+	frameround=ftft}
+
+% definisce lo stile del listato con numeri di riga
+\lstdefinestyle{numbers}
+	{numbers=left, numberstyle=\tiny}
+% definisce lo stile del listato senza numeri di riga
+\lstdefinestyle{nonumbers}
+	{numbers=none}
+
+%\listfromfile{filename}{description}{riferimento}{path/filename}
+%	1:	filename: nome del file che apparirà sul documento
+%	2:	description: descrizione che apparirà sul documento
+%	3:	riferimento: riferimento che verrà usato nei comandi come \ref
+%	4:	path/filename: percorso del file sorgente da caricare
+\newcommand{\listfromfile}[4]
+{\lstinputlisting[language=C,
+	style=numbers,
+	caption=\textbf{(\textit{#1}) -- #2},
+	label=#3,
+	frame=tRBl,
+	firstline=7,		%elimina le prime righe di commento
+	firstnumber=1]
+	{#4}}
+
+
+%parameters:
+%	1:	nome file
+%	2:	caption
+%	3:	etichetta
+\lstnewenvironment{listfromtex}[3]
+	{\lstset{language=C,
+		style=nonumbers,
+		caption={\textbf{(\textit{#1}) -- #2}},
+		label=#3,
+		frame=tRBl
+		}
+	}
+	{}
+
+\lstnewenvironment{listcodeC}
+	{\lstset{language=C,
+		style=nonumbers,
+		frame=tRBl
+		}
+	}
+	{}
+
+\lstnewenvironment{listcodeBash}
+	{\lstset{language=bash,
+		style=nonumbers,
+		frame=tRBl
+		}
+	}
+	{}
+
+% fine comandi riguardanti i listati
+% ============================================================

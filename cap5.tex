@@ -1,0 +1,104 @@
+\chapter{Comunicazione tra processi}\label{cap:5}
+
+Il \numnameref{cap:3}, ha parlato della creazione dei processi e mostrato come un processo può ottenere lo stato di uscita di un processo figlio. Questa è la forma più semplice di comunicazione tra due processi, ma non è la più potente. Il meccanismo del capitolo 3 non fornisce nessun modo al padre di comunicare con il figlio, tranne che per mezzo degli argomenti della linea di comando e le variabili d'ambiente, nessun altro modo per il figlio di comunicare con il padre, ad eccezione dello stato di uscita del figlio. Nessuno di questi meccanismi fornisce una maniera per comunicare con il processo figlio mentre questo è in esecuzione, questi meccanismi non permettono neppure la comunicazione con un processo al di fuori della relazione padre-figlio.
+
+Questo capitolo descrive il significato della comunicazione tra processi che aggira queste limitazioni. Presenteremo vari modi per comunicare tra padri e figli, tra processi ``non collegati'' e anche tra processi su macchine diverse.
+
+La comunicazione tra processi \--- \textit{Interprocess communication (IPC)} \--- è il trasferimento di dati tra processi. Per esempio, un browser web può richiedere una pagina web da un server web, che quindi invia i dati HTML. Questo trasferimento di dati di solito usa i socket in una connessione telefonica. In un altro esempio, puòi voler stampare i nomi dei files di una directory usando un comando come \texttt{ls | lpr}. La shell crea un processo \texttt{ls} ed un processo separato \texttt{lpr}, collegando i due con una pipe, rappresentata dal simbolo ``\texttt{|}''. Una pipe permette una via di comunicazione tra due processi correlati. Il processo \texttt{ls} scrive dati nella pipe e il processo \texttt{lpr} legge i dati dalla pipe.
+
+In questo capitolo, discutiamo cinque tipi di comunicazione tra processi:
+\begin{itemize}
+\item La memoria condivisa permette ai processi di comunicare semplicemente leggendo e scrivendo su una specifica locazione di memoria.
+\item La memoria mappata è simile alla memoria condivisa, ad eccezione che essa è associata ad un file nel filesystem.
+\item Le pipe permettono la comunicazione sequenziale da un processo ad un processo correlato.
+\item Le FIFO sono simili alle pipe, ad eccezione che i processi non correlati possono comunicare perché alla pipe viene dato un nome nel file system.
+\item I socket supportano la comunicazioni tra processi non correlati anche in computer diversi.
+\end{itemize}
+Questi tipi di IPC differiscono per i seguenti criteri:
+\begin{itemize}
+\item Se essi estendono la comunicazione a processi correlati (processi con un antenato comune), a processi non correlati condividendo lo stesso filesystem o a ogni computer connesso ad una rete.
+\item Se un processo comunicante è limitato solamente a scrivere dati o a leggere dati.
+\item Il numero di processi a cui è permesso di comunicare.
+\item se i processi comunicanti sono sincronizzati da IPC \--- per esempio, un processo che legge si ferma finché non sono disponibili dati da leggere. 
+\end{itemize}
+In questo capitolo, omettiamo la discussione sugli IPC che permettono la comunicazione solo un numero limitato di volte, come la comunicazione tramite il valore di uscita del figlio.
+
+\section{Memoria condivisa}\label{sec:5.1} % 5.1
+Uno dei metodi più semplici per la comunicazione tra processi è usando la memoria condivisa. La memoria condivisa permette a due o più processi di accedere alla stessa memoria come se avessero tutti chiamato \texttt{malloc} e ottenuto puntatori alla stessa memoria attuale. Quando un processo cambia la memoria, tutti gli altri processi vedono la modifica.
+
+\subsection{Comunicazione locale veloce}\label{subsec:5.1.1}
+La memoria condivisa è la forma più veloce di comunicazione tra processi perché tutti i processi condividono lo stesso pezzo di memoria. Accedere a questa memoria condivisa è tanto veloce quanto accedere alla memoria non condivisa del processo, e non richiede chiamate di sistema o voci del khernel. Evita anche di copiare dati non necessariamente.
+
+Poiché il kernel non sincronizza gli accessi alla memoria condivisa, devi fornire la tua sincronizzazione. Per esempio, un processo non dovrebbe leggere dalla memoria fin dopo che i dati non vi siano stati scritti, e due processi non dovrebbero scrivere sulla stessa locazione di memoria allo stesso tempo. Una strategia comune per evitare queste condizioni di competizione è quella di usare i semafori, che sono discussi nella prossima sezione. I nostri programmi illustrativi, comunque, mostrano giusto un singolo processo che accede alla memoria, per focalizzare sui meccanismi della memoria condivisa ed evitrare di confondere il codice di esempio con la logica di sincronizzazione.
+
+\subsection{Il modello della memoria}\label{subsec:5.1.2}
+Per usare un segmento di memoria condiviso, un processo deve allocare il segmento. Quindi ogni processo che desidera accedere al segmento deve attaccarsi al segmento. Dopo aver finito il loro uso del segmento, ogni processo si stacca dal segmento. A questo punto, un processo deve deallocare il segmento.
+
+Comprendere il modello della memoria di Linux aiuta a spiegare l'allocazione e l'attaccamento dei processi. Su Linux, ogni memoria virtuale del processo è divisa in pagine. Ogni processo mantiene una mappa dai suoi indirizzi di memoria a queste pagine di memoria virtuali, che attualmente contengono i dati. Anche se ogni processo ha i suoi indirizzi propri, la mappatura di più processi può puntare alla stessa pagina, permettendo di condividere la memoria. Delle pagine di memoria si parla nella \numnameref{sec:8.8} del \numnameref{cap:8}. \marginpar{Sezione 8.8, titolo... del capitolo 8, titolo...}
+Allocare un nuovo segmento di memoria condivisa causa la creazione di una pagina di memoria virtuale. Poiché tutti i processi desiderano accedere allo stesso segmento di memoria condivisa, solo un processo dovrebbe allocare un nuovo segmento condiviso. Allocare un segmento esistente non crea nuove pagine, ma restituisce un identificatore per la pagina esistente. Per permettere ad un processo di usare un segmento di memoria condivisa, un processo lo collega, che aggiunge voci di mappatura dalla sua memoria virtuale alla pagina del segmento condiviso. \marginpar{verificare traduzione} Quando finito con il segmento, queste voci di mappatura vengono rimosse. Quando non ci sono più processi che vogliono accedere a questi segmenti di memoria condivisa, esattamente un processo deve deallocare le pagine di memoria virtuale.
+Tutti i segmenti di memoria condivisa sono allocati come multipli interi della \textit{dimensione di pagina} del sistema, che è il numero di byte in una pagina di memoria. Su sistemi Linux, la dimensione della pagina è di 4KB, ma si può ottenere questo valore chiamando la funzione \texttt{getpagesize}
+
+\subsection{Allocazione}\label{subsec:5.1.3}
+Un processo alloca un segmento di memoria condivisa usando \texttt{shmget} (``SHared Memory GET''). Il suo primo parametro è una chiave intera che specifica quale segmento creare. Processi non correlati possono accedere allo stesso segmento condiviso specificando lo stesso valore chiave. Sfortunatamente, altri processi possono anche avere scelto la stessa chiave fissata, che può andare in conflitto. Usando la speciale costante \texttt{IPC\_PRIVATE} come valore chiave garantische che venga creato un nuovo segmento di memoria.
+
+Il suo secondo parametro specifica il numero di byte nel segmento. Poiché i segmenti sono allocati usando le pagine, il numero di byte attualmente allocati è arrotondato superiormente all'intero multiplo della dimensione della pagina.
+Il terzo parametro è l'or bit a bit dei valori flag che specificano le opzioni di \texttt{shmget}. I valori flag includono questi:
+\begin{itemize}
+\item \texttt{IPC\_CREAT} \--- Questo flag indica che dovrebbe essere creato un nuovo segmento. Ciò permette di chreare un nuovo segmento quando si specifica un valore chiave.
+\item \texttt{IPC\_EXCL} \--- Questo flag, che è sempre usato con \texttt{IPC\_CREAT}, causa a \texttt{shmget} di fallire se è specificata una chiave di segmento che già esiste. Quindi, questo permette al processo chiamante di avere un segmento ``esclusivo''. Se questo flag non è stato dato e la chiave di un segmento esistente è usata, \texttt{shmget} ritorna il segmento esistente invece di crearne uno nuovo.
+\item Flag modo \--- Questo valore è fatto da 9 biti, indica il permesso dato al proprietario, gruppo e il resto di controllare l'accesso al segmento. I bit di esecuzione sono ignorati. Un modo semplice per specificare i pemessi è di usare le costanti definite in \texttt{<sys/stat.h>} e documentati nella sezione \texttt{2 stat} delle pagine man.\footnote{Questi bit di permesso sono gli stessi di quelli usati per i files. Essi sono descritti nella \numnameref{sec:10.3}}. Per esempio, \texttt{S\_IRUSR} e \texttt{S\_IWUSR} specificano permessi di lettura e scrittura per il proprietario del segmento di memoria condivisa, e \texttt{S\_IROTH} e \texttt{S\_IWOTH} specificano permessi di lettura e scrittura per gli altri.
+\end{itemize}
+Per esempio, questa chiamata di \texttt{shmget} crea un nuovo segmento di memoria condiviso (o accede ad uno esistente, se \texttt{shm\_key} è già usato) che è leggibile e scrivibile per il proprietario ma non per altri utenti.
+\begin{listcodeC}
+int segment_id = shmget (shm_key, getpagesize (),
+			IPC_CREAT | S_IRUSR | S_IWUSER);
+\end{listcodeC}
+Se la chiamata ha successo, \texttt{shmget} ritorna un identificatore di segmento. Se il segmento di memoria esiste già, vengono verificati i permessi di accesso e viene fatta una verifica per assicurarsi che il segmento non sia marcato per la distruzione.
+
+\subsection{Attacco e distacco}\label{subsec:5.1.4}
+Per rendere il segmento di memoria condivisa disponibile, un processo deve usare \texttt{shmat}, ``SHared Memory ATtach''. Passargli l'identificatore del segmento di memoria condivisa \texttt{SHMID} restituito da \texttt{shmget}. Il secondo argomento è un puntatore che specifica dove nel tuo spazio di indirizzi del processo vuoi mappare la memoria condivisa; se specifichi NULL, Linux sceglierà un indirizzo disponibile. Il terzo argomento è un flag, che può includere il seguente:
+\begin{itemize}
+\item \texttt{SHM\_RND} indica che l'indirizzo specificato per il secondo parametro dovrebbe essere arrotondato inferiormente ad un multiplo della dimensione della pagina. Se non specifichi questo flag, dovrai allineare tu stesso il secondo argomento di \texttt{shmat} alla dimensione della pagina.
+\item \texttt{SHM\_RDONLY} indica che il segmento sarà solo letto, non scritto
+\end{itemize}
+Se la chiamata ha successo, essa restituisce l'indirizzo del segmento condiviso attaccato. I figli creati dalla chiamata \texttt{fork} ereditano i segmenti attaccati; essi possono staccare il segmento di memoria condivisa, se vogliono.
+
+Quando hai finito con un segmento di memoria condivisa, il segmento dovrebbe essere staccato usando \texttt{shmdt} (``SHared Memory DeTach''). Passagli l'indirizzo restituito da \texttt{shmat}. Se il segmento è stato deallocato e questo era l'ultimo processo che lo stava usando, viene rimosso. Le chiamate a \texttt{exit} ed ogni altra della famiglia \texttt{exec} staccano automaticamente i segmenti.
+
+\subsection{Controllare e deallocare la memoria condivisa}\label{subsec:5.1.5}
+La chiamata \texttt{shmctl} (``SHared Memory ConTroL'') restituisce informazioni su un segmento di memoria condiviso e può modificarlo. Il primo parametro è un identificatore di segmento di memoria condivisa.
+
+Per ottenere informazioni su un segmento di memoria condivisa, passa \texttt{IPC\_STAT} come secondo argomento ed un puntatore ad una \texttt{struct shmid\_ds}.
+
+Per rimuovere un segmento, passa \texttt{IPC\_RMID} come secondo argomento, e passa NULL come terzo argomento. Il segmento viene rimosso quando l'ultimo processo che vi è attaccato lo ha infine staccato.
+
+Ogni segmento di memoria condivisa dovrebbe essere deallocato esplicitamente usando \texttt{shmclt} quando hai finito con questo, Per evitare la violazione di limiti di tutto il sistema sul numero totale di segmenti di memoria condivisa. Invocando \texttt{exit} e \texttt{exec} vengono staccati i segmenti di memoria, ma non vengono deallocati.
+
+Vedi la pagina man di \texttt{shmctl} per una descrizione di altre operazione che puoi fare sui segmenti di memoria condivisa.
+
+\subsection{Un programma di esempio}\label{subsec:5.1.6}
+Il programma nel listato 5.1 illustra l'uso della memoria condivisa
+
+\listfromfile{shm.c}{Esercizio Memoria condivisa}{list:5.1}
+		{ALP-listings/chapter-5/shm.c}
+
+\subsection{Debugging}
+Il comando \texttt{ipcs} fornisce informazioni sulle possibilità di comunicazione tra processi, inclusi i segmenti condivisi. Usa il flag \texttt{-m} per ottenere informazioni sulla memoria condivisa. Per esempio, questo codice mostra che è in uso un segmento di memoria condivisa, numero 1627649:
+\begin{listcodeBash}
+% ipcs -m------ Shared Memory Segments --------key		shmid	owner	perms	bytes	nattch	status0x00000000	1627649	user	640	25600	0
+\end{listcodeBash}
+Se un segmento di memoria è stato erroneamente lasciato da un programma, puoi usare il comando \texttt{ipcrm} per rimuoverlo.
+\begin{listcodeBash}
+% ipcrm shm 1627649
+\end{listcodeBash}
+
+\subsection{Pro e contro}\label{subsec:5.1.8}
+I segmenti di memoria condivisa permettono una comunicazione bidirezionale veloce tra qualsiasi numero di processi. Ogni utente può sia leggere che scrivere, ma un programma deve stabilire e seguire qualche protocollo per prevenire le condizioni di competizione come la sovrascrittura di informazioni prima che queste vengano lette. Sfortunatamente, Linux non garantisce strettamente l'accesso esclusivo anche se crei un nuovo segmento condiviso con \texttt{IPC\_PRIVATE}.
+
+Inoltre, affinché più processi possano usare un segmento condiviso, essi devono cercare di arrangiarsi ad usare la stessa chiave.
+
+
+
+
+
+

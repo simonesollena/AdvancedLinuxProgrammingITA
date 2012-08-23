@@ -1,0 +1,1103 @@
+\chapter{Scrivere del buon software GNU/Linux}\label{cap:2}
+
+Questo capitolo copre alcune tecniche di base che usano molti programmatori GNU/Linux.
+Seguendo le linee guida presentate, sarai in grado di scrivere programmi che lavorano bene
+nell'ambiente GNU/Linux ed andare incontro alle aspettative degli utente GNU/Linux su come
+dovrebbero funzionare i programmi.
+
+\section{Interazione con l'ambiente di esecuzione}\label{sec:2.1} % 2.1
+
+Quando hai cominciato a studiare C o C++, avrai appreso che la funzione speciale \texttt{main} è il
+punto di inizio primario di un programma. Quando il sistema operativo esegue il tuo
+programma, esso fornisce automaticamente certe funzionalità che aiutano il programma a
+comunicare con il sistema operativo e con l'utente. Probabilmente avrai anche appreso riguardo
+ai due parametri del \texttt{main}, solitamente chiamati \texttt{argc} e \texttt{argv}, che ricevono l'input per il tuo
+programma. Hai appreso anche a riguardo dello \texttt{stdout} e \texttt{stdin} (o gli stream \texttt{cout} e \texttt{cin}
+in C++) che forniscono funzioni di input e output per la console. Queste funzionalità sono
+fornite dai linguaggi C e C++, ed essi interagiscono in certi modi con il sistema operativo
+GNU/Linux. GNU/Linux fornisce anche altri modi per interagire con l'ambiente operativo.
+
+\subsection{La lista degli argomenti}\label{subsec:2.1.1}
+
+Esegui un programma dal prompt di shell digitando il nome del programma. Opzionalmente,
+puoi fornire al programma informazioni aggiuntive digitando una o più parole dopo il nome del
+programma, separate da spazi. Queste sono chiamate \textit{argomenti da riga di comando} (\textit{commandline
+arguments}). (Puoi anche includere un argomento che contiene spazi, racchiudendolo tra
+virgolette). Più generalmente, a questi ci si riferisce anche come la \textit{lista degli argomenti} del
+programma perché non è necessario che essi abbiano origine dalla riga di comando di shell. Nel
+\numnameref{cap:3}, vedrai un altro modo di chiamare un programma, nel quale un
+programma può specificare direttamente la lista degli argomenti di un altro programma.
+
+Quando un programma è chiamato da shell, la lista degli argomenti contiene l'intera linea di
+comando, includendo il nome del programma ed ogni argomento della riga di comando che può
+essere stato fornito. Supponi, per esempio, di chiamare il comando ls nella shell per mostrare il
+contenuto della directory root e le corrispondenti dimensioni dei files con questa riga:
+
+\begin{listcodeBash}
+% ls -s /
+\end{listcodeBash}
+
+La lista di argomenti che il programma riceve ha tre elementi. Il primo è il nome del
+programma stesso, come specificato dalla riga di comando, chiamato \texttt{ls}. Il secondo ed il terzo
+elemento della lista degli argomenti sono due argomenti da riga di comando, \texttt{-s} e \texttt{/}.
+
+La funzione \texttt{main} del tuo programma può accedere alla lista degli argomenti tramite i
+parametri \texttt{argc} e \texttt{argv} del main (se non li usi, li puoi semplicemente omettere). Il primo
+parametro, \texttt{argc}, è un intero che è settato al numero di elementi nella lista degli argomenti. Il
+secondo parametro, \texttt{argv}, è un \texttt{array} di puntatori a caratteri. La dimensione dell'array è
+argc e gli elementi dell'array puntano agli elementi della lista degli argomenti, come stringhe
+di caratteri ``NUL-terminated''.
+
+Usare gli argomenti da riga di comando è tanto facile quanto esaminare il contenuto di \texttt{argc}
+e \texttt{argv}. Se non sei interessato al nome sesso del programma, non dimenticare di saltare il
+primo elemento.
+
+Il listato 2.1 dimostra come usare \texttt{argc} e \texttt{argv}.\\
+
+\listfromfile{arglist.c}{Usare \texttt{argc} e \texttt{argv}}{list:2.1}
+{ALP-listings/chapter-2/arglist.c}
+
+\subsection{Convenzioni GNU/Linux della riga di comando}\label{subsec:2.1.2} % 2.1.2
+
+Quasi tutti i programmi GNU/Linux obbediscono ad alcune convenzioni su come sono
+interpretati gli argomenti della riga di comando. Gli argomenti che i programmi si aspettano
+rientrano in due categorie: opzioni (o flag) e altri argomenti. Le opzioni modificano il modo in
+cui si comporta il programa, mentre gli altri argomenti forniscono gli input (per esempio, i nomi
+dei file di input).
+
+Le opzioni sono di due forme:
+\begin{itemize}
+\item{opzioni brevi consistono in un singolo trattino ed un singolo carattere (di solito una
+lettere minuscola o una lettera maiuscola). Le opzioni brevi sono veloci da digitare.}
+\item{Opzioni lunghe consistono in due trattini, seguiti da un nome fatto di lettere
+minuscole e maiuscole e trattini. Le opzioni lunghe sono facili da ricordare e facili da
+leggere (ad esempio, negli script di shell).}
+\end{itemize}
+
+Di solito, un programma le fornisce entrambe; una forma breve ed una forma lunga per
+molte opzioni che supporta, una per brevità e l'altra per chiarezza. Per esempio, molti
+programmi capiscono le opzioni \texttt{-h} e \texttt{--help}, e le trattano in modo identico. Normalmente,
+quando un programma è invocato dalla shell, ogni opzione che si vuole segue immediatamente
+il nome del programma. Alcune opzioni si aspettano di essere seguite immediatamente da un
+argomento. Molti programmi, per esempio, interpretano l'opzione \texttt{-{}-{}output foo} per
+specificare che l'output del programma dovrebbe essere memorizzato in un file chiamato foo.
+Dopo le opzioni, possono seguire altri argomenti di riga di comando, tipicamente files di input o
+input di dati.
+
+Per esempio, il comando \texttt{ls -s /} mostra il contenuto della directory root. L'opzione \texttt{-s}
+modifica il comportamento di default di \texttt{ls} dicendogli di mostrare la dimensione (in kilobytes)
+di ogni voce. L'argomento \texttt{/} dice a \texttt{ls} di quale directory fare il listato. L'opzione \texttt{-{}-size} è
+sinonima di \texttt{-s}, così lo stesso comando può essere invocato come \texttt{ls -{}-size /}.
+
+Gli standard di codifica GNU (\textit{GNU Coding Standards}) elencano i nomi di alcune opzioni di
+riga di comando comunemente usati. Se prevedi di fornire ogni opzione simile a queste, sarebbe
+una buona idea usare i nomi specificati negli standard di codifica. Puoi vedere le linee guida
+degli standard di codifica GNU per le opzioni di riga di comando invocando il seguente da un
+prompt di shell in molti sistemi GNU/Linux:
+
+\begin{listcodeBash}
+% info "(standards)User Interfaces"
+\end{listcodeBash}
+
+\subsection{Usare \texttt{getopt\_long}}\label{subsec:2.1.3} % 2.1.3
+
+Analizzare le opzioni di riga di comando è un compito fastidioso. Fortunatamente, le librerie
+GNU C forniscono una funzione che puoi usare nei programmi C e C++ per rendere questo
+lavoro un po' più facile (anche se resta sempre un po' noioso). Questa funzione,
+\texttt{getopt\_long}, capisce entrambe le opzioni, brevi e lunghe. Se usi questa funzione, includi il
+file header \texttt{<getopt.h>}. Supponi, per esempio, di stare scrivendo un programma che accetta
+le tre opzioni mostrate nella tabella 2.1.
+
+\begin{table}[htdp]
+\caption{Esempi di opzioni di programmi}
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+{Forma breve}&{Forma lunga}&{Scopo}\\
+\hline
+{\texttt{-h}}&{\texttt{-{}-help}}&{Mostra un sommario d'uso ed esce}\\
+{\texttt{-o nomefile}}&{\texttt{-{}-output nomefile}}&{Specifica il nome del file di output}\\
+{\texttt{-v}}&{\texttt{-{}-verbose}}&{Stampa messaggi dettagliati}\\
+\hline
+\end{tabular}
+\end{center}
+\label{default}
+\end{table}%
+
+In più, il programma accetta zero o più argomenti da linea di comando aggiuntivi, che sono i
+nomi dei files di input.
+
+Per specificare le opzioni lunghe disponibili, puoi costruire un array di elementi \texttt{struct
+option}
+
+Per usare \texttt{getopt\_long}, devi fornire due strutture dati, La prima è una stringa di caratteri
+che contiene le opzioni brevi valide, ognuna una singola lettera. Un'opzione che richiede un
+argomento è seguita da due punti, Per il tuo programma, la stringa \texttt{ho:v} indica che le opzioni
+valide sono \texttt{-h}, \texttt{-o} e \texttt{-v}, con la seconda di queste opzioni seguita da un argomento.
+
+Per specificare le opzioni lunghe disponibili, puoi costruire un array di elementi \texttt{struct
+option}. Ogni elemento corrisponde a una opzione lunga ed ha quattro campi. In circostanze
+normali, il primo campo è il nome dell'opzione lunga (come una stringa di caratteri, senza i due
+trattini); il secondo è 1 se l'opzione prende un argomento o 0 altrimenti; Il terzo è NULL; e il
+quarto è un carattere costante che specifica l'opzione breve sinonima per quella lunga. L'ultimo
+elemento dell'array dovrebbe essere tutto zeri. Puoi costruire un array come questo:
+
+\begin{listcodeC}
+const struct option long_options[] = {
+  { "hel"?, 0, NULL, 'h' },
+  { "output", 1, NULL, 'o' },
+  { "verbose", 0, NULL, 'v' },
+  { NULL, 0, NULL, 0 }
+};
+\end{listcodeC}
+
+Invochi la funzione \texttt{getopt\_long}, passantole gli argomenti \texttt{argc} e \texttt{argv} dal main, la
+stringa di caratteri che descrive le opzioni brevi e l'array di elementi \texttt{struct option}
+descrive le opzioni lunghe.
+\begin{itemize}
+\item {Ogni volta che chiami \texttt{getopt\_long}, esso verifica una singola opzione,
+restituendo la lettera dell'opzione breve per quell'opzione o \texttt{-1} se non sono trovate altre
+opzioni.}
+\item {Tipicamente, chiamerai \texttt{getopt\_long} in un \texttt{loop}, per preocessare tutte le
+opzioni che l'utente ha specificato e tratterai le opzioni specifiche all'interno di uno
+switch.}
+\item {Se \texttt{getopt\_long} incontra una opzione non valida (un'opzione che non hai
+specificato come una opzione breve o lunga valida), stampa un messaggio di errore e
+restituisce il carattere \texttt{?} (un marcatore di domanda). Molti programmi escono come
+risposta a questo, possibilmente dopo aver mostrato un messaggio di informazioni
+sull'utilizzo.}
+\item {Quando usi un'opzione che prende un argomento, la variabile globale \texttt{optarg} punta
+al testo di quell'argomento.}
+\item {Dopo che \texttt{getopt\_long} ha finito di elaborare tutte le opzioni, la variabile globale
+\texttt{optind} contiene l'indice (in \texttt{argv}) del primo argomento che non sia un'opzione.}
+\end{itemize}
+
+Il listato 2.2 mostra un esempio di come dovresti usare \texttt{getopt\_long} per processare i tuoi
+argomenti.\\
+
+\listfromfile{getopt\_long.c}{Usare \texttt{getopt\_long}}{list:2.2}
+	{ALP-listings/chapter-2/getopt_long.c}
+
+Usare \texttt{getopt\_long} può sembrare un po' laborioso, ma scrivere del codice da soli per
+analizzare le opzioni della riga di comando potrebbe richiedere anche più tempo. La funzione
+\texttt{getopt\_long} è molto sofisticata e permette una grande flessibilità nello specificare che tipo di
+opzioni accettare. Comunque, è una buona idea starsene lontani dalle funzionalità molto
+avanzate e lavorare con le opzioni della struttura di base descritte.
+
+\subsection{I/O Standard}\label{subsec:2.1.4} % 2.1.4
+
+Le librerie C standard forniscono stream di input e output (rispettivamente \texttt{stdin} e
+\texttt{stdout}). Queste sono usate da \texttt{scanf}, \texttt{printf} e altre funzioni di libreria. Nella tradizione
+UNIX, l'uso di standard input ed output è d'abitudine per i programmi GNU/Linux. Ciò
+permette di concatenare programmi multipli usando le pipes di shell e la ridirezione di input ed
+output. (Vedi la pagina di manuale della tua shell per impararne la sintassi).
+
+La libreria C fornisce anche lo \texttt{stderr}, lo stream standard error. I programmi dovrebbero
+stampare warning e messaggi di errore sullo standard error invece dello standard output. Questo
+permette agli utenti di separare output normali e messaggi di errore, per esempio,
+redirezionando lo standard output ad un file mentre permettendo allo standard error di stampare
+sulla console. La funzione \texttt{fprintf} può essere usata per stampare sullo \texttt{stderr}, per
+esempio:
+
+\begin{listcodeC}
+fprintf (stderr, ("Erro: ..."));
+\end{listcodeC}
+
+Questi tre stream sono anche accessibili con i comandi di base di UNIX I/O (read, write, e
+così via) tramite i descrittori di file o pipe. La sintassi per fare ciò varia a seconda delle shell;
+per le shell stile Bourne (inclusa bash, la shell di default in molte distribuzioni GNU/Linux), la
+sintassi è questa:
+
+\begin{listcodeBash}
+% program > output_file.txt 2>&1
+% program 2>&1 | filter
+\end{listcodeBash}
+
+La sintassi \texttt{2>\&1} indica che il descrittore di file 2 (\texttt{stderr}) dovrebbe essere unita al
+descrittore di file 1 (\texttt{stdout}). Nota che \texttt{2>\&1} deve seguire una redirezione di file (il primo
+esempio) ma deve precedere una ridirezione di pipe (il secondo esempio).
+
+Nota che \texttt{stdout} è bufferizzato. I dati scritti sullo \texttt{stdout} non sono inviati alla console (o
+altre periferiche, se è rediretto) fino a che il buffer non è pieno, il programma esce
+normalmente, o stdout è chiuso. Puoi azzerare il buffer chiamando la seguente:
+
+\begin{listcodeC}
+fflush (stdout);
+\end{listcodeC}
+
+Di contro, \texttt{stderr} non è bufferizzato; i dati che sono scritti sullo \texttt{stderr} vanno
+direttamente alla conole.\footnote{In C++ la stessa distinzione persiste, rispettivamente per \texttt{cout} e
+\texttt{cerr}. Nota che il token \texttt{endl} svuota uno stream ed in più stampa un carattere di nuova riga;
+se non vuoi svuotare lo stream (per esempio, per ragioni di performance), usa la costante di
+nuova linea \texttt{'\textbackslash n'}}
+
+Questo può produrre qualche risultato sorprendente. Per esempio, questo loop non stampa
+una frase al secondo; invece, le frasi sono bufferizzate ed un po' di queste vengono stampate
+assieme quando il buffer è pieno.
+
+\begin{listcodeC}
+while (1) {
+    printf (".");
+    sleep (1);
+}
+\end{listcodeC}
+
+In questo loop, comunque, il punto compare una volta ogni secondo:
+
+\begin{listcodeC}
+while (1) {
+    fprintf (stderr, ".");
+    sleep (1);
+}
+\end{listcodeC}
+
+\subsection{Codici di uscita del programma}\label{subsec:2.1.5} % 2.1.5
+
+Quando un programma termina, indica il proprio stato con un codice di uscita. Il codice di
+uscita è un piccolo numero intero; per convenzione, un codice di uscita pari a zero indica
+un'esecuzione senza problemi, mentre un codice di uscita diverso da zero indica che c'è stato un
+errore. Alcuni programmi usano differenti valori diversi da zero per i codici di uscita per
+distinguere errori specifici.
+
+Con molte shell è possibile ottenere i codici di uscita del programma eseguito più
+recentemente con la variabile speciale \$?. Qui c'è un esempio in cui il comando ls viene
+chiamato due volte ed i suoi codici di uscita sono stampati dopo ogni chiamata. Nel primo caso,
+ls viene eseguito correttamente e restituisce il codice di uscita zero. Nel secondo caso, ls
+restituisce un errore (perché il nome del file specificato sulla riga di comando non esiste) e
+quindi restituisce un codice di errore diverso da zero.
+
+\begin{listcodeBash}
+% ls /
+bin coda etc lib misc nfs proc sbin usr
+boot dev home lost+found mnt opt root tmp var
+% echo $?
+0
+% ls bogusfile
+ls: bogusfile: No such file or directory
+% echo $?
+1
+\end{listcodeBash}
+
+Un programma C o C++ specifica il proprio codice di uscita restituendo quel valore dalla
+funzione \texttt{main}. Ci sono altri metodi usati per fornire codici di uscita, e codici di uscita speciali
+sono assegnati al programma che non termina in modo non normale (per un segnale). Di questi
+si parlerà più avanti nel \autoref{cap:3}.
+
+\subsection{L'ambiente}\label{subsec:2.1.6} % 2.1.6
+
+GNU/Linux fornisce ogni programma in esecuzione con un \textit{ambiente}. L'ambiente è una
+raccolta di coppie variabile/valore. Entrambi, nomi delle variabili d'ambiente ed i loro valori
+sono stringhe di caratteri. Per convenzione, i nomi delle variabili d'ambiente sono scritti con
+tutte le lettere maiuscole.
+
+Probabilmente avrai già familiarità con molte delle comuni variabili d'ambiente. Per
+esempio:
+
+\begin{itemize}
+\item USER Contiene il tuo nome utente.
+\item HOME Coniene il percorso della tua home directory.
+\item{PATH Contiene una lista separata da due punti di directory nelle quali Linux cerca i comandi che invochi}
+\item{DISPLAY Contiene il nome ed il numero di display del server X Window nel quale
+appariranno le finestre dell'interfaccia grafica X Window.}
+\end{itemize}
+
+La tua shell, come altri programmi, ha un ambiente. Le Shell forniscono metodi per
+esaminare e modificare direttamente l'ambiente. Per stampare l'ambiente corrente nella tua shell
+invoca il programma \texttt{printenv}. Diverse shell hanno diverse sintassi per l'utilizzo delle
+variabili d'ambiente; la seguente è la sintassi per le shell stile Bourne.
+
+\begin{itemize}
+\item{La shell crea automaticamente una variabile di shell per ogni variabile d'ambiente
+che trova, così puoi accedere ai valori delle variabili d'ambiente usando la sintassi
+\texttt{\$varname}. Per esempio:
+\begin{listcodeBash}
+% echo $USER
+samuel
+% echo $HOME
+/home/samuel
+\end{listcodeBash}}
+\item{Puoi usare il comando \texttt{export} per esportare una variabile di shell nell'ambiente.
+Per esempio, per settare la variabile d'ambiente \texttt{EDITOR}, dovresti usare questo:
+\begin{listcodeBash}
+% EDITOR=emacs
+% export EDITOR
+\end{listcodeBash}
+O più brevemente
+\begin{listcodeBash}
+% export EDITOR=emacs
+\end{listcodeBash}}
+\end{itemize}
+
+In un programma, puoi accedere ad una variabile d'ambiente con la funzione \texttt{getenv} in
+\texttt{<stdlib.h>}. Questa funzione prende il nome di una variabile e ne restituisce il valore
+corrispondente come stringa di caratteri, o NULL se la variabile non è definita nell'ambiente.
+Per settare o cancellare variabili d'ambiente, usa rispettivamente le funzioni \texttt{setenv} e
+\texttt{unsetenv}.
+
+Enumerare tutte le variabili d'ambiente è un po' difficile. Per farlo puoi accedere ad una
+speciale variabile globale chiamata \texttt{environ}, definita nella libreria GNU C. Questa variabile,
+di tipo \texttt{char**}, è un array di puntatori a stringhe di caratteri terminato da NULL. Ogni stringa
+contiene una variabile d'ambiente, nella forma \texttt{VARIABILE=valore}.
+
+Il programma del listato 2.3, per esempio, stampa semplicemente l'intero ambiente facendo
+un loop nell'\texttt{array environ}.\\
+
+\listfromfile{print-env.c}{Stampa l'ambiente di esecuzione}{list:2.3}
+	{ALP-listings/chapter-2/print-env.c}
+
+Non modificare \texttt{environ} tu stesso, ma piuttosto usa le funzioni \texttt{setevn} e \texttt{unsetenv}.
+
+Di solito, quando viene avviato un nuovo programma, esso eredita una copia dell'ambiente
+del programma che lo ha invocato (il programma shell, se è stato invocato interattivamente).
+Così, per esempio, i programmi che esegui dalla shell, possono esaminare i valori delle variabili
+d'ambiente che hai settato nella shell.
+
+Le variabili d'ambiente sono comunemente usate per comunicare informazioni di
+configurazione ai programmi. Supponi, per esempio, che stai scrivendo un programma che si
+collega ad un server internet per ottenere alcune informazioni. Potresti scrivere il programma in
+modo tale che il nome del server sia specificato da riga di comando. Comunque, supponi che il
+nome del server non sia qualcosa che l'utente cambia molto spesso. Puoi usare in questo caso
+una speciale variabile d'ambiente \--- detta \texttt{SERVER\_NAME} \--- per specificare il nome del server;
+se questa variabile non esiste, viene usato un valore di default. Una parte del tuo programma
+potrebbe apparire a quello mostrato nel listato 2.4.
+
+\listfromfile{client.c}{Parte di un programma client di rete}{list:2.4}
+	{ALP-listings/chapter-2/client.c}
+
+Sopponi che il programma sia chiamato \texttt{client}. Assumendo che non hai settato la
+variabile \texttt{SERVER\_NAME}, è usato il valore di default per il nome del server:
+
+\begin{listcodeBash}
+% client
+accessing server server.my-company.com
+\end{listcodeBash}
+
+Ma è facile specificare un server diverso:
+
+\begin{listcodeBash}
+% export SERVER_NAME=backup-server.elsewhere.net
+% client
+accessing server backup-server.elsewhere.net
+\end{listcodeBash}
+
+\subsection{Usare files temporanei}\label{subsec:2.1.7} % 2.1.7
+
+A volte un programma necessita di creare un file temporaneo, per memorizzare dati per un
+po' o passare dati ad un altro programma. Sui sistemi GNU/Linux, i file temporanei sono
+memorizzati nella directory /tmp. Quando usi i file temporanei, dovresti essere già informato
+delle seguente "insidie":
+\begin{itemize}
+\item{Più di una istanza del tuo programma può essere eseguita simultaneamente (dallo
+stesso utente o diversi utenti). Le istanze dovrebbero usare diversi nomi dei files
+temporanei cosicché non vadano in collisione.}
+\item{I permessi dei file temporanei dovrebbero essere settato in modo che utenti non
+autorizzati non possano alterare l'esecuzione del programma modificando o sostituendo
+un file temporaneo.}
+\item{I nomi dei file temporanei dovrebbero essere generati in modo tale che non possano
+essere previsti esternamente; altrimenti un attaccante potrebbe sfruttare il ritardo nel
+testing se un nome dato è già in uso ed aprire un nuovo file temporaneo.}
+\end{itemize}
+
+GNU/Linux fornisce delle funzioni, \texttt{mkstemp} e \texttt{tmpfile} che si curano da sole di questi
+problemi al posto tuo (in aggiunta a molte funzioni che non lo fanno). Quale userai dipende dal
+fatto che tu voglia passare il file temporaneo ad un altro programma e se vuoi usare le funzioni
+I/O di UNIX (\texttt{open}, \texttt{write}, e così via) o le funzioni di stream I/O delle librerie C (\texttt{fopen},
+\texttt{fprintf}, e così via).
+
+\paragraph{Usare \textit{mkstemp}}
+
+La funzione \texttt{mkstemp} crea un file temporaneo il cui nome è univoco da un modello di nomi
+di file, crea il file con gli opportuni permessi cosicché solo l'utente corrente vi possa accedere e
+aprire il file per lettura/scrittura. Il modello del nome del file è una stringa di caratteri che
+finisce con ?XXXXXX? (sei X maiuscole); \texttt{mkstemp} sostituisce le X con dei caratteri in modo
+tale che il nome del file sia univoco. Il valore di ritorno è un descrittore di file; a questo punto
+usa le funzioni della famiglia \texttt{write} per scrivere sul file temporaneo.
+
+I file temporanei creati con mkstemp non sono cancellati automaticamente. E' compito tuo
+rimuovere il file temporaneo quando non è più usato. (I programmatori dovrebbero fare
+attenzione a cancellare i file temporanei; altrimenti il file system /tmp si riempirà, rendendo il
+sistema non funzionante). Se il file temporaneo serve solo per l'utilizzo interno e non verrà
+passato ad un altro programma, sarebbe una buona idea chiamare \texttt{unlink} nel file temporaneo
+immediatamente. La funzione \texttt{unlink} rimuove la voce della directory corrispondente al file,
+ma poiché i file in un file system hanno dei riferimenti, il file stesso non verrà rimosso fino a
+che non ci saranno più dei descrittori di file per quel file. Per questo motivi il tuo programma
+potrà continuare ad usare il file temporaneo, ed il file andrà via automaticamente non appena
+chiuderai il descrittore del file. Poiché Linux chiude i descrittori di file quando un programma
+termina, il file temporaneo verrà rimosso anche se il programma dovesse terminare in modo
+imprevisto.
+
+La coppia di funzioni nel listato 2.5 dimostra mkstemp. Usate insieme, queste funzioni
+rendono facile scrivere il buffer di una memoria in un file temporaneo (in modo tale che la
+memoria possa essere liberata o riutilizzata) e rileggerlo successivamente.\\
+
+\listfromfile{temp\_file.c}{utilizzo di mkstemp}{list:2.5}
+	{ALP-listings/chapter-2/temp_file.c}
+
+\paragraph{Usare \textit{tmpfile}}
+
+Se stai usando le funzioni di I/O della libreria C e non hai necessità di passare il file
+temporaneo ad un altro programma, puoi usare la funzione tmpfile. Questa crea ed apre un file
+temporaneo, e restituisce un puntatore di file che punta a questo. Il file temporaneo è già
+\textit{``unlinked''}, come nell'esempio precedente, così viene cancellato automaticamente quando il
+puntatore al file viene chiuso (con \texttt{fclose}) o quando il programma termina.
+
+GNU/Linux fornisce molte altre funzioni per generare file temporanei e nomi di file
+temporanei, inclusi \texttt{mktemp}, \texttt{tmpnam} e \texttt{tempnam}. Comunque, non usare queste funzioni
+sono soggette ai problemi di sicurezza già descritti.
+
+\section{Codifica difensiva}\label{sec:2.2} % 2.2
+
+Scrivere programmi che girano correttamente durante l'utilizzo ``normale'' è difficile;
+scrivere programmi che si comportino decentemente in situazioni errori è ancora più duro.
+Questa sezione dimostra alcune tecniche di codifica per scovare velocemente i bug e per trovare
+e rimettersi in piedi nei problemi in un programma in esecuzione.
+
+Gli esempi di codice presentati successivamente in questo libro saltano volutamente il codice
+di controllo degli errori e di recupero poiché ciò potrebbe oscurare il funzionamento di base che
+viene presentato. Comunque, l'esempio finale nel \numnameref{cap:11}\marginpar{capitolo 11, ``Un'applicazione di esempio
+GNU/Linux''}, ritorna a dimostrare come usare queste tecniche per scrivere programmi robusti.
+
+\subsection{Usare assert}\label{subsec:2.2.1} % 2.2.1
+
+Una buona cosa da tenere in mente quando si codificano programmi applicativi è che i bug o
+gli errori inaspettati potrebbero causare il fallimento dei programmi drammaticamente, il più
+presto possibile. Ciò ti aiuterà a trovare bug al più presto durante i cicli di sviluppo e testing. I
+fallimenti che non vengono fuori da soli sono spesso dimenticati e non si mostrano fino a che
+l'applicazione non è nelle mani dell'utente.
+
+Uno dei metodi più semplici per scovare condizioni inaspettate è la macro \texttt{assert} dello
+standard C. L'argomento da passare a questa macro è un'espressione Booleana. Il programma
+viene terminato se ciò che viene valutato dall'espressione è falso, dopo aver stampato un
+messaggio d'errore contenente il file sorgente e il numero di riga ed il testo dell'espressione. La
+macro \texttt{assert} è molto utile per una grande varietà di controlli di consistenza interni al
+programma. Per esempio, usa \texttt{assert} per testare la validità degli argomenti di una funzione,
+per testare le precondizioni e postcondizioni delle chiamate di funzioni (e chiamate di metodi in
+C++), e per testare dei valori di ritorno inaspettati.
+
+Ogni utilizzo di \texttt{assert} lavora non solo come un controllo di una condizione a runtime, ma
+anche come documentazione sul funzionamento del programma all'interno del codice sorgente.
+Se il tuo programma contiene un \texttt{assert (condizione)} ciò dice a qualcuno che sta
+leggendo il tuo codice sorgente che quella \texttt{condizione} dovrebbe essere sempre vera in quel
+punto del programma, e se la \texttt{condizione} non è vera, probabilmente c'è un bug nel
+programma.
+
+Per il codice che deve avere delle prestazioni ottimali, le verifiche a runtime come l'uso di
+\texttt{assert} può imporre significanti penalità in termini di prestazioni. In questo caso, puoi
+compilare il codice definendo la macro \texttt{NDEBUG}, tramite l'utilizzo del flag \texttt{-NDEBUG} da riga di
+comando del compilatore. Con \texttt{NDEBUG} settato, le occorrenze della macro \texttt{assert} verranno
+preprocessate via. E' una buona idea farlo solo quando necessario per ragioni di prestazioni e
+solo in casi critici di file sorgenti che devono avere certe prestazioni.
+
+Poiché è possibilie preprocessare via le macro assert, stai molto attento al fatto che ogni
+espressione utilizzata con asert non abbia effetti collaterali. Specialmente, non andrebbero
+chiamate delle funzioni all'interno dell'espressione assert, assegnare variabili o usare operatori
+di modifica come ++. Supponi, per esempio, di chiamare una funzione \texttt{do\_something}
+ripetutamente in un loop. La funzione \texttt{do\_something} restituisce zero in caso di successo e
+
+un valore diverso da zero in caso di fallimento, ma ti aspetti che la funzione non fallisca mai nel
+tuo programma. Potresti quindi essere tentato a scrivere:
+
+\begin{listcodeC}
+for (i = 0; i < 100; ++i)
+    assert (do_something () == 0);
+\end{listcodeC}
+
+Comunque, potresti scoprire che questo controllo a runtime impone al programma troppe
+penality di prestazioni e decidere successivamente di compilare con \texttt{NDEBUG} definito. Ciò
+rimuoverà interamente la chiamata \texttt{assert}, così l'espressione non sarà mai valutata e
+\texttt{do\_something} non verrà mai chiamata. Piuttosto potresti scrivere questo:
+\begin{listcodeC}
+for (i = 0; i < 100; ++i) {
+int status = do_something ();
+assert (status == 0);
+}
+\end{listcodeC}
+
+Un'altra cosa da tenere in mente è che non si dovrebbe usare assert per testare l'input non
+valido da parte dell'utente. Agli utenti non piace quando l'applicazione va in crash
+semplicemente con un messaggio di errore critico in riposta all'input non corretto. Dovresti
+sempre controllare l'input non corretto e produrre dei messaggi d'errore adeguati in risposta
+all'input. Utilizza \texttt{assert} solo per controlli interni a runtime.
+
+Alcuni buoni punti per l'utilizzo di \texttt{assert} sono questi:
+
+\begin{itemize}
+\item{controlla che non ci siano puntatori nulli, per esempio, un argomento di funzione non
+valido. Il messaggio di errore generato da \texttt{\{assert (pointer != NULL) \}},
+\begin{verbatim}
+Assertion 'pointer != ((void *)0)' failed.
+\end{verbatim}
+Fornisce molte più informazioni che il messaggio di errore che ne risulterebbe se il tuo
+programma facesse riferimento ad un puntatore nullo:
+\begin{verbatim}
+Segmentation fault (core dumped)
+\end{verbatim}
+}
+\item{Controlla le condizioni nei valori dei parametri delle funzioni. Per esempio, se una
+funzione dovrebbe essere chiamata solo con un valore positivo per il parametro foo, usa
+questo all'inizio del corpo della funzione:
+\begin{verbatim}
+assert (foo > 0);
+\end{verbatim}
+Ciò ti aiuterà a trovare utilizzi scorretti della funzione, e rende anche molto chiaro a chi
+sta leggendo il codice sorgente della funzione che c'è una restrizione sul valore del
+parametro.
+}
+\end{itemize}
+
+Non fermari solo a questo; usa \texttt{assert} liberamente nei tuoi programmi.
+
+\subsection{Fallimenti delle chiamate di sistema}\label{subsec:2.2.2} % 2.2.2
+
+Molti di noi hanno imparato originariamente come scrivere programmi che vanno
+dall'esecuzione fino al completamento lungo un percorso ben definito. Dividiamo il programma
+in compiti (task) e sotto-compiti (subtask), ed ogni funzione finisce un compito invocando altre
+funzioni per compiere i corrispondenti sotto-compiti. Dando gli input appropriati, ci aspettiamo
+che una funzione produca il corretto output e relativi effetti collaterali.
+
+La realtà dell'hardware e del software dei computer si intromette in questo sogno idealizzato.
+I computer hanno risorse limitate; l'hardware sbaglia; molti programmi eseguiti allo stesso
+tempo; sia utenti che programmatori commettono degli errori. È spesso al confine tra
+applicazione e sistema operativo che si manifestano queste realtà. Quindi, quando si utilizzano
+le chiamate di sistema per accedere alle risorse di sistema, per eseguire operazioni di I/O, o per
+altri scopi, è importante capire non solo cosa accade quando le chiamate di sistema hanno
+successo, ma anche come e perché le chiamate possono fallire.
+
+Le chiamate di sistema possono fallire in molti modi. Per esempio:
+
+\begin{itemize}
+\item{Il sistema può girare al di fuori delle risorse (o il programma può eccedere i limiti
+delle risorse assegnate dal sistema per un singolo programma). Per esempio, il
+programma potrebbe tentare di allocare troppa memoria, per scrivere troppo sull'hard
+disk, o aprire troppi file allo stesso tempo.}
+\item{Linux può bloccare certe chiamate di sistema quando un programma tenta di eseguire
+un'operazione per la quale non ha i permessi. Per esempio, un programma può tentare di
+scrivere su un file marcato per la sola lettura, accedere alla memoria di un altro
+processo, o uccidere il programma di un altro utente.}
+\item{Gli argomenti per una chiamata di sistema potrebbero non essere validi, sia perché
+l'utente potrebbe aver fornito un input non valido o per un bug del programma. Per
+esempio, il programma potrebbe passare un indirizzo di memoria non valido o un
+descrittore di file non valido ad una chiamata di sistema. O un programma potrebbe
+tentare di aprire una direcotory come fosse un file ordinario, o potrebbe passare il nome
+di un file ordinario ad una chiamata di sistema che si aspetta una directory.}
+\item{Una chiamata di sistema può fallire per motivi esterni al programma. Ciò accade
+molto spesso quando una chiamata di sistema accede ad una periferica hardware. La
+periferica potrebbe essere difettosa o potrebbe non supportare una particolare
+operazione, o forse un disco non è inserito nel drive.}
+\item{Una chiamata di sistema può qualche volta essere interrotta da un evento esterno,
+come l'invio di un segnale. Questo può non indicare un totale fallimento, ma è la causa
+del fatto che il programma chiamante riavvii la chiamata di sistema, se lo si desidera.}
+\end{itemize}
+
+In un programma ben scritto, che fa ampio uso delle chiamate di sistema, si verifica spesso il
+caso in cui la maggior parte del codice ha il compito di scovare e gestire gli errori ed altre
+circostanze critiche piuttosto che occuparsi del lavoro principale del programma.
+
+\subsection{Codici di errore dalle chiamate di sistema}\label{subsec:2.2.3} % 2.2.3
+
+La maggior parte delle chiamate di sistema restituiscono zero se l'operazione ha avuto
+successo o un valore diverso da zero se l'operazione è fallita. (Molti, comunque, usano diverse
+convenzioni per i valori di ritorno; per esempio, \texttt{malloc} restituisce un puntatore nullo per
+indicare un fallimento. Leggi sempre le pagine di manuale con attenzione quando usi una
+chiamata di sistema). Sebbene quest'informazione possa essere sufficiente per determinare
+quando il programma dovrebbe continuare l'esecuzione come di solito, probabilmente non
+fornisce abbastanza informazioni per un ripristino sensibile dagli errori.
+
+Molte chiamate di sistema usano una variabile speciale chiamata \texttt{errno} per memorizzare
+ulteriori informazioni in caso di fallimento.\footnote{Attualmente, per ragioni di sicurezza dei
+thread, \texttt{errno} è implementata come macro, ma usata come una variabile globale.} Quando
+una chiamta di sistema fallisce, il sistema setta la variabile \texttt{errno} ad un valore che indica cosa
+è andato storto. Poiché tutte le chiamate di sistema usa la stessa variabile \texttt{errno} per
+memorizzare le informazioni, dovresti copiare immediatamente il valore in un'altra variabile
+dopo il fallimento della chiamata di sistema. Il valore di \texttt{errno} verrà sovrascritto la prossima
+volta che farai una chiamata di sistema.
+
+I valori di errore sono degli interi; valori possibili sono assegnati dalle macro di
+preprocessore, per convenzione con tutte lettere maiuscole ed inizianti con ``E'' \--- per esempio,
+\texttt{EACCES} e \texttt{EINVAL}. Usa sempre queste macro per fare riferimento ai valori di \texttt{errno}
+piuttosto che valori interi. Se usi i valori di \texttt{errno} includi l'header \texttt{<errno.h>}.
+
+GNU/Linux fornisce una conveniente funzione, \texttt{strerror}, che restituisce una descrizione
+in stringa di caratteri di un codice di errore \texttt{errno}, adatto per l'utilizzo nei messaggi di errore.
+Se usi \texttt{strerror} includi \texttt{<string.h>}.
+
+GNU/Linux fornisce anche \texttt{perror}, che stampa la descrizione dell'errore direttamente sullo
+stream \texttt{stderr}. Passa a perror un prefisso come stringa di caratteri da stampare prima della
+descrizione dell'errore, che solitamente dovrebbe includere il nome della funzione che è fallita.
+Se usi \texttt{perror} includi \texttt{<stdio.h>}.
+
+Il frammento di codice cerca di aprire un file; se l'apertura fallisce, esso stampa un
+messaggio di errore ed esce dal programma. Nota che la chiamata \texttt{open} restituisce un
+descrittore di file aperto se l'operazione di apertura ha avuto successo, o \texttt{-1} se l'operazione
+fallisce.
+
+\begin{listcodeC}
+fd = open ("inputfile.txt", O_RDONLY);
+if (fd == -1) {
+/* The open failed. Print an error message and exit. */
+fprintf (stderr, ?error opening file: %s\n?, strerror (errno));
+exit (1);
+}
+\end{listcodeC}
+
+Dipendentemente dal tuo programma e dalla natura della chiamata di sistema, l'azione
+appropriata in caso di fallimento può essere di stampare un messaggio di errore, di cancellare
+l'operazione, di far chiudere il programma, di ritentare oppure di ignorare l'errore. È importante
+comunque inserire in un modo o nell'altro una logica che gestisca tutte le possibili modalità di
+fallimento.
+
+Un possibile codice di errore al quale dovresti prestare attenzione, specialmente con le
+funzioni di I/O, è \texttt{EINTR}. Alcune funzioni, come \texttt{read}, \texttt{select} e \texttt{sleep}, possono
+impiegare molto tempo per essere eseguite. Queste sono considerate funzioni \textit{bloccanti} perché
+l'esecuzione del programma è bloccata fino a che la chiamata non è completata. Comunque, se
+il programma riceve un segnale mentre è bloccato in una di queste chiamate, la chiamata finirà
+senza aver completato l'operazione. In questo caso, \texttt{errno} è settato a \texttt{EINTR}. Di solito, in
+questi casi, vorrai ritentare la chiamata di sistema.
+
+Ecco un frammento di codice che usa la chiamata \texttt{chown} per cambiare il proprietario di un
+file dato da \texttt{path} all'utente da \texttt{user\_id}. Se la chiamata fillisce, il programma esegue l'azione
+in base al valore di \texttt{errno}. Nota che quando troviamo un possibile bug nel programma,
+usciamo usando \texttt{abort} o \texttt{assert}, che causa la generazione di un file \textit{core}. Ciò può esser
+utile per un debug post-mortem. Per altri errori non recuperabili, come la condizione di out-ofmemory,
+usciamo usando \texttt{exit} ed un valore diverso da zero perché un file core non sarebbe
+molto utile.
+
+\begin{listcodeC}
+rval = chown (path, user_id, -1);
+if (rval != 0) {
+  /* Save errno because it's clobbered
+     by the next system call. */
+  int error_code = errno;
+  /* The operation didn?t succeed; chown
+     should return -1 on error. */
+  assert (rval == -1);
+  /* Check the value of errno, and take appropriate action. */
+  switch (error_code) {
+  case EPERM: /* Permission denied. */
+  case EROFS: /* PATH is on a read-only file system. */
+  case ENAMETOOLONG: /* PATH is too long. */
+  case ENOENT: /* PATH does not exit. */
+  case ENOTDIR: /* A component of PATH is not a directory. */
+  case EACCES: /* A component of PATH is not accessible. */
+      /* Something?s wrong with the file.
+       Print an error message. */
+    fprintf (stderr, "error changing ownership of %s: %s\n",
+        path, strerror (error_code));
+    /* Don?t end the program; perhaps give the user a chance to
+      choose another file... */
+    break;
+  case EFAULT:
+    /* PATH contains an invalid memory address.
+       This is probably a bug. */
+  abort ();
+  case ENOMEM:
+    /* Ran out of kernel memory. */
+       fprintf (stderr, ?%s\n?, strerror (error_code));
+    exit (1);
+  default:
+    /* Some other, unexpected, error code.
+       We?ve tried to handle all possible error codes;
+       if we've missed one, that?s a bug! */
+    abort ();
+  };
+}
+\end{listcodeC}
+
+Potresti semplicemente aver usato questo codice, che si comporta allo stesso modo se la
+chiamata ha successo:
+
+\begin{listcodeC}
+rval = chown (path, user_id, -1);
+assert (rval == 0);
+\end{listcodeC}
+
+Ma se la chiamata fallisce, quest'alternativa non fornisce nessun aiuto per il riportare,
+maneggiare, o recuperare dagli errori.
+
+Se usi la prima forma, la seconda forma o qualche altra cosa intermedia dipende dai requisiti
+di scoprire gli errori e gestirli del tuo programma.
+
+\subsection{Errori ed allocazione delle risorse}\label{subsec:2.2.4} % 2.2.4
+
+Spesso, quando una chiamata di sistema fallisce, sarebbe opportuno annullare l'operazione
+corrente piuttosto che terminare il programma poiché potrebbe essere possibile un ripristino
+dall'errore. Un modo per farlo è quello di ritornare dalla funzione corrente, restituendo un
+codice alla chiamante che indichi l'errore.
+
+Se decidi di ritornare dal mezzo della funzione, è importante assicurarsi che ogni risorsa
+nella funzione precedentemente allocata con successo sia prima deallocata. Le risorse possono
+includere memoria, descrittori di file, puntatori a file, file temporanei, sincronizzazione di
+oggetti, e così via. Altrimenti, se il tuo programma continua a girare, le risorse allocate prima
+dell'errore verrebbero perse.
+
+Considera, per esempio, una funzione che legge da un file in un buffer. La funzione potrebbe
+seguire questi passi:
+
+\begin{enumerate}
+\item Allocare il buffer.
+\item Aprire il file.
+\item Leggere dal file nel buffer.
+\item Chiudere il file.
+\item Restituire il buffer.
+\end{enumerate}
+
+Se il file non esiste, il passo 2 fallirà. Un'azione appropriata potrebbe essere quella di
+restituire NULL dalla funzione. Comunque, se il buffer è stato già allocato al passo 1, c'è il
+rischio di perdere quella memoria. Devi ricordarti di deallocare il buffer da qualche parte lungo
+ogni flusso di controllo dal quale non ritorni. Se il passo 3 fallise, non devi solo deallocare il
+buffer prima di ritornare, ma devi anche chiudere il file.
+
+Il listato 2.6 mostra un esempio di come dovresti scrivere questa funzione.\\
+
+\listfromfile{readfile.c}{Liberare le risorse in condizioni non normali}{list:2.6}
+	{ALP-listings/chapter-2/readfile.c}
+
+Linux libera la memoria allocata, apre i file, e molte altre risorse quando un programma
+termina, così non è necessario dellocare buffer e chiudere file prima di chiamare \texttt{exit}. Potresti
+aver bisogno di liberare manualmente altre risorse condivise, comunque, come file temporanei e
+memoria condivisa, che potrebbero potenzialmente persistere nel programma.
+
+\section{Scrivere ed usare librerie}\label{sec:2.3} % 2.3
+
+Virtualmente tutti i programmi sono linkati con una o più librerie. Ogni programma che usa
+una funzione C (come \texttt{printf} o \texttt{malloc}) sarà linkato con la libreria di runtime C. Se il tuo
+programma ha un'interfaccia utente grafica (GUI), esso sarà linkato con le librerie delle finestre.
+Se il tuo programma usa un database, il fornitore del database ti darà le librerire che potrai usare
+per accedere al database.
+
+In ognuno di questi casi, devi decidere come linkare la libreria, statica o dinamica. Se scegli
+di fare il link statico, i tuoi programmi saranno grandi e difficili da aggiornare, ma
+probabilmente facili da sviluppare. Se fai il link dinamico, i tuoi programmi saranno piccoli,
+facili da aggiornare, ma difficili da sviluppare. Questa sezione spiega come fare i link, sia statici
+che dinamici, esamina le differenze più dettagliatamente, e fornisce alcune ``regole a naso'' per
+decidere che tipo di link è meglio per te.
+
+\subsection{Archivi}\label{subsec:2.3.1} % 2.3.1
+
+Un \textit{archivio} (o libreria statica) è semplicemente una collezione di file oggetto memorizzati in
+un singolo file. (Un archivio approssimativamente è l'equivalente di un file \texttt{.LIB} di Windows).
+Quando fornisci un archivio al linker, il linker cerca nell'archivio i file oggetto che gli servono,
+li estrae, e quindi ne fa il link al tuo programma come se tu gli avessi fornito quei file
+direttamente.
+
+Puoi creare un archivio usando il comando \texttt{ar}. I file di archivio tradizionalmente usano
+l'estensione .a piuttosto che l'estensione .o usata comunemente dai file oggetto. Ecco come puoi
+combinare \texttt{test1.o} e \texttt{test2.o} in un singolo archivio \texttt{libtest.a}:
+\begin{listcodeBash}
+% ar cr libtest.a test1.o test2.o
+\end{listcodeBash}
+
+Il flag \texttt{cr} dice ad \texttt{ar} di creare un archivio.\footnote{È possibile usare altri flag per rimuovere file da
+una archivio o per eseguire altre operazione nell'archivio. Queste operazioni sono usate
+raramente ma sono documentate nella pagina di manuale di ar.} Adesso puoi fare il link con
+questo archivio usando l'opzione \texttt{-ltest} con gcc o g++, come descritto nella \numnameref{subsec:1.2.2}, nel \numnameref{cap:1}.
+
+Quando il linker incontra un archivio sulla riga di comando, cerca nell'archivio tutte le
+definizioni di simboli (funzioni o variabili) che sono referenziate dai file oggetto, che sono già
+stati processati ma non ancora definiti. I file oggetto che definiscono questi simboli sono estratti
+dall'archivio ed inclusi nell'eseguibile finale. Poiché il linker cerca nell'archivio solo quando lo
+incontra sulla riga di comando, di solito ha senso mettere l'archivio alla fine della riga di
+comando. Per esempio, supponiamo che \texttt{test.c} contenta il codice nel listato 2.7 e \texttt{app.c}
+contenga il codice nel listato 2.8.\\
+
+\listfromfile{test.c}{Contenuto della libreria}{list:2.7}
+	{ALP-listings/chapter-2/test.c}
+
+\listfromfile{app.c}{Un programma che usa le funzioni della libreria}{list:2.8}
+	{ALP-listings/chapter-2/app.c}
+
+Adesso supponi che \texttt{test.o} sia combinato con alcuni altri file oggetto per creare l'archivio
+libtest.a. Il seguente comando non funzionerà:
+\begin{listcodeBash}
+% gcc -o app -L. -ltest app.o
+app.o: In function 'main':
+app.o(.text+0x4): undefined reference to 'f'
+collect2: ld returned 1 exit status
+\end{listcodeBash}
+
+Il messaggio di errore indica che anche se \texttt{libtest.a} contiene una definizione di \texttt{f}, il
+linker non la trova. Ciò accade perché \texttt{libtest.a} è stato cercato quando è stato incontrato
+all'inizio, e q quel punto il linker non ha visto nessun riferimento a \texttt{f}.
+
+D'altro canto, se usiamo questa linea, non avremo nessun errore:
+\begin{listcodeBash}
+%gcc -o app app.o -L. -ltest
+\end{listcodeBash}
+
+Il motivo è che il riferimento ad \texttt{f} in app.o causa che il linker includa il file oggetto \texttt{test.o}
+dall'archivio \texttt{libtest.a}.
+
+\subsection{Librerie condivise}\label{subsec:2.3.2} % 2.3.2
+
+Una libreria condivisa (conosciuta anche come oggetto condiviso o libreria linkata
+dinamicamente) è simile a un archivio nel quale c'è un gruppo di file oggetto. Comunque, ci
+sono molte differenze importanti. La differenza principale è che quando una libreria condivisa è
+linkata in un programma, l'eseguibile finale non contiene il codice che è presente nella libreria
+condivisa. L'eseguibile invece contiene un riferimento alla libreria condivisa. Se nel sistema
+molti programmi sono linkati alla stessa libreria condivisa, essi faranno tutti riferimento alla
+stessa libreria, ma nessuno sarà incluso. Così, la libreria è ``condivisa'' da tutti i programmi che
+sono linkati ad essa.
+
+Una seconda importante differenza è che la libreria condivisa non è semplicemente una
+collezione di file oggetto nel quale il linker sceglie quelli che servono a soddisfare i riferimenti
+indefiniti. Piuttosto, i file oggetto che compongono la libreria condivisa sono ombinati in un
+singolo file oggetto cosicché un programma che linka assieme una libreria condivisa include
+sempre tutto il codice della libreria piuttosto che solo quelle porzioni di cui ha bisogno.
+
+Per creare una libreria condivisa, devi compilare il file oggetto che formerà la libreria usando
+l'opzione \texttt{-fPIC} per il compilatore, come questa:
+\begin{listcodeBash}
+% gcc -c -fPIC test1.c
+\end{listcodeBash}
+L'opzione \texttt{-fPIC} dice al compilatore che stai per usare \texttt{test.o} come parte di un oggetto
+condiviso.
+
+\begin{quote}
+{\large\textbf{Position-Independent Code (PIC)}}\\
+PIC sta per codice a posizione indipendente (position-independen code). La
+funzione sta nel fatto che una libreria condivisa può essere caricata in diversi
+indirizzi in diversi programmi, così il codice nell'oggetto condiviso non deve
+dipendere dall'indirizzo (o posizione) al quale è stato caricato. Questa
+considerazione non ha nessun impatto su di te, come programmatore, eccetto che
+devi ricordare di usare il flag -fPIC quando compili del codice che userai in una
+libreria condivisa.
+\end{quote}
+
+Quindi combini il file oggetto in una libreria condivisa, come questa:
+\begin{listcodeBash}
+% gcc -shared -fPIC -o libtest.so test1.o test2.o
+\end{listcodeBash}
+
+L'opzione \texttt{-shared} dice al linker di prourre una libreria piuttosto che un eseguibile come
+di solito. Le librerie condivise usano l'estensione \texttt{.so}, che sta per shared object (oggetto
+condiviso). Come gli archivi statici, il nome inizia sempre con \texttt{lib} per indicare che il file è una
+libreria. Fare il link con una libreria condivisa è come fare il link con un archivio statico. Per
+esempio, la seguente riga farà il link con libtest.so se esso è nella directory corrente, altrimenti
+cercherà una libreria standard nel sistema:
+\begin{listcodeBash}
+% gcc -o app app.o -L. -ltest
+\end{listcodeBash}
+
+Supponiamo che siano disponibili entrambi \texttt{libtest.a} e \texttt{libtest.so}. A questo punto
+il linker dovrà scegliere una delle libreria e scartare l'altra. Il linker cerca in ogni directory
+(prima quelle specificate dall'opzione \texttt{-L}, e quindi nelle directory standard). Quando il linker
+trova una directory che contiene o \texttt{libtest.a} o \texttt{libtest.so}, smette la ricerca nelle
+directory. Se solo una delle due forme è presente nella directory, il linker sceglierà quella
+forma. Altrimenti, il linker sceglierà la versione in libreria condivisa, a meno che tu non gli dica
+di fare altrimenti. Puoi usare l'opzione \texttt{-static} per far utilizzare gli archivi statici. Per
+esempio, la seguente linea userà l'archivio \texttt{libtest.a}, anche se la libreria \texttt{libtest.so} è
+pure disponibile.
+\begin{listcodeBash}
+% gcc -static -o app app.o -L. ?ltest
+\end{listcodeBash}
+
+Il comando \texttt{ldd} mostra le librerie condivise che sono linkate nell'eseguibile. È necessario
+che queste librerie siano disponibili quando l'eseguibile è in esecuzione. Nota che \texttt{ldd} listerà
+una libreria aggiuntiva chiamata \texttt{ld-linux.so}, che è parte del meccanismo di linking
+dinamico di GNU/Linux.
+
+\paragraph{Usare \textit{LD\_LIBRARY\_PATH}}
+
+Quando fai il link di un programma con una libreria condivisa, il linker non mette il percorso
+completo per la libreria condivisa nell'eseguibile finale. Piuttosto, mette solo il nome della
+libreria condivisa. Quando il programma è in esecuzione, il sistema cerca la libreria condivisa e
+la carica. Il sistema, di default, cerca solo in \texttt{/lib} e \texttt{/usr/lib}. Se la libreria condivisa
+linkata al tuo programma è installata fuori da queste directory, non verrà trovata, ed il sistema si
+rifiuterà di eseguire il programma.
+
+\begin{sloppypar}
+Una soluzione a questo problema sta nell'utilizzo dell'opzione \texttt{-Wl,} \texttt{-rpath} quando si fa il link
+del programa. Supponi di usare la seguente:
+\end{sloppypar}
+\begin{listcodeBash}
+% gcc -o app app.o -L. -ltest -Wl,-rpath,/usr/local/lib
+\end{listcodeBash}
+
+In questo modo, quando il programma è in esecuzione, il sistema cercherà in
+\texttt{/usr/local/lib} per ogni libreria condivisa richiesta.
+
+\begin{sloppypar}
+Un'altra soluzione al problema è impostare la variabile d'ambiente \texttt{LD\_LIBRARY\_PATH}
+quando si esegue il programma. Come la variabile d'ambiente \texttt{PATH}, \texttt{LD\_LIBRARY\_PATH} è
+una lista di directory separate dai due punti. Per esempio, se \texttt{LD\_LIBRARY\_PATH} è
+\texttt{/usr/local/lib:/opt/lib}, allora la ricerca verrà fatta in \texttt{/usr/local/lib} e in
+\texttt{/opt/lib} prima delle directory standard \texttt{/lib} e \texttt{/usr/lib}. Dovresti notare anche che se
+hai \texttt{LD\_LIBRARY\_PATH}, il linker nel creare l'eseguibile cercherà nelle directory fornite qui
+oltre che nelle directory fornite dall'opzione \texttt{-L}.\footnote{Potresti trovare dei riferimenti a
+\texttt{LD\_RUN\_PATH} in alcune documentazioni online. Non credere a quello che leggi; questa
+variabile non fa nulla sotto GNU/Linux.}
+\end{sloppypar}
+
+\subsection{Librerie standard}\label{subsec:2.3.3} % 2.3.3
+
+Anche se non non hai specificato nessuna libreria quando hai fatto il link del tuo programma,
+quasi certamente questo userà una libreria condivisa. Ciò accade perché GCC fa il link
+automaticamente nelle librerie standard C, \texttt{libc}, per te. Le funzioni matematiche delle librerie
+standard C non sono incluse in \texttt{libc}; invece, stanno in una libreria separata, \texttt{libm}, che hai
+bisogno di specificare esplicitamente. Per esempio, per compilare e fare il link di un
+programma \texttt{compute.c} che usa funzioni trigonometriche come \texttt{sin} e \texttt{cos}, devi richiamare
+questo codice:
+\begin{listcodeBash}
+% gcc -o compute compute.c ?lm
+\end{listcodeBash}
+
+Se scrivi un programma C++ e fai il link usando il comando \texttt{c++} o \texttt{g++}, prenderai
+automaticamente anche la libreria standard C++, \texttt{libstdc++}.
+
+\subsection{Dipendenze delle librerie}\label{subsec:2.3.4} % 2.3.4
+
+Una libreria spesso dipenderà da un'altra libreria. Per esempio, molti sistemi GNU/Linux
+includono \texttt{libtiff}, una libreria contenente funzioni per leggere e scrivere file di immagini in
+formato TIFF. Questa libreria, a sua volta, usa le librerie \texttt{libjpeg} (procedure per immagini
+JPEG) e \texttt{libz} (procedure di compressione)
+
+Il listato 2.9 mostra un programma molto piccolo che usa libtiff per aprire un file di
+immagine TIFF.\\
+
+\listfromfile{tifftest.c}{Utilizzo di \textit{libtiff}}{list:2.9}
+	{ALP-listings/chapter-2/tifftest.c}
+
+Salva questo file sorgente come \texttt{tifftest.c} Per compilare questo programma e fare il
+link con \texttt{libtiff}, specifica \texttt{-ltiff} sulla tua riga di comando del linker:
+\begin{listcodeBash}
+% gcc -o tifftest tifftest.c -ltiff
+\end{listcodeBash}
+
+Di default, questo si collegherà alla versione della libreria condivisa di \texttt{libtiff}, trovata in
+\texttt{/usr/lib/libtiff.so}. Poiché \texttt{libtiff} usa \texttt{libjpeg} e \texttt{libz}, le versioni delle librerie condivise
+di queste due sono anche qui (una libreria condivisa può puntare ad altre librerie condivise dalle
+quali dipende). Per verificare ciò, usa il comando \texttt{ldd}:
+\begin{listcodeBash}
+% ldd tifftest
+    libtiff.so.3 => /usr/lib/libtiff.so.3 (0x4001d000)
+    libc.so.6 => /lib/libc.so.6 (0x40060000)
+    libjpeg.so.62 => /usr/lib/libjpeg.so.62 (0x40155000)
+    libz.so.1 => /usr/lib/libz.so.1 (0x40174000)
+    /lib/ld-linux.so.2 => /lib/ld-linux.so.2 (0x40000000)
+\end{listcodeBash}
+
+Le librerie statiche, d'altro canto, non possono puntare ad altre librerie. Se decidi di fare il
+link con la versione statica di \texttt{libtiff} specificando \texttt{-static} sulla riga di comando, otterrai
+dei simboli non risolti:
+\begin{listcodeBash}
+% gcc -static -o tifftest tifftest.c -ltiff
+/usr/bin/../lib/libtiff.a(tif_jpeg.o): In function
+?TIFFjpeg_error_exit?:
+tif_jpeg.o(.text+0x2a): undefined reference to ?jpeg_abort?
+/usr/bin/../lib/libtiff.a(tif_jpeg.o): In function
+?TIFFjpeg_create_compress?:
+tif_jpeg.o(.text+0x8d): undefined reference to ?jpeg_std_error?
+tif_jpeg.o(.text+0xcf): undefined reference to ?jpeg_CreateCompress?
+...
+\end{listcodeBash}
+
+Per fare il link di questo programma devi specificare le altre due librerie tu stesso:
+\begin{listcodeBash}
+% gcc -static -o tifftest tifftest.c -ltiff -ljpeg -lz
+\end{listcodeBash}
+
+Occasionalmente, due librerie saranno mutuamente dipendenti. In altre parole, il primo
+archivio farà riferimento a simboli definiti nel secondo archivio e vice versa. La situazione
+generalmente tira fuori mostra la scarsità di design, ma lo fa occasionalmente. Il linker cercherà
+la libreria ogni volta che ne ha bisogno. Per esempio, questa linea causa la ricerca in
+\texttt{libfoo.a} più volte:
+\begin{listcodeBash}
+% gcc -o app app.o -lfoo -lbar -lfoo
+\end{listcodeBash}
+
+Così, anche se libfoo.a fa riferimento a simboli in \texttt{libbar.a} e vice versa, il link del
+programma verrà fatto con successo.
+
+\subsection{Pro e contro}\label{subsec:2.3.5} % 2.3.5
+
+Adesso che sai tutto riguardo gli archivi statici e le librerie condivise, probabilmente ti
+chiederai come usarle. Ci sono alcune considerazioni importanti da tenere a mente.
+
+Il principale vantaggio di una libreria condivisa è quelli di risparmiare spazio sul sistema nel
+quale il programma è installato. Se stati installando 10 programmi, ed essi fanno tutti uso della
+stessa libreria condivisa, risparmi molto spazio usando una libreria condivisa. Se invece hai
+utilizzato un archivio statico, l'archivio è incluso in tutti e 10 i programmi. Così, usando una
+libreria condivisa risparmi spazio su disco. Ciò riduce anche il tempo di download se il tuo
+programma lo si sta scaricando dal web.
+
+Un vantaggio correlato alle librerie condivise è che gli utenti possono aggiornare le librerie
+senza aggiornare tutti i programmi che dipendono da esse. Per esempio, supponi che hai creato
+una libreria condivisa che gestisce le connessioni HTTP. Molti programmi potrebbero
+dipendere da questa libreria. Se trovi un bug in questa libreria puoi aggiornare la libreria.
+Istantaneamente tutti i programmi che dipendono da questa libreria saranno riparati; non dovrai
+rifare il link di tutti i programmi come faresti per un archivio statico.
+
+Questi vantaggi potrebbero farti pensare che dovresti sempre usare le librerie condivise.
+Comunque, sostanzialmente esistono delle ragioni per le quali usare invece gli archivi statici. Il
+fatto che un aggiornamento di una libreria condivisa ha effetto su tutti i programmi che
+dipendono da essa può essere uno svantaggio. Per esempio, se stai sviluppando un software
+mission-critical, farai piuttosto il link con un archivio statico in modo che un aggiornamento
+delle librerie condivise nel sistema non produca effetti sul tuo programma. (Altrimenti, gli
+utenti potrebbero aggiornare la libreria condivisa, danneggiando con ciò il tuo programma e
+quindi chiamare l'assistenza clienti, attribuendoti le colpe!).
+
+Se non riesci ad installare le tue librerie in \texttt{/lib} o \texttt{/usr/lib}, dovresti pensarci due volte
+prima di usare una libreria condivisa. (Non sarai in grado di installare le librerie in quelle
+directory se ti aspetti che l'utente installi il tuo software senza permessi di amministrazione). In
+particolare, il trucco \texttt{-Wl, -rpath} non funzionerà se non sai dove andranno a finire le librerie.
+E chiedere al tuo utente di settare \texttt{LD\_LIBRARY\_PATH} significa un passo in più per loro.
+Poiché ogni utente deve farlo individualmente, ciò è sostanzialmente un peso.
+
+Devi pesare questi vantaggi e svantaggi per ogni programma che distribuisci.
+
+\subsection{Loading e Unloading dinamico}\label{subsec:2.3.6} % 2.3.6
+
+A volte vuoi caricare del codice a tempo di esecuzione senza fare il link esplicito in quel
+codice. Per esempio, considera un'applicazione che supporti moduli ``plug-in'' come un browser
+web. Il browser permette a terze parti di creare plug-in per fornire funzionalità aggiuntive. Gli
+sviluppatori di terze parti creano librerie condivise e le mettono in posizioni conosciute. Il
+browser web quindi carica automaticamente il codice di queste librerie.
+
+Questa funzionalità è disponibile su Linux usando la funzione \texttt{dlopen}. Puoi aprire una
+libreria condivisa chiamata \texttt{libtest.so} chiamando \texttt{dlopen} come qui:
+\begin{listcodeC}
+dlopen ('libtest.so', RTLD_LAZY)
+\end{listcodeC}
+(Il secondo parametro è un flag che indica come collegare i simboli nella libreria condivisa. Se
+vuoi altre informazioni puoi consultare le pagine di manuale online di dlopen, ma \texttt{RTLD\_LAZY}
+è l'impostazione che ti serve di solito). Per usare le funzioni di caricamento dinamico, includi il
+file header \texttt{<dlfcn.h>} e fai il link con l'opzione \texttt{-ldl} per avere il collegamento alla libreria
+libdl.
+
+Il valore di ritorno di questa funzione è un \texttt{void *} che è usato come aggancio per la
+libreria condivisa. Puoi passare questo valore alla funzione \texttt{dlsym} per ottenere l'indirizzo di
+una funzione che è stata caricata con la libreria condivisa. Per esempio, se \texttt{libtest.so}
+definisce una funzione chiamata \texttt{my\_function}, puoi chiamarla come in questo modo:
+\begin{listcodeC}
+void* handle = dlopen ('libtest.so', RTLD_LAZY);
+void (*test)() = dlsym (handle, 'my_function');
+(*test)();
+dlclose (handle);
+\end{listcodeC}
+
+La chiamata di sistema \texttt{dlsym} può anche essere usata per ottenere un puntatore ad una
+variabile statica nella libreria condivisa.
+
+Enrambi \texttt{dlopen} e \texttt{dlsym} restituiscono \texttt{NULL} se non hanno successo. In questo caso, puoi
+chiamare \texttt{dlerror} (senza parametri) per ottenere un messaggio di errore comprensibile con la
+descrizione del problema.
+
+La funzione \texttt{dlcole} chiude la libreria condivisa. Tecnicamente, \texttt{dlopen} attualmente
+carica la libreria solo se non è già stata caricata. Se la libreria è già stata caricata, \texttt{dlopen}
+incrementa semplicemente il contatore di riferimento alla libreria. Similmente, \texttt{dlclose}
+decrementa il contatore di riferimento e chiude la libreria solo se il contatore di riferimento ha
+raggiunto zero.
+
+Se stai scrivendo il codice nella tua libreria condivisa in C++, probabilmente vorrai
+dichiarare quelle funzioni e variabili alle quali vorrai che si acceda altrove con lo specificatore
+di link \texttt{extern "C"}. Per esempio, se la funzione C++ \texttt{my\_function} è in una libreria
+condivisa e vuoi accedere ad essa con \texttt{dlsym}, la dovresti dichiarare come questa:
+\begin{listcodeC}
+extern "C" void foo ();
+\end{listcodeC}
+
+Ciò evita che il compilatore ``distrugga'' il nome della funzione per trasformarlo in uno
+diverso che rappresenti codificate informazioni extra riguardo la funzione. Un compilatore C
+non distruggerà i nomi; userà qualunque nome che darai alla tua funzione o variabile.
+
+% Fine capitolo 2

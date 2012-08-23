@@ -1,0 +1,641 @@
+\chapter{Programmazione UNIX avanzata con Linux}\label{cap:1}
+
+\firstsentence{Q}{uesto capitolo ci mostra come effettuare i passi di base} richiesti per creare un programma
+Linux in C o C++. In particolare, questo capitolo ci mostra come creare e modificare del codice
+sorgente C e C++, compilare questo codice, ed effettuare il debug del risultato. Se si è già
+abituati a programmare su Linux, si può andare avanti al \numnameref{cap:2}; si presti molta attenzione alla \numnameref{sec:2.3}, in
+particolare riguardo al linking statico Vs. Dinamico che potresti non ancora conoscere.
+
+Nel corso di questo libro, assumeremo che tu abbia familiarit\`a con i linguaggi di programmazione
+C e C++. Assumeremo anche che tu sappia come eseguire semplici operazioni da riga di comando
+shell di Linux, come creare directory e copiare files. Poiché molti programmatori linux hanno
+cominciato a programmare in ambiente Windows, mostreremo occasionalmente similitudini e
+contrasti tra Windows e Linux.
+
+\section{Editare con \emph{Emacs}}\label{sec:1.1}
+
+Un editor è il programma che si usa per editare il codice sorgente. Molti dei vari editor sono
+disponibili per Linux, ma l'editor più popolare e maggiormente pieno di funzionalità è
+probabilmente  {\tt Gnu Emacs}.
+\begin{quote}
+{\large\textbf{ Riguardo Emacs}}\\
+Emacs è molto più che un editor. È un programma incredibilmente potente, tanto che al
+CodeSourcery, è amichevolmente conosciuto come Un Vero Programma (One True Program)
+o giusto OTP per abbreviare. Da Emacs è possibile leggere ed inviare email ed è possibile
+personalizzarlo ed estenderlo in numerosissimi modi, troppi per poterne parlare qui. Da Emacs
+è possibile persino navigare su web!
+\end{quote}
+
+Se hai familiarità con un altro editor, puoi certamente usare quello. Nulla nel resto di questo libro
+dipende dall'utilizzo di Emacs. Se invece non hai ancora un editor preferito su linux, dovresti
+andare avanti con il mini-tutorial fornito qui di seguito.
+
+Se ti piace Emacs e vuoi imparare qulcosa in più a riguardo delle sue funzionalità avanzate, dovresti
+tenere in considerazione il fatto di leggere uno dei libri su Emacs disponibili. Un eccellente Tutorial
+è {\emph{Learning GNU Emacs}}, scritto da Debra Cameron, Bill Rosenbaltt, e Eric S. Raymond (O'Reilly, 1996).
+
+\subsection{Aprire un file sorgente C o C++}\label{subsec:1.1.1} % 1.1.1
+
+È possibile avviare Emacs scrivendo {\tt emacs} nella propria finestra di terminale e premendo il
+tasto invio. Quando Emacs è avviato, è possibile usare il menù in alto per creare un nuovo file
+sorgente. Clicca sul menù Files, scegli Apri Files, e quindi scrivi il nome del file che vuoi aprire
+nel ``minibuffer'' in basso allo schermo.\footnote{Se non stai lavorando su un sistema X Window,
+devi premere F10 per accedere ai menù} Se vuoi creare un file sorgente C, usa un nome di file
+che finisca in {\tt.c} o in {\tt.h}. Se vuoi creare un file sorgente C++, usa un nome di file che finisca
+in {\tt.cpp}, {\tt.hpp}, {\tt.cxx}, {\tt.hxx}, {\tt.C} o {\tt.H}. Quando il file è aperto, puoi scrivere così come
+faresti in un programma di word-processing. Per salvare il file, scegli la voce Save Buffer nel
+menu Files. Quando avrai finito di usare Emacs, potrai scegliere l'opzione Exit Emacs nel menù Files.
+
+Se non ti piace puntare e cliccare, puoi usare le scorciatoie da tastiera per aprire
+automaticamente i files, salvare i files, ed uscire da Emacs. Per aprire un file digita {\tt{C-x C-f}}
+({\tt{C-x}} significa premere il tasto Control e quindi premere il tasto x). Per salvare un file digita {\tt{C-x
+C-s}}. Per uscire da Emacs digita {\tt{C-x C-c}}. Se vuoi prendere un po' più confidenza con
+Emacs, scegli la voce ``Emacs Tutorial'' nel menù Help. Il tutoial ti fornisce alcuni consigli su
+come usare Emacs efficientemente.
+
+\subsection{Formattazione automatica}\label{subsec:1.1.2} % 1.1.2
+
+Se sei abituato alla programmazione in un Ambiente di Sviluppo Integrato (Integrated
+Development Environment \--- IDE), sarai anche abituato ad avere un editor che ti aiuti a
+formattare il codice. Emacs può fornire lo stesso tipo di funzionalità. Se apri un file sorgente C
+o C++, Emacs automaticamente mette in risalto il fatto che il file contiene del codice sorgente, e
+non del semplice testo. Se premi il tasto Tab in una riga vuota, Emacs muove il cursore in un
+punto di indentazione appropriato. Se premi il tasto di indentazione in una riga che contiene
+già del testo, Emacs indenta il testo. Così, per esempio, supponi di aver scritto la seguente:
+\begin{listcodeC}
+int main ()
+{
+printf ("Hello, world\n");
+}
+\end{listcodeC}
+
+Se premi il tasto Tab sulla linea con la chiamata a {\tt{printf}}, Emacs riformatterà il tuo codice
+cosicché sarà simile a questo:
+\begin{listcodeC}
+int main ()
+{
+  printf ("Hello, world\n");
+}
+\end{listcodeC}
+Nota come la linea è stata appropriatamente indentata.
+
+Non appena userai Emacs ancora per un po', vedrai come ti tornerà utile nell'esecuzione di
+tutti i tipi di compiti di formattazione complicati. Se sei ambizioso, puoi programmare Emacs per
+eseguire letteralmente ogni tipo di formattazione automatica immaginabile. Tanta gente ha
+usato questo tipo di funzionalità per implementare modelli per Emacs per editare proprio ogni
+tipo di documento, per implementare giochi\footnote{Prova ad eseguire il comando {\tt{M-x dunnet}} se
+vuoi giocare ad un vecchio affascinante gioco di avventura su testo} e per implementare front
+ends di database.
+
+\subsection{Evidenziatura della sintassi}\label{subsec:1.1.3} % 1.1.3
+
+Oltre alla formattazione del codice, Emacs può rendere facile leggere codice C e C++
+colorando diversi elementi sintattici. Per esempio, Emacs può far apparire parole chiave di un
+colore, tipi di dati ``built-in'', come \texttt{int}, in un altro colore, e commenti ancora di un altro colore.
+L'utilizzo dei colori rende un po' più facile scoprire i comuni errori di sintassi.
+
+Il modo più facile per far apparire la colorazione è editare il file \texttt{$\sim$/.emacs} ed inserire la
+seguente stringa:
+\begin{listcodeBash}
+(global-font-lock-mode t)
+\end{listcodeBash}
+
+Salva il file, esci da Emacs, e riavvia. Adesso apri un file sorgente C o C++ e divertiti!
+
+Potresti aver notato che la stringa che hai inserito nel tuo \texttt{.emacs} somiglia al codice di
+linguaggio di programmazione LISP. Ciò avviene perché questo \textit{è} codice LISP! Molto di Emacs
+è attualmente scritto in LISP. È possibile aggiungere funzionalità a Emacs scrivendo altro
+codice LISP.
+
+\section{Compilare con GCC}\label{sec:1.2} % 1.2
+
+Un compilatore trasforma codice sorgente leggibile dall'uomo in codice oggetto leggibile
+da macchina che può girare automaticamente. I compilatori di scelta sui sistemi Linux sono tutti
+parti del GNU Compiler Collection, solitamente conosciuti come GCC.\footnote{Per ulteriori
+informazioni su GCC, visita http://gcc.gnu.org} GCC include anche compilatori per C, C++,
+Java, C ad oggetti, Fortran, e Chill. Questo libro è principalmente focalizzato sulla
+programmazione C e C++.
+
+Supponi di avere un progetto come quello del listato 1.2 con un file sorgente C++
+(\texttt{reciprocal.cpp}) e un file sorgente C (\texttt{main.c}) come
+nel listato \ref{list:1.1}. Di questi due file si
+supponga che vengano compilati e quindi linkati assieme per produrre un programma chiamato
+\texttt{recipocal}.\footnote{In Windows gli eseguibili solitamente hanno nomi che finisono in \texttt{.exe}. I
+programmi di Linux, d'altro canto, solitamente non hanno estensioni. Così, l'equivalente di
+Windows di questo programma sarebbe chiamato probabilmente \texttt{reciprocal.exe}; la
+versione Linux è semplicemente \texttt{reciprocal}}
+Questo programma calcolerà il reciproco di un intero.\\
+
+
+\listfromfile{main.c}{file sorgente C}{list:1.1}
+	{ALP-listings/chapter-1/main.c}
+
+\listfromfile{reciprocal.cpp}{File sorgente C++}{list:1.2}
+	{ALP-listings/chapter-1/reciprocal.cpp}
+
+C'è anche un file header chiamato \texttt{reciprocal.hpp} (vedi listato 1.3).\\
+
+\listfromfile{reciprocal.hpp}{file header}{list:1.3}
+	{ALP-listings/chapter-1/reciprocal.hpp}
+
+Il primo passo è trasformare il codice sorgente C e C++ in codice oggetto.
+
+\subsection{Compilare un singolo file sorgente}\label{subsec:1.2.1} % 1.2.1
+
+Il nome del compilatore C è gcc. Per compilare un file sorgente C, usa l'opzione \texttt{-c}. Così,
+per esempio, l'inserimento di quanto segue, al prompt dei comandi, avvia la compilazione
+del file sorgente \texttt{main.c}
+
+\begin{listcodeBash}
+% gcc -c main.c
+\end{listcodeBash}
+
+Il file oggetto risultante è chiamato \texttt{main.o}.
+
+Il compilatore C++ è chiamato \texttt{g++}. Le sue operazioni sono molto simili a \texttt{gcc}; è possibile compilare
+\texttt{reciprocal.cpp} digitando quanto segue:
+
+\begin{listcodeBash}
+% g++ -c reciprocal.cpp
+\end{listcodeBash}
+
+L'opzione \texttt{-c} dice a \texttt{g++} di compilare il programma solo in un file oggetto; senza questa,
+\texttt{g++} si aspetterebbe di dover fare il link del programma per produrre un eseguibile. Dopo aver digitato
+questo comando, otterrai un file oggetto chiamato \texttt{reciprocal.o}.
+
+Probabilmente avrai bisogno di un altro paio di opzioni per compilare ogni programma
+ragionevolmente grande. L'opzione \texttt{-I} è usata per dire a GCC dove cercare i files header. Di
+default GCC cerca nella directory corrente e nelle directory dove sono installati gli headers per
+le librerie standard. Quindi se hai bisogno di includere dei files header che si trovano da qualche
+altra parte servirà l'opzione \texttt{-I}. Supponiamo ad esempio che il tuo progetto abbia una
+directory per i files sorgente chiamata src ed un'altra chiamata \texttt{include}. Dovresti compilare
+\texttt{reciprocal.cpp} come in questo esempio per indicare che \texttt{g++} deve usare, in
+aggiunta, la directory \texttt{../include} per trovare \texttt{reciprocal.hpp}:
+
+\begin{listcodeBash}
+% g++ -c -I ../include reciprocal.cpp
+\end{listcodeBash}
+
+A volte si vogliono definire delle macro nella riga di comando. Per esempio, nel codice
+di produzione, non si vuole il sovraccarico dovuto al controllo delle asserzioni, presente in \texttt{reciprocal.cpp};
+questo serve solo a fare il debug del programma. \`E possibile disattivare tale controllo
+definendo la macro \texttt{NDEBUG}. Dovresti aggiungere un \texttt{\#define} esplicito per
+\texttt{reciprocal.cpp}, ma ciò richiederebbe modifiche allo stesso codice sorgente. È più semplice
+definire piuttosto
+\texttt{NDEBUG} da riga di comando, come in questo caso:
+
+\begin{listcodeBash}
+% g++ -c -D NDEBUG recipocal.cpp
+\end{listcodeBash}
+
+Se hai voluto definire \texttt{NDEBUG} con alcuni valori particolari, potresti aver fatto qualcosa del
+genere:
+
+\begin{listcodeBash}
+% g++ -c -D NDEBUG=3 reciprocal.cpp
+\end{listcodeBash}
+
+Se si sta compilando il codice per la produzione finale, probabilmente si vuole che GCC ottimizzi il codice
+cosicché giri il più veloce possibile. Ciò lo si può fare utilizzando l'opzione \texttt{-O2} da riga di
+comando. (GCC ha molti livelli di ottimizzazione; il secondo livello è il più appropriato per
+la maggior parte dei programmi.) Per esempio, il seguente, compila \texttt{reciprocal.cpp} con l'ottimizzazione
+attivata:
+
+\begin{listcodeBash}
+% g++ -c -O2 reciprocal.cpp
+\end{listcodeBash}
+
+Nota che compilare con l'ottimizzazione può rendere il programma molto difficile da
+debuggare con un debugger (vedi \numnameref{sec:1.4}). Inoltre, in certi casi,
+compilare con l'ottimizzazione può far venire fuori dei bugs che il programma non ha
+manifestato precedentemente.
+
+Si possono passare molte altre opzioni a \texttt{gcc} e \texttt{g++}. Il miglior modo per ottenere una lista
+completa è vedere la documentazione online. Lo si può fare digitando quanto segue al prompt dei
+comandi:
+
+\begin{listcodeBash}
+% info gcc
+\end{listcodeBash}
+
+\subsection{Fare il link di file oggetto}\label{subsec:1.2.2} % 1.2.2
+
+Adesso che hai compilato \texttt{main.c} e \texttt{utilities.cpp}, vorrai fare il link. Per fare
+il link di un programma che contiene codice C++ si dovrebbe usare sempre \texttt{g++},
+anche se contiene pure
+del codice C. Se il programma contiene solo codice C, si dovrebbe usare invece \texttt{gcc}. Poiché
+questo programma contiene sia codice C che C++, si dovrebbe usare \texttt{g++} in questo modo:
+
+\begin{listcodeBash}
+% g++ -o reciprocal main.o reciprocal.o
+\end{listcodeBash}
+
+L'opzione \texttt{-o} fornisce il nome del file da generare come output del passaggio di link.
+Adesso puoi far girare \texttt{reciprocal} come in questo esempio:
+
+\begin{listcodeBash}
+% ./reciprocal 7
+The reciprocal of 7 is 0.142857
+\end{listcodeBash}
+
+Come puoi notare, \texttt{g++} ha automaticamente fatto il link con la libreria standard C di runtime
+contenente l'implementazione di printf. Se avessi avuto bisogno di fare il link con un'altra libreria
+(come una graphical user interface toolkit), avresti dovuto specificare la libreria tramite
+l'opzione \texttt{-l}. In Linux, i nomi di librerie quasi sempre cominciano con \texttt{lib}. Per esempio, la
+libreria Pluggable Authentication Module (PAM) è chiamata \texttt{libpam.a}. Per fare il link in
+\texttt{libpam.a}, usa un comando come questo:
+
+\begin{listcodeBash}
+% g++ -o reciprocal main.o reciprocal.o -lpam
+\end{listcodeBash}
+
+Il compilatore aggiunge automaticamente il prefisso \texttt{lib} ed il suffissto \texttt{.a}.
+
+Come per i files header, il linker cerca le librerie in alcune locazioni standard, includendo le
+directory \texttt{/lib} e \texttt{/usr/lib} che contengono le librerie standard di sistema. Se vuoi che il
+linker cerchi in altre directory, dovresti usare l'opzione \texttt{-L}, che è la ``parallela'' dell'opzione \texttt{-I}
+appena discussa. Puoi usare questa riga per dire al linker di cercare le librerie nella directory
+\texttt{/usr/local/lib/pam} prima di cercare nei soliti posti:
+
+\begin{listcodeBash}
+% g++ -o reciprocal main.o reciprocal.o
+                -L/usr/local/lib/pam -lpam
+\end{listcodeBash}
+
+Benché non ci sia bisogno di usare l'opzione \texttt{-I} per dire al preprocessore di cercare nella
+directory corrente, è necessario usare l'opzione \texttt{-L} per dire al linker di cercare nella directory
+corrente. In particolare, per dire al linker dove trovare la
+libreria test nella directory corrente, dovresti usare la seguente istruzione:
+
+\begin{listcodeBash}
+% gcc -o app app.o -L. -ltest
+\end{listcodeBash}
+
+\section{Automatizzare i processi con GNU Make}\label{sec:1.3} % 1.3
+
+Se sei abituato a programmare per il sistema operativo Windows, sei probabilmente abituato
+a lavorare con un Integrated Developmente Environment (IDE). Aggiungi i files sorgenti al
+progetto e quindi l'IDE compila il tuo progetto automaticamente. Benché ci siano degli IDE
+disponibili per Linux, in questo libro non ne parleremo. Invece, questo libro ti mostrerà come
+usare GNU Make per automatizzare la ricompilazione del codice, che è ciò che fanno molti dei
+programmatori Linux.
+
+L'idea di base che sta dietro a \texttt{make} è semplice. Dici a \texttt{make} quali \textit{obiettivi} vuoi compilare,
+quindi fornisci delle \textit{regole} spiegando come compilarli. Specifichi inoltre le dipendenze che
+indicano quando un particolare obiettivo dovrebbe essere ricompilato.
+
+Nel nostro progetto di esempio \texttt{reciprocal} ci sono tre obiettivi ovvi: \texttt{reciprocal.o},
+\texttt{main.o} ed il \texttt{reciprocal} stesso. Hai già le regole in mente per compilare questi obiettivi
+sotto forma di linea di comando, dati precedentemente. Le dipendenze richiedono qualche
+piccolo ragionamento in più. Chiaramente, \texttt{reciprocal} dipende da \texttt{reciprocal.o} e
+\texttt{main.o} poiché non è possibile fare il link del programma completo fino a che non hai
+compilato ognuno di questi file oggetto. I files oggetto vanno ricompilati ogni qualvolta il
+corrispondente file sorgente cambia. C'è un altro lato da tenere in considerazione: un
+cambiamento a \texttt{reciprocal.hpp} può causare il dover ricompilare entrambi i files oggetto
+poiché entrambi i files sorgenti includono quel file header.
+\begin{sloppypar}
+In aggiunta agli obiettivi ovvi, dovrebbe esserci sempre un obiettivo \texttt{clean}. Quest'obiettivo
+rimuove tutti i files oggetto e programmi generati cosicché alla fine si abbia tutto pulito. La
+regola per questo obiettivo usa il comando rm per rimuovere i files.
+\end{sloppypar}
+Puoi dare tutte queste informazioni a make mettendo le informazioni in un file chiamato
+\texttt{Makefile}. Ecco ciò che è contenuto nel \texttt{Makefile}
+
+\begin{listcodeBash}
+reciprocal: main.o reciprocal.o
+    g++ $(CFLAGS) -o reciprocal main.o reciprocal.o
+
+main.o: main.c reciprocal.hpp
+    gcc $(CFLAGS) -c main.c
+
+reciprocal.o: reciprocal.cpp reciprocal.hpp
+    g++ $(CFLAGS) -c reciprocal.cpp
+
+clean:
+    rm -f *.o reciprocal
+\end{listcodeBash}
+
+Puoi vedere che gli obiettivi sono elencati sulla sinistra, seguiti da due punti e quindi ogni
+dipendenza. La regola per compilare quell'obiettivo sta sulla linea successiva. (Per il momento
+ignora il \texttt{\$(CFLAGS)}.) La riga contenente la regola deve iniziare con un
+carattere di tabulazione, altrimenti make farà confusione. Se editi il \texttt{Makefile} in Emacs,
+Emacs ti aiuterà con la formattazione.
+
+Se rimuovi i files oggetto che hai appena compilato, e digiti
+
+\begin{listcodeBash}
+% make
+\end{listcodeBash}
+
+su riga di comando, vedrai quanto segue:
+
+\begin{listcodeBash}
+% make
+gcc -c main.c
+g++ -c reciprocal.cpp
+g++ -o reciprocal main.o reciprocal.o
+\end{listcodeBash}
+
+Puoi notare che \texttt{make} ha compilato automaticamente i file oggetto e fatto il link tra loro.
+Se adesso cambi \texttt{main.c} in qualche modo, e digiti di nuovo \texttt{make}, vedrai
+quanto segue:
+
+\begin{listcodeBash}
+% make
+gcc -c main.c
+g++ -o reciprocal main.o reciprocal.o
+\end{listcodeBash}
+
+Puoi notare che \texttt{make} ha saputo compilare \texttt{main.o} e rifare il link del programma, ma non
+si è preoccupato di ricompilare \texttt{reciprocal.cpp} poiché nessuna delle dipendenze per
+\texttt{reciprocal.o} è stata cambiata.
+
+Il \texttt{\$(CFLAGS)} è una variabile di make. E' possibile definire questa variabile sia nello stesso
+\texttt{Makefile} che su riga di comando. \texttt{GNU make} sostituirà il valore della variabile durante
+l'esecuzione della regola. Così, per esempio, per ricompilare con l'ottimizzazione attivata,
+dovresti fare ciò:
+
+\begin{listcodeBash}
+% make clean
+rm -f *.o reciprocal
+% make CFLAGS=-O2
+gcc -O2 -c main.c
+g++ -O2 -c reciprocal.cpp
+g++ -O2 -o reciprocal main.o reciprocal.o
+\end{listcodeBash}
+
+Nota che il flag \texttt{-O2} è stato inserito nelle regole al posto di \texttt{\$(CFLAGS)}.
+
+In questa sezione hai visto solo le capacità più semplici di make. Puoi trovare altro
+digitando ciò:
+
+\begin{listcodeBash}
+% info make
+\end{listcodeBash}
+
+Nel manale, troverai informazioni su come \texttt{make} riesca a mantenere un \texttt{Makefile} semplice,
+come ridurre il numero di regole necessarie, e come calcolare automaticamente
+le dipendenze. Inoltre puoi trovare altre informazioni in \textit{GNU, Autoconf, Automake, and Libtool}
+di Gary V.Vaughan, Ben Elliston,Tom Tromey, e Ian Lance Taylor (New Riders Publishing,
+2000).
+
+\section{Debuggare con GNU Debugger (GDB)}\label{sec:1.4} % 1.4
+
+Il debugger è il programma che si usa per scoprire perché il proprio programma non si sta
+comportando nel modo in cui pensi dovrebbe comportarsi. Lo farai molto.\footnote{...finché il tuo
+porgramma non funzionerà per la prima volta} GNU Debugger (\texttt{GDB}) è il debugger usato da
+molti programmatori Linux. puoi usare \texttt{GDB} per vedere il tuo codice passo passo, impostare dei
+breakpoints ed esaminare il valore di variabili locali.
+
+\subsection{Compilare con Informazioni di Debugging}\label{subsec:1.4.1} % 1.4.1
+
+Per usare \texttt{GDB}, è necessario compilare con le informazioni di debugging abilitate. Per fare
+questo si aggiunge lo swtich \texttt{-g} sulla riga di comando di compilazione. Se stai usando un
+\texttt{Makefile} come descritto precedentemente, puoi giusto settare il \texttt{CFLAGS} uguale a \texttt{-g}
+quando esegui \texttt{make}, come mostrato qui:
+
+\begin{listcodeBash}
+% make CFLAGS=-g
+gcc -g -c main.c
+g++ -g -c reciprocal.cpp
+g++ -g -o reciprocal main.o reciprocal.o
+\end{listcodeBash}
+
+Quando compili con \texttt{-g}, il compilatore include informazioni extra nei files oggetto e negli
+eseguibili. Il debugger usa queste informazioni per mostrare quali indirizzi corriposndono a
+quali linee nel codice sorgente, come stampare variabili locali, e così via
+
+\subsection{Eseguire GDB}\label{subsec:1.4.2} % 1.4.2
+
+Puoi avviare \texttt{gdb} digitando:
+
+\begin{listcodeBash}
+% gdb reciprocal
+\end{listcodeBash}
+
+Quando \texttt{gdb} si avvia, dovresti vedere il prompt di \texttt{GDB}:
+
+\begin{listcodeBash}
+(gdb)
+\end{listcodeBash}
+
+Il primo passo è quello di eseguire il tuo programma all'interno del debugger, Inserisci giusto
+il comando run ed ogni argomento del programma. Prova ad eseguire il programma senza
+nessun argomento, come questo:
+
+\begin{listcodeBash}
+(gdb) run
+Starting program: reciprocal
+Program received signal SIGSEGV, Segmentation fault.
+__strtol_internal (nptr=0x0, endptr=0x0, base=10, group=0)
+at strtol.c:287
+287 strtol.c: No such file or directory.
+(gdb)
+\end{listcodeBash}
+
+Il problema è che non c'è controllo di errore nel codice \texttt{main}. Il programma si aspetta un
+argomento, ma in questo caso il programma è stato eseguito senza argomento. Il messaggio
+\texttt{SEGSEV} indica un crash del programma. \texttt{GDB} sa che il crash attuale è avvenuto in una funzione
+chiamata \texttt{\_\_strtol\_interna}l. Questa funzione è nella libreria standard, e il sorgente non
+è installato, come spiega il messaggio ``No such file or directory''. E' possibile vedere lo stack
+usando il comando where:
+
+\begin{listcodeBash}
+(gdb) where
+#0 __strtol_internal (nptr=0x0, endptr=0x0, base=10, group=0)
+at strtol.c:287
+#1 0x40096fb6 in atoi (nptr=0x0) at ../stdlib/stdlib.h:251
+#2 0x804863e in main (argc=1, argv=0xbffff5e4) at main.c:8
+\end{listcodeBash}
+
+Puoi vedere da questa schermata che il main ha chiamato la funzione \texttt{atoi} con un puntatore
+\texttt{NULL}, che è ciò che fa nascere i problemi.
+
+Usando il comando
+\texttt{up} puoi salire di due livelli nello stack per raggiungere il \texttt{main}:
+
+\begin{listcodeBash}
+(gdb) up 2
+#2 0x804863e in main (argc=1, argv=0xbffff5e4) at main.c:8
+8 i = atoi (argv[1]);
+\end{listcodeBash}
+
+Nota che \texttt{gdb} è capace di trovare il sorgente per \texttt{main.c} e mostra la riga dove è avvenuta
+la chiamata alla funzione dell'errore. E' possibile anche vedere il valore di variabili usando il
+comando \texttt{print}:
+
+\begin{listcodeBash}
+(gdb) print argv[1]
+$2 = 0x0
+\end{listcodeBash}
+
+Che conferma che il problema è certamente dovuto ad un puntatore \texttt{NULL} passato ad \texttt{atoi}.
+
+Puoi impostare un breakpoint usando il comando \texttt{break}:
+
+\begin{listcodeBash}
+(gdb) break main
+Breakpoint 1 at 0x804862e: file main.c, line 8.
+\end{listcodeBash}
+
+Questo comando imposta un punto di interruzione (breakpoint) sulla prima linea del \texttt{main}.\footnote{Certa gente ha
+commentato che dire di interrompere il \texttt{main} è un po' bizzarro perchè solitamente questo
+lo si vuol fare solo quando il \texttt{main} è già interrotto}
+Adesso prova ad
+eseguire il programma con un argomento, come questo:
+
+\begin{listcodeBash}
+(gdb) run 7
+Starting program: reciprocal 7
+Breakpoint 1, main (argc=2, argv=0xbffff5e4) at main.c:8
+8 i = atoi (argv[1]);
+\end{listcodeBash}
+
+Puoi notare che il debugger si è fermato al breakpoint.
+
+Puoi andare avanti dopo la chiamata ad \texttt{atoi} usando il comando \texttt{next}:
+
+\begin{listcodeBash}
+(gdb) next
+9 printf (?The reciprocal of %d is %g\n?, i, reciprocal (i));
+\end{listcodeBash}
+
+Se vuoi vedere cosa sta accadendo dentro \texttt{reciprocal}, usa il comando \texttt{step} come
+questo:
+
+\begin{listcodeBash}
+(gdb) step
+reciprocal (i=7) at reciprocal.cpp:6
+6 assert (i != 0);
+\end{listcodeBash}
+
+Adesso sei nel corpo della funzione \texttt{reciprocal}.
+
+Potresti trovare molto conveniente eseguire \texttt{gdb} dall'interno di Emacs piuttosto che usare
+\texttt{gdb} da riga di comando. Usa il comando \texttt{M-x gdb} per avviare \texttt{gdb} in una finestra di Emacs.
+Se vieni fermato ad un breakpoint, Emacs tira fuori automaticamente il file appropriato. È facile
+capire cosa sta accadendo quando dai uno sguardo all'intero file piuttosto che giusto una riga di
+testo.
+
+\section{Trovare altre informazioni}\label{sec:1.5} % 1.5
+
+Praticamente ogni distribuzione di Linux è provvista di una grande quantità di
+documentazione utile. Puoi imparare molto di ciò di cui parleremo in questo libro leggendo la
+documentazione della tua distribuzione Linux (anche se ti occuperà molto tempo). La
+documentazione non è sempre ben organizzata, per cui, il compito più difficile è quello di
+trovare ciò di cui hai bisogno. La documentazione è anche spesso datata, quindi prendi tutto ciò
+che leggi \textit{``con le pinze''}. Se per esempio il sistema non si comporta esattamente come una \textit{man
+page} (pagine di manuale) dice che dovrebbe comportarsi può darsi che la pagina
+di manuale sia obsoleta.
+
+Per aiutarti a navigare, qui ci sono le più utili fonti di informazioni riguardo la
+programmazione Linux avanzata.
+
+\subsection{Pagine Man}\label{subsec:1.5.1}
+
+Le distribuzioni Linux includono pagine di manuale per la maggior parte dei comandi
+standard, chiamate di sistema, e funzioni di librerie standard. Le pagine di manuale sono divise
+in sezioni numerate; per i programmatori, le più importanti sono queste:
+
+\begin{itemize}
+\item (1) Comandi utente
+\item (2) Chiamate di sistema
+\item (3) Funzioni di librerie standard
+\item (8) comandi di sistema/amministrativi
+\end{itemize}
+
+I numeri indicano sezioni di pagine di manuale. Le pagine di manuale di Linux sono
+installate nel tuo sistema; usa il comando \texttt{man} per accedere ad esse. Per trovare una pagina di
+manuale digita semplicemente \texttt{man nome}, dove \texttt{nome} è il nome di un comando o di una
+funzione. In alcuni casi lo stesso nome si trova in più di una sezione; puoi specificare
+esplicitamente la sezione anteponendo il numero della sezione al nome. Per esempio, se digiti quanto segue, otterrai la pagina di manuale per il comando \texttt{sleep} (nella sezione 1 delle pagine di
+manuale di Linux):
+
+\begin{listcodeBash}
+% man sleep
+\end{listcodeBash}
+
+Per vedere la pagina di manuale per la funzione di libreria sleep, usa questo comando:
+
+\begin{listcodeBash}
+% man 3 sleep
+\end{listcodeBash}
+
+Ogni pagina di manuale include un sommario on-line del comando o funzione. Il comando
+\texttt{whatis nome} mostra tutte le pagine di manuale (in tutte le sezioni) per un comando o una
+funzione corrispondente a quel \texttt{nome}. Se non sei sicuro di quale comando o funzione vuoi, puoi
+effettuare una ricerca per parola chiave sulle linee di sommario delle pagine di manuale, usando
+\texttt{man -k parolachiave}.
+
+Le pagine di manuale includono una grande quantità di informazioni molto utili e
+dovrebbero essere il primo posto nel quale cercare aiuto. La pagina di manuale per un comando
+descrive opzioni per la linea di comando e argomenti, input e output, codici di errori,
+configurazioni, e altre cose simili. La pagina di manuale per una chiamata di sistema o una
+funzione di libreria descrive parametri e valori di ritorno, lista di codici di errori ed effetti
+collaterali, e specifica quali files include usare per chiamare la funzione.
+
+\subsection{Info}\label{subsec:1.5.2} % 1.5.2
+
+Il sistema di documentazione Info contiene documentazione più dettagliata per molti
+componenti del cuore del sistema GNU/Linux, più molti altri programmi. Le pagine Info sono
+documenti ipertestuali, simili a pagine web. Per lanciare il browser Info basato su testo, digita
+\texttt{info} in una nuova finestra di shell. Ti verrà presentato un menù di documenti Info installati
+nel sistema. (Premi Control+H per visualizzare i tasti per navigare all'interno di un documento
+Info).
+
+Tra i più utili documenti Info ci sono questi:
+
+\begin{itemize}
+\item \texttt{gcc} \--- Il compilatore gcc
+\item \texttt{libc} \--- La libreria GNU C, che include molte chiamate di sistema
+\item \texttt{gdb} \--- Il debugger GNU
+\item \texttt{emacs} \--- L'editor di testo Emacs
+\item \texttt{info} \--- Lo stesso sistema Info
+\end{itemize}
+
+Praticamente tutti gli strumenti standard di programmazione di Linux (inclusi \texttt{ld}, il linker;
+\texttt{as}, l'assemblatore, e \texttt{gprof}, il profiler) sono corredati di utili pagine Info. Puoi saltare
+direttamente ad un particolare documento Info specificando il nome della pagina da riga di
+comando:
+
+\begin{listcodeBash}
+% info libc
+\end{listcodeBash}
+
+Se fai la maggior parte della tua programmazione in Emacs, puoi accedere direttamente al
+broswer interno Info digitando \texttt{M-x info} o \texttt{C-h i}.
+
+\subsection{File Header}\label{subsec:1.5.3} % 1.5.3
+
+È possibile imparare molto sulle funzioni di sistema disponibili e su come usarle guardando i
+files header del sistema. Questi risiedono in \texttt{/usr/include} e in \texttt{/usr/include/sys}. Se,
+per esempio, ottieni degli errori di compilazione dall'utilizzo di una chiamata di sistema, dai
+un'occhiata al file header corrispondente per verificare che la signature della funzione sia la
+stessa a quello che è descritto nella pagina di manuale.
+
+Sui sistemi linux, gran parte dei dettagli fondamenteli su come lavorano le chiamate di sistema si
+riflette nei files header nelle directory \texttt{/usr/include/bits}, \texttt{/usr/include/asm}, e
+\texttt{/usr/include/linux}. Per esempio, i valori numerici dei segnali (descritti nella
+\numnameref{sec:3.3}, nel \numnameref{cap:3}) sono definiti in
+\texttt{/usr/include/bits/signum.h}. Questi file header facilitano la lettura alle menti
+curiose. Tuttavia, non includerli nel programa; usa sempre i file header in \texttt{/usr/include}
+come menzionato nella pagina di manuale per la funzione che stai usando.
+
+\subsection{Codice sorgente}\label{subsec:1.5.4} % 1.5.4
+
+Siamo in ambito open source, no? Ciò che regola il modo in cui il sistema lavora alla fine è lo
+stesso codice sorgente del sistema e fortunatamente per i programmatori Linux, quel codice
+sorgente è gratuitamente disponibile. C'è la possibilità che la tua distribuzione Linux includa
+tutto il codice sorgente dell'intero sistema e di tutti i programmi inclusi in essa; se non è così,
+sei autorizzato, secondo i termini della GNU General Public License, a richiederlo al
+distributore. (Comunque, il codice sorgente potrebbe non essere stato installato sull'hard disk.
+Guarda la documentazione della tua distribuzione per le istruzioni su come installarlo).
+
+Il codice sorgente per lo stesso kernel di linux è di solito memorizzato in
+\texttt{/usr/src/linux}. Se questo libro ti incuriosisce sui dettagli di come lavorano i processi, la
+memoria condivisa e le periferiche di sistema, puoi sempre imparare direttamente dal codice
+sorgente. Molte delle funzioni descritte in questo libro sono implementate con librerie GNU C;
+controlla la documentazione della tua distribuzione per la posizione del codice sorgente delle
+librerie C.
+
+% Fine del capitolo 1

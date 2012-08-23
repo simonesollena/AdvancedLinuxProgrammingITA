@@ -1,0 +1,12 @@
+/***********************************************************************
+* Code listing from "Advanced Linux Programming,"                         *
+*                                                                                                         *
+*                                                                                                         *
+***********************************************************************/
+
+int main ()
+{
+  pthread_t thread1_id;
+  pthread_t thread2_id;
+  struct char_print_parms thread1_args;
+  struct char_print_parms thread2_args;

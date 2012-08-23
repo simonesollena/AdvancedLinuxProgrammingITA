@@ -1,0 +1,510 @@
+\chapter{Processi}\label{cap:3}
+
+Un'istanza in esecuzione di un programma è chiamata processo. Se hai due finestre di
+terminale visualizzate a schermo, probabilmente stai eseguendo lo stesso programma terminale
+due volte \--- hai due processi di terminale. Ogni finestra di terminale è probabilmente una shell
+in esecuzione; ogni shell è un altro processo. Quando invochi un comando da una shell, il
+programma corrispondente è eseguito in un nuovo processo; il processo schell ricomincia
+quando i processi sono finiti.
+
+I programmatori avanzati spesso usano più processi cooperanti in una singola applicazione
+per abilitare l'applicazione a fare più di una cosa per volta, per aumentare la robustezza
+dell'applicazione e per fare uso di programmi già esistenti.
+
+Molte delle funzioni di manipolazione dei processi che sono descritte in questo capitolo sono
+simili a quelle in altri sistemi UNIX. Molti sono dichiarati nel file header \texttt{<unistd.h>};
+controlla la pagina di manuale per ogni funzione per esserne sicuro.
+
+\section{Uno sguardo ai processi}\label{sec:3.1}
+
+Anche se sei seduto davanti al tuo computer, ci sono processi in esecuzione. Ogni
+programma in esecuzione usa uno o più processi. Iniziamo dando un'occhiata ai processi già in
+esecuzione sul tuo computer.
+
+\subsection{ID dei processi}\label{subsec:3.1.1}
+
+Ogni processo in un sistema Linux è identificato dal suo ID di processo univoco, al queale
+spesso ci si riferisce come pid. Gli ID dei processi sono numeri a 16 bit assegnati
+sequenzialmente da Linux quando viene creato un nuovo processo.
+
+Ogni processo inoltre ha un processo padre (ad eccezione del processo speciale \texttt{init},
+descritto nella \numnameref{subsec:3.4.3}). Quini, puoi immaginare che i processi in un
+sistema Linux siano impostati in un albero, con il processo \texttt{init} come radice. Il \textit{parent
+process ID}, o ppid, è semplicemente l'ID del padre del processo.
+
+Quando si fa riferimento agli ID dei processi in un programma C o C++, si usa sempre il tipo
+di dato \texttt{pid\_t}, che è definito in \texttt{<sys/types.h>}. Un programma può ottenere l'ID di un
+processo in esecuzione con la chiamata di sistema \texttt{getpid()} e ottenere l'ID del padre di
+questo processo con la chiamata di sistema \texttt{getppid()}. Per esempio, il programma nel listato
+3.1 stampa gli ID dei suoi processi e gli ID dei loro genitori.\\
+
+\listfromfile{print-pid.c}{Stampa gli ID dei processi}{list:3.1}
+	{ALP-listings/chapter-3/print-pid.c}
+
+Nota che se invochi questo programma molte volte, viene riportato un ID di processo diverso
+perché ogni invocazione crea un nuovo processo. Comunque, se lo invochi ogni volta dalla
+stessa shell, l'ID del processo padre (che è l'ID di processo del processo shell) è lo stesso.
+
+\subsection{Vedere i processi attivi}\label{subsec:3.1.2} % 3.1.2
+
+Il comando \texttt{ps} mostra i processi che stanno girando nel sistema. La versione GNU/Linux di
+\texttt{ps} ha molte opzioni perché cerca di essere compatibile con le versioni di \texttt{ps} in molte altre
+varianti di UNIX. Queste opzioni controllano quali processi sono listati e le informazioni a
+riguardo per ogni visualizzazione.
+
+Per default, invocare \texttt{ps} mostra i processi mostrati dal terminale o dalla finestra di terminale
+nella quale \texttt{ps} è invocato. Per esempio:
+\begin{listcodeBash}
+% ps
+PID     TTY     TIME      CMD
+21693   pts/8   00:00:00  bash
+21694   pts/8   00:00:00  ps
+\end{listcodeBash}
+
+L'invocazione di \texttt{ps} mostra due processi. Il primo, \texttt{bash}, è la \texttt{shell} in esecuzione in
+questo terminale. Il secondo è l'istanza in esecuzione del programma \texttt{ps} stesso. La prima
+colonna, etichettata PID, mostra l'ID di processo di ognuno.
+
+Per una vista più dettagliata e ciò che sta girando sul sistema GNU/Linux, invoca questo:
+\begin{listcodeBash}
+% ps -e -o pid,ppid,command
+\end{listcodeBash}
+
+L'opzione \texttt{-e} dice a \texttt{ps} di mostrare tutti i processi che stanno girando sul sistema. L'opzione
+\texttt{-o pid,ppid,command} indica a \texttt{ps} quali informazioni mostrare a riguardo di ogni
+processo \--- in questo caso, l'ID di processo, l'ID del processo padre, ed il comando in esecuzione
+in questo processo.
+
+\begin{quote}
+\large{\textbf{Formati dell'output di ps}}\\
+Con l'opzione \texttt{-o} al comando \texttt{ps}, specifichi le informazioni riguardanti i processi
+che vuoi nell'output come lista separata da virgole. Per esempio,\\
+\texttt{ps -o pid,user,start\_time,command}\\
+mostra l'ID di processo, il nome del
+proprietario del processo, l'orario al quale il processo è stato avviato ed il comando
+eseguito in quel processo. Vedi la pagina di manuale di \texttt{ps} per la lista completa di
+codici di campo. Puoi usare invece le opzioni -f (lista completa), -l (lista lunga) o -j
+(lista dei lavori) per ottenere tre diversi formati di liste preimpostati.
+\end{quote}
+
+Ecco le prime righe ed ultime righe di output da questo comando nel mio sistema. Puoi
+notare output differenti, in dipendenza da cosa c'è in esecuzione nel tuo sistema.
+\begin{listcodeBash}
+% ps -e -o pid,ppid,command
+PID     PPID    COMMAND
+1       0       init [5]
+2       1       [kflushd]
+3       1       [kupdate]
+...
+21725   21693   xterm
+21727   21725   bash
+21728   21727   ps -e -o pid,ppid,command
+\end{listcodeBash}
+
+Nota che l'ID del processo padre del comando ps, 21727, è l'ID di processo di bash, la shell
+dalla quale ho invocato \texttt{ps}. L'ID del processo padre di bash a sua volta è 21725, l'ID di
+processo del programma xterm nel quale la shell sta girando.
+
+\subsection{Uccidere un processo}\label{subsec:3.1.3} % 3.1.3
+
+Puoi uccidere un processo in esecuzione con il comando \texttt{kill}. Specifica semplicemente
+sulla linea di comando l'ID di processo del processo da uccidere.
+
+Il comando \texttt{kill} lavora inviando al processo un \texttt{SIGTERM}, o segnale di termine.\footnote{puoi
+anche usare il comando \texttt{kill} per inviare altri segnali a un processo. Questo è descritto nella
+\numnameref{sec:3.4}.} Ciò fa terminare il processo, finché il programma in
+esecuzione non prende esplicitamente o maschera il senale SIGTERM. I segnali sono descritti
+nella \numnameref{sec:3.3}.
+
+\section{Creare processi}\label{sec:3.2} % 3.2
+
+Vengono usate due tecniche comuni per creare un nuovo processo. La prima è relativamente
+semplice ma dovrebbe essere usata con moderazione perché non è efficiente ed ha considerevoli
+rischi di sicurezza. La seconda tecnica è più complessa ma fornisce maggiore flessibilità,
+velocità e sicurezza.
+
+\subsection{usando system}\label{subsec:3.2.1} % 3.2.1
+
+La funzione \texttt{system} nella libreria standard C fornisce una via facile per eseguire un
+comando dall'interno di un programma, come se il comando sia stato digitato in una shell. Di
+fatto, \texttt{system} crea un sottoprocesso eseguendo la Boune shell standard (/bin/sh) e cede il
+comando a quella shell per l'esecuzione. Per esempio, questo programma nel listato 3.2 invoca
+il comando \texttt{ls} per mostrare il contenuto della directory root come se avessi digitato \texttt{ls -l /} in
+una shell.\\
+
+\listfromfile{system.c}{Utilizzo della chiamata \textit{system}}{list:3.2}
+	{ALP-listings/chapter-3/system.c}
+
+La funzione \texttt{system} restituisce lo stato di uscita del comando shell. Se la shell stessa non
+può essere eseguita, \texttt{system} restituisce 127; se si verifica un altro errore, \texttt{system} restituisce
+\texttt{-1}.
+
+Poiché la funzione \texttt{system} usa una shell per invocare il tuo comando, esso è soggetto alle
+caratteristiche, limitazioni, e problemi di sicurezza della shell di sistema. Non puoi fare
+riferimento all'abilità di ogni particolare versione della shell Bourne. Su molti sistemi UNIX,
+\texttt{/bin/sh} è un link simbolico ad un'altra shell. Per esempio, su molti sistemi GNU/Linux,
+\texttt{/bin/sh} punta alla \texttt{bash} (Bourne-Again Shell), e diverse distribuzioni GNU/Linux usano
+diverse versioni di bash. Invocare un programma con permessi di \texttt{root} con la funzione
+\texttt{system}, per esempio, può avere diversi risultati in diversi sistemi GNU/Linux. Quindi, è
+preferibile usare il metodo \texttt{fork} ed \texttt{exex} per creare processi.
+
+\subsection{Usando \textit{fork} ed \textit{exec}}\label{subsec:3.2.2} % 3.2.2
+
+Le API di DOS e Windows contengono la famiglia di funzioni \texttt{span}. Queste funzioni
+prendono come argomento il nome di un programma da eseguire e creano una nuova istanza di
+processo di quel programma. Linux non contiene una singola funzione che fa tutto ciò in un
+solo passo. Piuttosto, Linux fornisce una funzione, \texttt{fork}, che crea un processo figlio che è una
+copia esatta del suo processo padre. Linux fornisce un altro insieme di funzioni, la famiglia
+\texttt{exec}, che fanno in modo che un particolare processo smetta di essere un'istanza di un
+programma e diventare invece una copia del processo corrente. Quindi puoi usare \texttt{exec} per
+trasformare uno di questi processi in un'istanza del programma che vuoi avviare.
+
+\paragraph{Chiamare \textit{fork}}
+
+Quando un programma chiama \texttt{fork}, viene creato un processo duplicato, chiamato processo
+figlio. Il processo padre continua l'esecuzione del programma dal punto il cui è stato chiamato il
+\texttt{fork}. Il processo figlio, inoltre, esegue lo stesso programma dallo stesso posto.
+
+Così, in cosa differiscono i due processi? Primo, il processo figlio è un nuovo processo e
+quindi ha un nuovo ID di processo, diverso dall'ID del suo processo padre. Un modo per un
+programma per distinguere quando è nel processo padre o nel processo figlio è chiamare
+\texttt{getpid}. Comunque, la funzione \texttt{fork} fornisce diversi valori di ritorno ai processi padre e
+figlio \--- un processo ``va dentro'' la chiamata \texttt{fork} e due processi ``vengono fuori'', con differenti valori di ritorno. Il valore di ritorno nel processo padre è l'ID di processo del figlio. Il valore di ritorno nel processo figlio è zero. Poiché nessun processo ha un ID di
+processo pari a zero, ciò rende facile per il programma che sta girando sapere se è nel processo
+padre o figlio.
+
+Il listato 3.3 è un esempio di utilizzo di \texttt{fork} per duplicare il processo di un programma.
+Nota che il primo blocco della condizione if è eseguito solo nel processo padre, mentre la
+clausola else è eseguita nel processo figlio.\\
+
+\listfromfile{fork.c}{Usare \textit{fork} per duplicare il processo di un programma}{list:3.3}
+	{ALP-listings/chapter-3/fork.c}
+
+\paragraph{Usare la famiglia \textit{exec}}
+
+Le funzioni \texttt{exec} sostituiscono il programma in esecuzione in un processo con un altro
+programma. Quando un programma chiama la funzione \texttt{exec}, quel processo cessa
+immediatamente l'esecuzione di quel programma ed inizia ad eseguire un nuovo programma
+dall'inizio, assumendo che la chiamata \texttt{exec} non incontri nessun errore.
+
+All'interno della famiglia \texttt{exec} ci sono funzioni che variano leggermente nelle loro capacità
+e su come sono chiamate.
+\begin{itemize}
+\item{Funzioni che contengono la lettera \textit{p} nel loro nome (\texttt{execvp} ed \texttt{execpl}) accettano
+il nome di un programma e cercano un programma con quel nome nella directory della
+corrente esecuzione del programma; Alle funzioni che non contengono la p bisogna dare
+il percorso completo del programma che deve essere eseguito.}
+\item{Funzioni che contengono la lettera \textit{v} nel loro nome (\texttt{execv}, \texttt{execvp} ed \texttt{execve})
+accettano la lista di argomenti del nuovo programma come un array terminato da NULL
+di puntatori a stringhe. Le funzioni che contengono la letara \textit{l} (\texttt{execl}, \texttt{execlp} ed
+\texttt{execle}) accettano la lista di argomenti usando il meccanismo varargs del linguaggio
+C.}
+\item{Funzioni che contengono la lettera \textit{e} nel loro nome (\texttt{execve} ed \texttt{execle}) accettano
+un ulteriore argomento, un array di variabili di ambiente. L'argomento dovrebbe essere
+un array terminato da NULL di puntatori a stringhe di caratteri. Ogni stringa di caratteri
+dovrebbe essere nella forma ``VARIABILE=valore''.}
+\end{itemize}
+
+Poiché \texttt{exec} sostituisce il programma chiamante con un altro, esso non ritorna mai finché
+non viene incontrato un errore.
+
+La lista degli argomenti passata al programma è analoga agli argomenti da riga di comando
+che dai ad un programma quando lo esegui dalla shell. Essi sono disponibili tramite i parametri
+del main \texttt{argc} ed \texttt{argv}. Ricorda che quando un programma viene invocato dalla shell, la
+shell setta il primo elemento della lista degli argomenti (\texttt{argv[1]}) al primo argomento della
+riga di comando e così via. Quando usi una funzione \texttt{exec} nel tuo programma, anche tu,
+dovresti passare il nome della funzione come primo elemento della lista degli argomenti.
+
+\paragraph{Usare \textit{fork} ed \textit{exec} insieme}
+
+Un comune modello per eseguire un sottoprogramma all'interno di un programma è prima
+fare il fork del processo e quindi exec del sottoprogramma. Ciò permette al programma
+chiamante di continuare la propria esecuzione nel processo padre mentre il programma
+chiamante è sostituito dal sottoprogramma nel processo figlio.
+
+Il programma nel listato 3.4, come il listato 3.2, lista il contenuto della directory radice
+usando il comando \texttt{ls}. Diversamente dall'esempio precedente, comunque, esso invoca il
+comando ls direttamente, passandogli gli argomenti della riga di comando \texttt{-l} e \texttt{/} piuttosto
+che invocarlo tramite una shell.\\
+
+\listfromfile{fork-exec.c}{Usare \textit{fork} ed \textit{exec} insieme}{list:3.4}
+	{ALP-listings/chapter-3/fork-exec.c}
+
+\subsection{Scheduling dei processi}\label{subsec:3.2.3} % 3.2.3
+
+Linux schedula i processi padre e figlio indipendentemente; non c'è nessuna garanzia su
+quale dei due girerà prima o per quanto tempo esso girerà prima che Linux lo interrompa e
+faccia girare l'altro processo (o qualche altro processo nel sistema). In particolare, nessuna
+parte, oppure tutte, del comando ls, potrebbero girere nel processo foglio prima che il processo
+padre non sia stato completato.\footnote{Un metodo per serializzare i due processi è presentato nella
+\numnameref{subsec:3.4.1}.} Linux promette che ogni processo verrà
+eventualmente eseguito \--- nessun processo verrà completamente impoverito delle risorse di
+esecuzione.
+
+Devi specificare che un processo è meno importante \--- e gli dovrebbe essere data una priorità
+più bassa \--- assegnandogli un valore alto di \textit{niceness} (futilità). Per default, ogni processo ha un
+niceness pari a zero. Un alto valore di niceness indica che al processo viene data una priorità di
+esecuzione minore; viceversa, un processo con un basso (negativo) niveness ottiene maggior
+tempo di esecuzione.
+
+Per eseguire un programma con un niceness diverso da zero, usa il comando \texttt{nice},
+specificando il valore niceness con l'opzione \texttt{-n}. Per esempio, questo è come dovresti invocare
+il comando ``\texttt{sort input.txt > output.txt}'', una lunga operazione di ordinamento
+con una priorità ridotta in modo che non rallenti troppo il sistema:
+\begin{listcodeBash}
+% nice -n 10 sort input.txt > output.txt
+\end{listcodeBash}
+
+Puoi usare il comando renice da riga di comando per cambiare il niceness di un processo in
+esecuzione.
+
+Per camiare il niceness di un processo in esecuzione programmaticamente, usa la funzione
+nice. Il suo argomento è un valore di incremento, che è aggiunto al valore niceness del pocesso
+che esso chiama. Ricorda che un valore positivo incrementa il valore niceness e quindi riduce la
+priorità di esecuzione del processo.
+
+Nota che solo un processo senza privilegi di root può eseguire un processo con un valore
+niceness negativo o ridurre il valore niceness di un processo in esecuzione. Ciò significa che
+puoi specificare valori negativi ai comandi nice e renice solo quando sei loggato come root, e
+solo un processo che è in esecuzione come root può passare valori negativi alla funzione nice.
+Ciò evita che gli utenti ordinari si accaparrino la priorità di esecuzione togliendola ad altri che
+stanno usando il sistema.
+
+\section{Segnali}\label{sec:3.3} % 3.3
+
+I segnali sono meccanismi per comunicare e manipolare i processi in Linux. L'argomento dei
+segnali è molto ampio; qui discutiamo su alcuni dei più importanti segnali e tecniche che sono
+usate per controllare i processi.
+
+Un segnale è un messaggio speciale inviato ad un processo. I segnali sono asincroni; quando
+un processo riceve un segnale, esso processa il segnale immediatamente, senza completare la
+funzione corrente o anche la corrente riga di codice. Ci sono diverse dozzine di segnali divesi,
+ognuno con un diverso significato. Ogni tipo di segnale è specificato dal suo numero di segnale,
+ma nei programmi, di solito si fa riferimento ai segnali tramite il loro nome. Su Linux, questi
+sono definiti in \texttt{/usr/include/bits/signum.h} (Non dovresti includere questo file
+header irettamente nei tuoi programmi, piuttosto usa \texttt{<signal.h>}.)
+
+Quando un processo riceve un segnale, può fare una delle diverse cose, dipendentemente
+dalle disposizioni del segnale. Per ogni segnale ci sono disposizioni di default, che determinano
+cosa accade al processo se il programma non specifica alcuni altri comportamenti. Per molti tipi
+di segnali, un programma può specificare alcuni altri comportamenti \--- tra ignorare il segnale o
+chiamare una funzione speciale \texttt{signal-handler} per rispondere al segnale. Se viene usato un
+gestore di segnale, l'esecuzione corrente del programma è messa in pausa, viene eseguito
+gestore del segnale e quando il gestore del segnale ritorna il programma riprende.
+
+Il sistema Linux invia i segnali ai processi in risposta a condizioni specifiche. Per esempio,
+\texttt{SIGBUS} (errore del bus), \texttt{SIGSEGV} (segmentation violation) e \texttt{SIGFPE} (floating point
+exception) possono essere inviati ad un processo che tenta di eseguire un'operazione illegale. Le
+disposizioni di default di questi segnali tentano di terminare il processo e produrre un file
+riassuntivo.
+
+Un processo può anche inviare un segnale ad un altro processo. Un uso comune di questo
+meccanismo è quello di terminare un altro processo inviandogli un segnale \texttt{SITGERM} o
+\texttt{SIGKILL}.\footnote{Qual'è la differenza? Il segnale \texttt{SIGTERM} chiede ad un processo di terminare; il
+processo può ignorare la richiesta mascherando o ignorando il segnale. Il segnale \texttt{SIGKILL}
+uccide sempre il processo immediatamente poiché il processo non può mascherare o ignorare il
+\texttt{SIGKILL}.} Un altro uso comune è di inviare un comando ad un programma in esecuzione. Due
+segnali ``userdefined'' (definiti dall'utente) sono riservati per questo scopo: \texttt{SIGUSR}1 e
+\texttt{SIGUSR2}. Qualche volta viene usato per questo scopo anche il segnale \texttt{SIGHUP},
+comunemente per svegliare un programma in pausa o causare ad un programma la rilettura del
+suo file di configurazione.
+
+La funzione \texttt{sigaction} può essere usata per settare una disposizione di un segnale. Il
+primo parametro è il numero del segnale. I successivi due parametri sono puntatori a strutture
+\texttt{sigaction}; il primo di essi contiene la disposizione desiderata per quel numero di segnale
+mentre il secondo riceve la disposizione precedente. Il campo più importante nella prima o
+seconda struttura \texttt{sigaction} è \texttt{sa\_handler}. Esso può prendere uno dei tre valori:
+\begin{itemize}
+\item{\texttt{SIG\_DFL}, che specifica la disposizione di default per il segnale.}
+\item{\texttt{SIG\_IGN}, che specifica che il segnale dovrebbe essere ignorato.}
+\item{Un puntatore ad una funzione che gestisce un segnale (signal-handler). La funzione
+dovrebbe prendere un parametro, il numero di segnale e restituire un \texttt{void}.}
+\end{itemize}
+
+Poiché i segnali sono asincroni, il programma principale può essere in uno stato molto fragile
+quando viene processato un segnale e quindi mentre mentre viene eseguita una funzione che
+gestisce il segnale.
+
+Un gestore di segnale dovrebbe effettuare il minimo lavoro necessario per rispondere al
+segnale e quindi restituire il controllo al programma principale (o terminare il programma). In
+molti casi, esso consiste semplicemente nel registrare il fatto che si è ricevuto un segnale. Il
+programma principale quindi verifica periodicamente se è stato ricevuto un segnale e reagisce di
+conseguenza.
+
+Per un gestore di segnale è possibile che sia interrotto dallo smistamento di un altro segnale.
+Anche se può sembrare un'occorrenza rara, se accade, sarà molto difficile diagnosticare e fare il
+debug del problema. (Questo è un esempio di una condizione rara, discussa nel \numnameref{cap:4}, \numnameref{sec:4.4}\marginpar{
+sezione 4.4 ``Sincronizzazione e sezioni critiche''}). Quindi, dovresti stare molto
+attento su cosa fa il tuo programma in un gestore di segnale.
+
+Anche assegnare un valore ad una variabile globale può essere pericoloso poiché
+l'assegnamento potrebbe essere effettuato in due o più istruzioni tra una e l'altra potrebbe
+presentarsi un secondo segnale, lasciando la variabile in uno stato corrotto. Se usi una variabile
+globale per memorizzare un segnale da una funzione gestore di segnali, essa dovrebbe essere
+del tipo speciale \texttt{sig\_atomic\_t}. Linux garantisce che gli assegnamenti a variabili di questo
+tipo sono effettuati in un'istruzione singola e quindi non possono essere interrotti a metà strada.
+In linux, \texttt{sig\_atomic\_t} è un \texttt{int} ordinario; infatti, gli assegnamenti ad interi che
+rappresentano la dimensione di un \texttt{int} o più piccolo, o a puntatori, sono atomici. Se vuoi
+scrivere un programma che sia portabile verso ogni sistema UNIX standard, comunque, usa
+\texttt{sig\_atomic\_t} per queste variabili globali.
+
+Questo abbozzo di programma nel listato 3.5, per esempio, usa una funzione gestore di
+segnali per contare il numero di volte che il programma riceve \texttt{SIGUSR1}, uno dei segnali
+riservati per l'utilizzo nella applicazioni.\\
+
+\listfromfile{sigusr1.c}{Usare un gestore di segnale}{list:3.5}
+	{ALP-listings/chapter-3/sigusr1.c}
+
+\section{Terminazione dei processi}\label{sec:3.4} % 3.4
+
+Normalmente, un processo termina in uno di due modi. O il programma che lo ha mandato in esecuzione chiama la funzione \texttt{exit}, o la funzione \texttt{main} del programma finisce.
+Ogni processo ha un codice di uscita: un numero che il processo restituisce al suo genitore. Il codice di uscita è l'argomento passato alla funzione \texttt{exit}, o il valore restituito dal \texttt{main}.
+
+Un processo può anche terminare non normalmente, in risposta ad un segnale. Per esempio, i segnali \texttt{SIGBUS}, \texttt{SIGSEGN} e \texttt{SIGFPE} menzionati precedentemente causano la terminazione del processo. Altri segnali sono usati per terminare il processo esplicitamente. Il segnale \texttt{SIGINT} è inviato
+ad un processo quando l'utente cerca di terminarlo digitando Ctrl+C nel proprio terminale.
+Il segnale \texttt{SIGTERM} è inviato dal comando \texttt{kill}. La disposizione di default per
+entrambi è quella di teminare il processo. Chiamandola funzione \texttt{abort}, un processo stesso si manda il senale \texttt{SIGABRT}, che emina il processo e produce un file core.
+Il segnale di terminazione più potente è \texttt{SIGKILL}, che termina un processo immediatamente e non può essere bloccato o gestito da un programma.
+
+Ognuno di questi segnali può essere inviato usando il comando \texttt{kill} specificando
+un argomento extra da riga di comando; per esempio, per terminare un processo che ha dei problemi inviandogli un \texttt{SIGKILL}, invoca la seguente, dove \texttt{pid} è il suo ID di processo:
+\begin{listcodeBash}
+% kill -KILL pid
+\end{listcodeBash}
+Per inviare un segnale da un programma, usa la funzione \texttt{kill}. Il primo parametro è l'ID del processo obiettivo. Il secondo parametro è il numero di segnale; usa \texttt{SIGTERM} per simulare il comportamento di default del comando \texttt{kill}. Per sempio, dove \texttt{child pid} contiene l'iID di processo del processo figlio, puoi usare la funzion \texttt{kill} per terminare un processo figlio da un processo padre chiamandolo in un modo simile a questo:
+\begin{listcodeBash}
+kill (child_pid, SIGTERM);
+\end{listcodeBash}
+Se usi la funzione \texttt{kill} includi gli header \texttt{<sys/types.h>} e \texttt{<signal.h>}.
+
+Per convenzione, il codice di uscita è usato per indicare quando un programma è stato eseguito correttamente. Un codice di uscita pari a zero indica la corretta esecuzione, mentre un codice di uscita diverso da zero indica che c'è stato un errore. Nell'ultimo caso, il valore particolare restituito può dare alcune indicazione sulla natura dell'errore. Sarebbe una buona idea riportare questa convenzione nei tuoi programmi poiché altri componenti del sistema GNU/Linux assumono che ci sia questo comportamento. Per esempio, la shell assume la presenza di questa convenzione quando colleghi più programmi con gli operatori \texttt{\&\&}
+(and logico) e \texttt{||} (or logico. Quindi, dovresti restituire zero dal \texttt{main} a meno che non si verifichi un errore.
+
+Con molte shell è possibile ottenere il codice di uscita del programma eseguito più recentemente usando la variabile speciale \texttt{\$?}. Ecco un esempio nel quale il comando \texttt{ls} è invocato due volte ed è mostrato il codice di uscita dopo ogni chiamata. Nel primo caso, \texttt{ls} viene eseguito correttamente e restituisce il codice di uscita zero. Nel secondo caso, \texttt{ls} incontra un errore (perché il nome del file specificato sulla riga di comando non esiste) e quindi restituisce un codice di uscita diverso da zero.
+\begin{listcodeBash}
+% ls /
+bin   coda  etc   lib         misc  nfs proc  sbin  usr
+boot  dev   home  lost+found  mnt   opt root  tmp   var
+% echo $?
+0
+% ls bogusfile
+ls: bogusfile: No such file or directory
+% echo $?
+1
+\end{listcodeBash}
+Nota che benché il tipo di parametro della funzione \texttt{exit} sia un \texttt{int} e la funzione \texttt{main} restituisca un \texttt{int}, Linux non riserva tutti i 32 bit del codice di ritorno. In fatti, dovresti usare solo codici di uscita compresi tra zero e 127. I codici di uscita superiori a 128 hanno uno speciale significato \--- quando un processo è terminato da un segnale, il suo codice di uscita è 128 più il numero del segnale.
+
+\subsection{Attendere che un processo termini}\label{subsec:3.4.1} % 3.4.1
+
+Se hai scritto ed eseguito l'esempio \texttt{fork} ed \texttt{exec} nel listato 3.4, dovresti aver notato che l'output del programma \texttt{ls} spesso appare dopo che il ``programma principale'' è già stato completato. Ciò accade perché il processo figlio, nel quale gira \texttt{ls}, è schedulato indipendentemente dal processo padre. Poiché Linux è un sistema operativo multitasking, entrambi i processi appaiono come eseguiti simultaneamente e non puoi predire quando il programma \texttt{ls} avrà una possibilità di essere eseguito, prima o dopo che venga eseguito il processo padre.
+
+In alcune situazioni, comunque, è preferibile che il processo padre aspetti fino a che uno o più processi figli non siano stati completati. Ciò può essere fatto con la famiglia di chiamate di sistema \texttt{wait}. Queste funzioni ti permettono di aspettare che un processo completi la propria esecuzione ed abilitare il processo padre ad ottenere informazioni sulla terminazione dei suoi processi figli. Ci sono quattro diverse chiamate di sistema nella famiglia \texttt{wait}; puoi sceglierle per ottenere poche o molte informazioni sul processo che è terminato e puoi scegliere se occuparti del processo figlio che è stato terminato.
+
+\subsection{La chiamata di sistema \textit{wait}}\label{subsec:3.4.2} % 3.4.2
+
+La funzione più semplice è chiamata semplicemente \texttt{wait}. Essa blocca il processo chiamante fino a che uno dei suoi processi figli non esce (o non c'è un errore). Esso restituisce un codice di stato tramite un argomento di tipo puntatore ad intero, dal quale puoi estrarre informazioni su come il processo figlio è uscito. Per esempio, la macro \texttt{WEXITSTATUS} estrae il codice di uscita del processo figlio.
+
+Puoi usare la macro \texttt{WIFEITED} per determinare dallo stato di uscita di un processo figlio se il processo è terminato normalmente (tramite la funzione \texttt{exit} o uscendo dal \texttt{main}) o è morto in seguito ad un segnale non gestito. Nell'ultimo caso, usa la macro \texttt{WTERMSIG} per estrarre, dal suo stato di uscita, il numero di segnale per il quale è morto.
+
+Qui c'è nuovamente la funzione \texttt{main} dall'esempio \texttt{fork} ed \texttt{exec}. Questa volta, il processo padre chiama \texttt{wait} fino a che il processo figlio, che è l'esecuzione del comando \texttt{ls}, non è finito.
+\begin{listcodeC}
+int main ()
+{
+  int child_status;
+
+  /* The argument list to pass to the ?ls? command. */
+  char* arg_list[] = {
+    ?ls?, /* argv[0], the name of the program. */
+    ?-l?,
+    ?/?,
+    NULL /* The argument list must end with a NULL. */
+};
+
+/* Spawn a child process running the ?ls? command. Ignore the
+   returned child process ID. */
+spawn (?ls?, arg_list);
+/* Wait for the child process to complete. */
+wait (&child_status);
+if (WIFEXITED (child_status))
+  printf (?the child process exited normally, with exit code %d\n?,
+          WEXITSTATUS (child_status));
+else
+  printf (?the child process exited abnormally\n?);
+
+return 0;
+}
+\end{listcodeC}
+In Linux sono disponibili molte chiamate di sistema simili, che sono più flessibili o forniscono più informazioni sull'uscita del processo figlio. La funzione \texttt{waitpid} può essere usata per attendere che finisca uno specifico processo figlio piuttosto che ogni processo figlio. La funzione \texttt{wait3} restituisce statistiche di utilizzo della CPU riguardo l'uscita del processo figlio e la funzione \texttt{wait4} ti permette di specificare altre opzioni riguardo al processo per il quale stare in attesa.
+
+\subsection{Processi zombie}\label{subsec:3.4.3} % 3.4.3
+Se un processo figlio termina mentre il suo genitore sta chiamando una funzione \texttt{wait}, il processo figlio scopare ed il suo stato di uscita è passato al suo padre tramite la chiamata \texttt{wait}. Ma cosa accade quando un processo figlio termina ed il processo figlio non sta chiamando \texttt{wait}? Esso semplicemente scopare? No, perché l'informazione sulla sua terminazione \--- come quella se è terminato normalmente e, se così, qual è il suo stato di uscita \--- andrebbe persa. Invece, quando un processo figli termina, è diventato un processo zombie.
+
+Un \textit{processo zombie} è un processo che è terminato ma non è stato ancora cancellato. È responsabilità del processo padre cancellare il proprio figlio zombie. Le funzioni \texttt{wait} fanno anche questo, così non è necessario verificare se il tuo processo figlio sta ancora girando prima di mettersi in attesa per questo. Supponi, per esempio, che un programma faccia il fork in un processo figlio, esegua qualche altra operazione, e quindi chiami \texttt{wait}. Se il processo figlio in quel momento non è ancora terminato, il processo padre resterà bloccato nella chiamata \texttt{wait} fino a che il processo figlio non abbia finito. Se il processo figlio finisce prima che il processo padre chiami \texttt{wait}, il processo figlio diventa uno zombie. Quando il processo padre chiama \texttt{wait}, viene estratto lo stato di uscita del figlio zombie, il processo figlio è cancellato e la chiamata \texttt{wait} ritorna immediatamente.
+
+Cosa accade se il processo padre non cancella il proprio figlio? Essi stanno in giro per il sistema, come processi zombie. Il programma nel listato 3.6 fa il fork in un processo figlio, che termina immediatamente e quindi aspetta per un minuto senza mai cancellare il processo figlio.\\
+
+\listfromfile{zombie.c}{Creare un processo zombie}{list:3.6}
+	{ALP-listings/chapter-3/zombie.c}
+Prova a compilare questo file in un eseguibile chiamato \texttt{make-zombie}. Eseguilo e, mentre è ancora in esecuzione, visualizza l'elenco dei processi nel sistema invocando il seguente comando in un'altra finestra:
+\begin{listcodeBash}
+% ps -e -o pid,ppid,stat,cmd
+\end{listcodeBash}
+Questo lista gli ID di processo, ID di processo padre, stato del processo e riga di comando del processo. Osserva che, in aggiunta al processo padre \texttt{make-zombie}, c'è un altro processo visualizzato \texttt{make-zombie}. Questo è il processo figlio; nota che l'ID del suo processo padre è l'ID del processo principale \texttt{make-zombie}. Il processo figlio è markato come \texttt{<defunct>}, ed il suo codice di uscita è Z, che sta per zombie.
+
+Cosa accade quando il programma principale \texttt{make-zombie} termina quando il processo padre esce senza aver mai chiamato \texttt{wait}? Il processo zombie sta ancora in giro? No \--- prova ad eseguire nuovamente \texttt{ps} e nota che entrambi i processi \texttt{make-zombie} sono andati via. Quando un programma termina, il suo figlio è ereditato da un processo speciale, il programma \texttt{init}, che gira sempre con l'ID di processo pari a 1 (Esso è il primo processo avviato quando Linux si avvia). Il processo \texttt{init} cancella automaticamente ogni processo figlio zombie che esso eredita.
+
+\subsection{Cancellare i figli in maniera asincrona}\label{subsec:3.4.4} % 3.4.4
+Se stai usando un processo figlio, semplicemente per eseguire (\texttt{exec}) un altro programma, è bene chiamare \texttt{wait} immediatamente nel processo padre, che si bloccherà fino a che il processo figlio non è stato completato. Ma speso, vorrai che il processo padre continui la sua esecuzione mentre uno o più figli vengono eseguiti in maniera asincrona. Come puoi essere sicuro di cancellare i processi figli che hanno completato la loro esecuzione in modo da non lasciare processi zombie, che consumano risorse di sistema, e stanno in giro?
+
+Un approccio per il processo padre potrebbe essere chiamare \texttt{wait3} o \texttt{wait4} periodicamente per cancellare figli zombie. Chiamare \texttt{wait} per questo scopo non funziona bene perché, se nessun figlio ha terminato, la chiamata bloccherà il processo padre finché uno dei figli non avrà terminato. Comunque, \texttt{wait3} e \texttt{wait4} prendono un parametro flag aggiuntivo, al quale puoi passare il valore flag \texttt{WNOHANG}. Con questo flag, la funzione gira in \textit{modalità nonblocking} \--- esso cancellerà un processo figlio terminato, se c'è, o semplicemente dice se non ce ne sono. Il valore di ritorno della chiamata è l'ID di processo del figlio terminato nel caso più comune, o zero nell'ultimo caso.
+
+Una soluzione più elegante è notificare al processo padre quando un figlio termina. Ci sono molti modi per farlo usando i metodi discussi nel \numnameref{cap:5}\marginpar{
+capitolo 5, ``Comunicazione tra processi''}, ma fortunatamente Linux lo fa al posto tuo, usando i segnali. Quando un processo figlio termina, Linux invia un segnale al processo padre, il segnale \texttt{SIGCHILD}. La disposizione di default di questo segnale è quella di non fare nulla, che è il motivo per il quale puoi non averlo notato prima.
+
+Comunque, un modo semplice per cancellare i processi figli è catturando il segnale \texttt{SIGCHILD}. Di certo, quando si cancella un processo figlio, è importante memorizzare il suo stato di terminazione, se questa informazione è necessaria, perché quando il processo sarà stato cancellato usando \texttt{wait}, questa informazione non sarà più disponibile. Il listato 3.7 mostra un esempio di un programma che usa il gestore \texttt{SIGCHILD} per cancellare i suoi processi figli.\\
+
+\listfromfile{sigchld.c}{Cancellare i figli gestendo SIGCHILD}{list:3.7}
+	{ALP-listings/chapter-3/sigchld.c}
+Nota come il gestore di segnale memorizza lo stato di uscita del processo figlio in una variabile globale, per mezzo della quale il programma principale vi può accedere. Poiché la variabile è assegnata in un gestore di segnale, il suo tipo è \texttt{sig\_atomic\_t}.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
