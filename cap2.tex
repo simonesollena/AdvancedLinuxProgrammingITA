@@ -1,6 +1,7 @@
 \chapter{Scrivere del buon software GNU/Linux}\label{cap:2}
 
-Questo capitolo copre alcune tecniche di base che usano molti programmatori GNU/Linux.
+QUESTO CAPITOLO COPRE ALCUNE TECNICHE DI BASE CHE USANO
+MOLTI PROGRAMMATORI GNU/Linux.
 Seguendo le linee guida presentate, sarai in grado di scrivere programmi che lavorano bene
 nell'ambiente GNU/Linux ed andare incontro alle aspettative degli utente GNU/Linux su come
 dovrebbero funzionare i programmi.
@@ -21,16 +22,16 @@ GNU/Linux. GNU/Linux fornisce anche altri modi per interagire con l'ambiente ope
 
 Esegui un programma dal prompt di shell digitando il nome del programma. Opzionalmente,
 puoi fornire al programma informazioni aggiuntive digitando una o più parole dopo il nome del
-programma, separate da spazi. Queste sono chiamate \textit{argomenti da riga di comando} (\textit{commandline
+programma, separate da spazi. Queste sono chiamate \textit{argomenti da riga di comando} (\textit{command-line
 arguments}). (Puoi anche includere un argomento che contiene spazi, racchiudendolo tra
-virgolette). Più generalmente, a questi ci si riferisce anche come la \textit{lista degli argomenti} del
+virgolette). Più generalmente, si fa riferimento a questi anche come la \textit{lista degli argomenti} del
 programma perché non è necessario che essi abbiano origine dalla riga di comando di shell. Nel
 \numnameref{cap:3}, vedrai un altro modo di chiamare un programma, nel quale un
 programma può specificare direttamente la lista degli argomenti di un altro programma.
 
 Quando un programma è chiamato da shell, la lista degli argomenti contiene l'intera linea di
 comando, includendo il nome del programma ed ogni argomento della riga di comando che può
-essere stato fornito. Supponi, per esempio, di chiamare il comando ls nella shell per mostrare il
+essere stato fornito. Supponi, per esempio, di chiamare il comando \texttt{ls} nella shell per mostrare il
 contenuto della directory root e le corrispondenti dimensioni dei files con questa riga:
 
 \begin{listcodeBash}
@@ -75,8 +76,8 @@ leggere (ad esempio, negli script di shell).}
 \end{itemize}
 
 Di solito, un programma le fornisce entrambe; una forma breve ed una forma lunga per
-molte opzioni che supporta, una per brevità e l'altra per chiarezza. Per esempio, molti
-programmi capiscono le opzioni \texttt{-h} e \texttt{--help}, e le trattano in modo identico. Normalmente,
+molte delle opzioni che supporta, una per brevità e l'altra per chiarezza. Per esempio, molti
+programmi capiscono le opzioni \texttt{-h} e \texttt{-{}-{}help}, e le trattano in modo identico. Normalmente,
 quando un programma è invocato dalla shell, ogni opzione che si vuole segue immediatamente
 il nome del programma. Alcune opzioni si aspettano di essere seguite immediatamente da un
 argomento. Molti programmi, per esempio, interpretano l'opzione \texttt{-{}-{}output foo} per
@@ -158,7 +159,7 @@ descrive le opzioni lunghe.
 \item {Ogni volta che chiami \texttt{getopt\_long}, esso verifica una singola opzione,
 restituendo la lettera dell'opzione breve per quell'opzione o \texttt{-1} se non sono trovate altre
 opzioni.}
-\item {Tipicamente, chiamerai \texttt{getopt\_long} in un \texttt{loop}, per preocessare tutte le
+\item {Tipicamente, chiamerai \texttt{getopt\_long} in un \texttt{loop}, per processare tutte le
 opzioni che l'utente ha specificato e tratterai le opzioni specifiche all'interno di uno
 switch.}
 \item {Se \texttt{getopt\_long} incontra una opzione non valida (un'opzione che non hai
@@ -200,7 +201,7 @@ sulla console. La funzione \texttt{fprintf} può essere usata per stampare sullo 
 esempio:
 
 \begin{listcodeC}
-fprintf (stderr, ("Erro: ..."));
+fprintf (stderr, ("Error: ..."));
 \end{listcodeC}
 
 Questi tre stream sono anche accessibili con i comandi di base di UNIX I/O (read, write, e
@@ -218,8 +219,8 @@ descrittore di file 1 (\texttt{stdout}). Nota che \texttt{2>\&1} deve seguire un
 esempio) ma deve precedere una ridirezione di pipe (il secondo esempio).
 
 Nota che \texttt{stdout} è bufferizzato. I dati scritti sullo \texttt{stdout} non sono inviati alla console (o
-altre periferiche, se è rediretto) fino a che il buffer non è pieno, il programma esce
-normalmente, o stdout è chiuso. Puoi azzerare il buffer chiamando la seguente:
+altre periferiche, se è rediretto) fino a che il buffer non si riempie, finché il programma esce
+normalmente, o finché stdout è chiuso. Puoi azzerare il buffer chiamando la seguente:
 
 \begin{listcodeC}
 fflush (stdout);
@@ -260,9 +261,9 @@ errore. Alcuni programmi usano differenti valori diversi da zero per i codici di
 distinguere errori specifici.
 
 Con molte shell è possibile ottenere i codici di uscita del programma eseguito più
-recentemente con la variabile speciale \$?. Qui c'è un esempio in cui il comando ls viene
+recentemente con la variabile speciale \texttt{\$?}. Qui c'è un esempio in cui il comando \texttt{ls} viene
 chiamato due volte ed i suoi codici di uscita sono stampati dopo ogni chiamata. Nel primo caso,
-ls viene eseguito correttamente e restituisce il codice di uscita zero. Nel secondo caso, ls
+\texttt{ls} viene eseguito correttamente e restituisce il codice di uscita zero. Nel secondo caso, \texttt{ls}
 restituisce un errore (perché il nome del file specificato sulla riga di comando non esiste) e
 quindi restituisce un codice di errore diverso da zero.
 
@@ -280,7 +281,7 @@ ls: bogusfile: No such file or directory
 
 Un programma C o C++ specifica il proprio codice di uscita restituendo quel valore dalla
 funzione \texttt{main}. Ci sono altri metodi usati per fornire codici di uscita, e codici di uscita speciali
-sono assegnati al programma che non termina in modo non normale (per un segnale). Di questi
+sono assegnati al programma che non termina in modo normale (per un segnale). Di questi
 si parlerà più avanti nel \autoref{cap:3}.
 
 \subsection{L'ambiente}\label{subsec:2.1.6} % 2.1.6
