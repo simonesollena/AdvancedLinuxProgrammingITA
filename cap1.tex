@@ -30,7 +30,7 @@ Se hai familiarità con un altro editor, puoi certamente usare quello. Nulla nel 
 dipende dall'utilizzo di Emacs. Se invece non hai ancora un editor preferito su linux, dovresti
 andare avanti con il mini-tutorial fornito qui di seguito.
 
-Se ti piace Emacs e vuoi imparare qulcosa in più a riguardo delle sue funzionalità avanzate, dovresti
+Se ti piace Emacs e vuoi imparare qulcosa in più riguardo le sue funzionalità avanzate, dovresti
 tenere in considerazione il fatto di leggere uno dei libri su Emacs disponibili. Un eccellente Tutorial
 è {\emph{Learning GNU Emacs}}, scritto da Debra Cameron, Bill Rosenbaltt, e Eric S. Raymond (O'Reilly, 1996).
 
@@ -50,7 +50,7 @@ Se non ti piace puntare e cliccare, puoi usare le scorciatoie da tastiera per ap
 automaticamente i files, salvare i files, ed uscire da Emacs. Per aprire un file digita {\tt{C-x C-f}}
 ({\tt{C-x}} significa premere il tasto Control e quindi premere il tasto x). Per salvare un file digita {\tt{C-x
 C-s}}. Per uscire da Emacs digita {\tt{C-x C-c}}. Se vuoi prendere un po' più confidenza con
-Emacs, scegli la voce ``Emacs Tutorial'' nel menù Help. Il tutoial ti fornisce alcuni consigli su
+Emacs scegli la voce ``Emacs Tutorial'' nel menù Help. Il tutoial ti fornisce alcuni consigli su
 come usare Emacs efficientemente.
 
 \subsection{Formattazione automatica}\label{subsec:1.1.2} % 1.1.2
@@ -61,7 +61,7 @@ formattare il codice. Emacs può fornire lo stesso tipo di funzionalità. Se apri 
 o C++, Emacs automaticamente mette in risalto il fatto che il file contiene del codice sorgente, e
 non del semplice testo. Se premi il tasto Tab in una riga vuota, Emacs muove il cursore in un
 punto di indentazione appropriato. Se premi il tasto di indentazione in una riga che contiene
-già del testo, Emacs indenta il testo. Così, per esempio, supponi di aver scritto la seguente:
+già del testo, Emacs indenta il testo. Così, per esempio, supponi di aver scritto quanto segue:
 \begin{listcodeC}
 int main ()
 {
@@ -87,7 +87,7 @@ tipo di documento, per implementare giochi\footnote{Prova ad eseguire il comando
 vuoi giocare ad un vecchio affascinante gioco di avventura su testo} e per implementare front
 ends di database.
 
-\subsection{Evidenziatura della sintassi}\label{subsec:1.1.3} % 1.1.3
+\subsection{Evidenziazione della sintassi}\label{subsec:1.1.3} % 1.1.3
 
 Oltre alla formattazione del codice, Emacs può rendere facile leggere codice C e C++
 colorando diversi elementi sintattici. Per esempio, Emacs può far apparire parole chiave di un
@@ -119,7 +119,7 @@ programmazione C e C++.
 Supponi di avere un progetto come quello del listato 1.2 con un file sorgente C++
 (\texttt{reciprocal.cpp}) e un file sorgente C (\texttt{main.c}) come
 nel listato \ref{list:1.1}. Di questi due file si
-supponga che vengano compilati e quindi linkati assieme per produrre un programma chiamato
+supponga che vengano compilati e quindi linkati assieme per generare un programma chiamato
 \texttt{recipocal}.\footnote{In Windows gli eseguibili solitamente hanno nomi che finisono in \texttt{.exe}. I
 programmi di Linux, d'altro canto, solitamente non hanno estensioni. Così, l'equivalente di
 Windows di questo programma sarebbe chiamato probabilmente \texttt{reciprocal.exe}; la
@@ -168,7 +168,7 @@ ragionevolmente grande. L'opzione \texttt{-I} è usata per dire a GCC dove cercar
 default GCC cerca nella directory corrente e nelle directory dove sono installati gli headers per
 le librerie standard. Quindi se hai bisogno di includere dei files header che si trovano da qualche
 altra parte servirà l'opzione \texttt{-I}. Supponiamo ad esempio che il tuo progetto abbia una
-directory per i files sorgente chiamata src ed un'altra chiamata \texttt{include}. Dovresti compilare
+directory per i files sorgenti chiamata \texttt{src} ed un'altra chiamata \texttt{include}. Dovresti compilare
 \texttt{reciprocal.cpp} come in questo esempio per indicare che \texttt{g++} deve usare, in
 aggiunta, la directory \texttt{../include} per trovare \texttt{reciprocal.hpp}:
 
