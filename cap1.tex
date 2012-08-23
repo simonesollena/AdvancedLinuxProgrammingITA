@@ -327,7 +327,7 @@ Se rimuovi i files oggetto che hai appena compilato, e digiti
 % make
 \end{listcodeBash}
 
-su riga di comando, vedrai quanto segue:
+sulla riga di comando, vedrai quanto segue:
 
 \begin{listcodeBash}
 % make
@@ -337,7 +337,7 @@ g++ -o reciprocal main.o reciprocal.o
 \end{listcodeBash}
 
 Puoi notare che \texttt{make} ha compilato automaticamente i file oggetto e fatto il link tra loro.
-Se adesso cambi \texttt{main.c} in qualche modo, e digiti di nuovo \texttt{make}, vedrai
+Se adesso fai qualche modifica a \texttt{main.c} e digiti di nuovo \texttt{make}, vedrai
 quanto segue:
 
 \begin{listcodeBash}
@@ -348,7 +348,7 @@ g++ -o reciprocal main.o reciprocal.o
 
 Puoi notare che \texttt{make} ha saputo compilare \texttt{main.o} e rifare il link del programma, ma non
 si è preoccupato di ricompilare \texttt{reciprocal.cpp} poiché nessuna delle dipendenze per
-\texttt{reciprocal.o} è stata cambiata.
+\texttt{reciprocal.o} ha subito cambiamenti.
 
 Il \texttt{\$(CFLAGS)} è una variabile di make. E' possibile definire questa variabile sia nello stesso
 \texttt{Makefile} che su riga di comando. \texttt{GNU make} sostituirà il valore della variabile durante
@@ -382,10 +382,10 @@ di Gary V.Vaughan, Ben Elliston,Tom Tromey, e Ian Lance Taylor (New Riders Publi
 \section{Debuggare con GNU Debugger (GDB)}\label{sec:1.4} % 1.4
 
 Il debugger è il programma che si usa per scoprire perché il proprio programma non si sta
-comportando nel modo in cui pensi dovrebbe comportarsi. Lo farai molto.\footnote{...finché il tuo
+comportando nel modo in cui pensi dovrebbe comportarsi. Lo userai spesso.\footnote{...finché il tuo
 porgramma non funzionerà per la prima volta} GNU Debugger (\texttt{GDB}) è il debugger usato da
 molti programmatori Linux. puoi usare \texttt{GDB} per vedere il tuo codice passo passo, impostare dei
-breakpoints ed esaminare il valore di variabili locali.
+punti di interruzione ed esaminare il valore delle variabili locali.
 
 \subsection{Compilare con Informazioni di Debugging}\label{subsec:1.4.1} % 1.4.1
 
@@ -403,7 +403,7 @@ g++ -g -o reciprocal main.o reciprocal.o
 
 Quando compili con \texttt{-g}, il compilatore include informazioni extra nei files oggetto e negli
 eseguibili. Il debugger usa queste informazioni per mostrare quali indirizzi corriposndono a
-quali linee nel codice sorgente, come stampare variabili locali, e così via
+quali linee e a quali files sorgente, come stampare variabili locali, e così via
 
 \subsection{Eseguire GDB}\label{subsec:1.4.2} % 1.4.2
 
@@ -451,8 +451,8 @@ at strtol.c:287
 Puoi vedere da questa schermata che il main ha chiamato la funzione \texttt{atoi} con un puntatore
 \texttt{NULL}, che è ciò che fa nascere i problemi.
 
-Usando il comando
-\texttt{up} puoi salire di due livelli nello stack per raggiungere il \texttt{main}:
+Puoi salire di due livelli nello stack usando il comando
+\texttt{up}  per raggiungere il \texttt{main}:
 
 \begin{listcodeBash}
 (gdb) up 2
@@ -544,7 +544,7 @@ in sezioni numerate; per i programmatori, le più importanti sono queste:
 \item (8) comandi di sistema/amministrativi
 \end{itemize}
 
-I numeri indicano sezioni di pagine di manuale. Le pagine di manuale di Linux sono
+I numeri indicano le sezioni delle pagine di manuale. Le pagine di manuale di Linux sono
 installate nel tuo sistema; usa il comando \texttt{man} per accedere ad esse. Per trovare una pagina di
 manuale digita semplicemente \texttt{man nome}, dove \texttt{nome} è il nome di un comando o di una
 funzione. In alcuni casi lo stesso nome si trova in più di una sezione; puoi specificare
@@ -610,15 +610,15 @@ broswer interno Info digitando \texttt{M-x info} o \texttt{C-h i}.
 È possibile imparare molto sulle funzioni di sistema disponibili e su come usarle guardando i
 files header del sistema. Questi risiedono in \texttt{/usr/include} e in \texttt{/usr/include/sys}. Se,
 per esempio, ottieni degli errori di compilazione dall'utilizzo di una chiamata di sistema, dai
-un'occhiata al file header corrispondente per verificare che la signature della funzione sia la
-stessa a quello che è descritto nella pagina di manuale.
+un'occhiata al file header corrispondente per verificare che la signature della funzione sia
+uguale a quella visualizzata nella pagina di manuale.
 
 Sui sistemi linux, gran parte dei dettagli fondamenteli su come lavorano le chiamate di sistema si
 riflette nei files header nelle directory \texttt{/usr/include/bits}, \texttt{/usr/include/asm}, e
 \texttt{/usr/include/linux}. Per esempio, i valori numerici dei segnali (descritti nella
-\numnameref{sec:3.3}, nel \numnameref{cap:3}) sono definiti in
+\numnameref{sec:3.3}, nel \numnameref{cap:3}) sono definiti in 
 \texttt{/usr/include/bits/signum.h}. Questi file header facilitano la lettura alle menti
-curiose. Tuttavia, non includerli nel programa; usa sempre i file header in \texttt{/usr/include}
+curiose. Tuttavia, non includere direttamente qeusti nel programa; usa sempre i file header in \texttt{/usr/include}
 come menzionato nella pagina di manuale per la funzione che stai usando.
 
 \subsection{Codice sorgente}\label{subsec:1.5.4} % 1.5.4
