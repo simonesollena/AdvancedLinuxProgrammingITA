@@ -43,8 +43,18 @@ riferimenti a capitoli/sezioni/sottosezioni, con titolo:
 
 note a margine:
 
+(attualmente utilizzate per riferimenti a capitoli o sezioni non ancora presenti,
+da rimuovere in futuro)
+
 	\marginpar{nota}
 
 nota a piè di pagina:
 
 	\footnote{nota}
+
+citazioni di testo con relativo titolo:
+
+	\begin{quote}
+		{\large\textbf{Titolo}}\\
+		testo citato
+	\end{quote}

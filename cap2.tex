@@ -557,7 +557,7 @@ funzioni per compiere i corrispondenti sotto-compiti. Dando gli input appropriat
 che una funzione produca il corretto output e relativi effetti collaterali.
 
 La realtà dell'hardware e del software dei computer si intromette in questo sogno idealizzato.
-I computer hanno risorse limitate; l'hardware sbaglia; molti programmi eseguiti allo stesso
+I computer hanno risorse limitate; l'hardware sbaglia; molti programmi vengono eseguiti allo stesso
 tempo; sia utenti che programmatori commettono degli errori. È spesso al confine tra
 applicazione e sistema operativo che si manifestano queste realtà. Quindi, quando si utilizzano
 le chiamate di sistema per accedere alle risorse di sistema, per eseguire operazioni di I/O, o per
@@ -608,7 +608,7 @@ Molte chiamate di sistema usano una variabile speciale chiamata \texttt{errno} p
 ulteriori informazioni in caso di fallimento.\footnote{Attualmente, per ragioni di sicurezza dei
 thread, \texttt{errno} è implementata come macro, ma usata come una variabile globale.} Quando
 una chiamta di sistema fallisce, il sistema setta la variabile \texttt{errno} ad un valore che indica cosa
-è andato storto. Poiché tutte le chiamate di sistema usa la stessa variabile \texttt{errno} per
+è andato storto. Poiché tutte le chiamate di sistema usano la stessa variabile \texttt{errno} per
 memorizzare le informazioni, dovresti copiare immediatamente il valore in un'altra variabile
 dopo il fallimento della chiamata di sistema. Il valore di \texttt{errno} verrà sovrascritto la prossima
 volta che farai una chiamata di sistema.
@@ -627,7 +627,7 @@ stream \texttt{stderr}. Passa a perror un prefisso come stringa di caratteri da 
 descrizione dell'errore, che solitamente dovrebbe includere il nome della funzione che è fallita.
 Se usi \texttt{perror} includi \texttt{<stdio.h>}.
 
-Il frammento di codice cerca di aprire un file; se l'apertura fallisce, esso stampa un
+Questo frammento di codice cerca di aprire un file; se l'apertura fallisce, esso stampa un
 messaggio di errore ed esce dal programma. Nota che la chiamata \texttt{open} restituisce un
 descrittore di file aperto se l'operazione di apertura ha avuto successo, o \texttt{-1} se l'operazione
 fallisce.
@@ -642,7 +642,7 @@ exit (1);
 \end{listcodeC}
 
 Dipendentemente dal tuo programma e dalla natura della chiamata di sistema, l'azione
-appropriata in caso di fallimento può essere di stampare un messaggio di errore, di cancellare
+appropriata in caso di fallimento può essere quella di stampare un messaggio di errore, di cancellare
 l'operazione, di far chiudere il programma, di ritentare oppure di ignorare l'errore. È importante
 comunque inserire in un modo o nell'altro una logica che gestisca tutte le possibili modalità di
 fallimento.
@@ -659,7 +659,8 @@ Ecco un frammento di codice che usa la chiamata \texttt{chown} per cambiare il p
 file dato da \texttt{path} all'utente da \texttt{user\_id}. Se la chiamata fillisce, il programma esegue l'azione
 in base al valore di \texttt{errno}. Nota che quando troviamo un possibile bug nel programma,
 usciamo usando \texttt{abort} o \texttt{assert}, che causa la generazione di un file \textit{core}. Ciò può esser
-utile per un debug post-mortem. Per altri errori non recuperabili, come la condizione di out-ofmemory,
+utile per un debug post-mortem. Per altri errori non recuperabili,
+come la condizione di out-of-memory,
 usciamo usando \texttt{exit} ed un valore diverso da zero perché un file core non sarebbe
 molto utile.
 
@@ -713,19 +714,19 @@ assert (rval == 0);
 \end{listcodeC}
 
 Ma se la chiamata fallisce, quest'alternativa non fornisce nessun aiuto per il riportare,
-maneggiare, o recuperare dagli errori.
+gestire, o riprendersi dagli errori.
 
 Se usi la prima forma, la seconda forma o qualche altra cosa intermedia dipende dai requisiti
-di scoprire gli errori e gestirli del tuo programma.
+di trovare gli errori e gestirli del tuo programma.
 
 \subsection{Errori ed allocazione delle risorse}\label{subsec:2.2.4} % 2.2.4
 
 Spesso, quando una chiamata di sistema fallisce, sarebbe opportuno annullare l'operazione
-corrente piuttosto che terminare il programma poiché potrebbe essere possibile un ripristino
+corrente ma non terminare il programma poiché potrebbe essere possibile un ripristino
 dall'errore. Un modo per farlo è quello di ritornare dalla funzione corrente, restituendo un
 codice alla chiamante che indichi l'errore.
 
-Se decidi di ritornare dal mezzo della funzione, è importante assicurarsi che ogni risorsa
+Se decidi di ritornare mentre l'esecuzione è nel mezzo della funzione, è importante assicurarsi che ogni risorsa
 nella funzione precedentemente allocata con successo sia prima deallocata. Le risorse possono
 includere memoria, descrittori di file, puntatori a file, file temporanei, sincronizzazione di
 oggetti, e così via. Altrimenti, se il tuo programma continua a girare, le risorse allocate prima
@@ -753,7 +754,7 @@ Il listato 2.6 mostra un esempio di come dovresti scrivere questa funzione.\\
 \listfromfile{readfile.c}{Liberare le risorse in condizioni non normali}{list:2.6}
 	{ALP-listings/chapter-2/readfile.c}
 
-Linux libera la memoria allocata, apre i file, e molte altre risorse quando un programma
+Linux libera la memoria allocata, file aperti, e molte altre risorse quando un programma
 termina, così non è necessario dellocare buffer e chiudere file prima di chiamare \texttt{exit}. Potresti
 aver bisogno di liberare manualmente altre risorse condivise, comunque, come file temporanei e
 memoria condivisa, che potrebbero potenzialmente persistere nel programma.
@@ -778,7 +779,7 @@ decidere che tipo di link è meglio per te.
 Un \textit{archivio} (o libreria statica) è semplicemente una collezione di file oggetto memorizzati in
 un singolo file. (Un archivio approssimativamente è l'equivalente di un file \texttt{.LIB} di Windows).
 Quando fornisci un archivio al linker, il linker cerca nell'archivio i file oggetto che gli servono,
-li estrae, e quindi ne fa il link al tuo programma come se tu gli avessi fornito quei file
+li estrae, e quindi ne fa il link nel tuo programma come se tu gli avessi fornito quei file
 direttamente.
 
 Puoi creare un archivio usando il comando \texttt{ar}. I file di archivio tradizionalmente usano
@@ -790,13 +791,13 @@ combinare \texttt{test1.o} e \texttt{test2.o} in un singolo archivio \texttt{lib
 
 Il flag \texttt{cr} dice ad \texttt{ar} di creare un archivio.\footnote{È possibile usare altri flag per rimuovere file da
 una archivio o per eseguire altre operazione nell'archivio. Queste operazioni sono usate
-raramente ma sono documentate nella pagina di manuale di ar.} Adesso puoi fare il link con
+raramente ma sono documentate nella pagina di manuale di \texttt{ar}.} Adesso puoi fare il link con
 questo archivio usando l'opzione \texttt{-ltest} con gcc o g++, come descritto nella \numnameref{subsec:1.2.2}, nel \numnameref{cap:1}.
 
 Quando il linker incontra un archivio sulla riga di comando, cerca nell'archivio tutte le
 definizioni di simboli (funzioni o variabili) che sono referenziate dai file oggetto, che sono già
 stati processati ma non ancora definiti. I file oggetto che definiscono questi simboli sono estratti
-dall'archivio ed inclusi nell'eseguibile finale. Poiché il linker cerca nell'archivio solo quando lo
+dall'archivio ed inclusi nell'eseguibile finale. Poiché il linker cerca l'archivio solo quando lo
 incontra sulla riga di comando, di solito ha senso mettere l'archivio alla fine della riga di
 comando. Per esempio, supponiamo che \texttt{test.c} contenta il codice nel listato 2.7 e \texttt{app.c}
 contenga il codice nel listato 2.8.\\
@@ -818,7 +819,7 @@ collect2: ld returned 1 exit status
 
 Il messaggio di errore indica che anche se \texttt{libtest.a} contiene una definizione di \texttt{f}, il
 linker non la trova. Ciò accade perché \texttt{libtest.a} è stato cercato quando è stato incontrato
-all'inizio, e q quel punto il linker non ha visto nessun riferimento a \texttt{f}.
+all'inizio, ed in quel punto il linker non ha visto alcun riferimento a \texttt{f}.
 
 D'altro canto, se usiamo questa linea, non avremo nessun errore:
 \begin{listcodeBash}
@@ -855,9 +856,9 @@ condiviso.
 
 \begin{quote}
 {\large\textbf{Position-Independent Code (PIC)}}\\
-PIC sta per codice a posizione indipendente (position-independen code). La
-funzione sta nel fatto che una libreria condivisa può essere caricata in diversi
-indirizzi in diversi programmi, così il codice nell'oggetto condiviso non deve
+PIC sta per codice a posizione indipendente (position-independen code). Le
+funzioni in una libreria condivisa possono essere caricate ad indirizzi diversi
+in diversi programmi, così il codice nell'oggetto condiviso non deve
 dipendere dall'indirizzo (o posizione) al quale è stato caricato. Questa
 considerazione non ha nessun impatto su di te, come programmatore, eccetto che
 devi ricordare di usare il flag -fPIC quando compili del codice che userai in una
@@ -872,16 +873,17 @@ Quindi combini il file oggetto in una libreria condivisa, come questa:
 L'opzione \texttt{-shared} dice al linker di prourre una libreria piuttosto che un eseguibile come
 di solito. Le librerie condivise usano l'estensione \texttt{.so}, che sta per shared object (oggetto
 condiviso). Come gli archivi statici, il nome inizia sempre con \texttt{lib} per indicare che il file è una
-libreria. Fare il link con una libreria condivisa è come fare il link con un archivio statico. Per
-esempio, la seguente riga farà il link con libtest.so se esso è nella directory corrente, altrimenti
-cercherà una libreria standard nel sistema:
+libreria.
+
+Fare il link con una libreria condivisa è come fare il link con un archivio statico. Per
+esempio, la seguente riga farà il link con libtest.so se esso è nella directory corrente
+o in una delle directory nei percorsi di ricerca standard del sistema:
 \begin{listcodeBash}
 % gcc -o app app.o -L. -ltest
 \end{listcodeBash}
-
 Supponiamo che siano disponibili entrambi \texttt{libtest.a} e \texttt{libtest.so}. A questo punto
 il linker dovrà scegliere una delle libreria e scartare l'altra. Il linker cerca in ogni directory
-(prima quelle specificate dall'opzione \texttt{-L}, e quindi nelle directory standard). Quando il linker
+(prima quelle specificate dall'opzione \texttt{-L}, e poi quelle nelle directory standard). Quando il linker
 trova una directory che contiene o \texttt{libtest.a} o \texttt{libtest.so}, smette la ricerca nelle
 directory. Se solo una delle due forme è presente nella directory, il linker sceglierà quella
 forma. Altrimenti, il linker sceglierà la versione in libreria condivisa, a meno che tu non gli dica
@@ -889,11 +891,11 @@ di fare altrimenti. Puoi usare l'opzione \texttt{-static} per far utilizzare gli
 esempio, la seguente linea userà l'archivio \texttt{libtest.a}, anche se la libreria \texttt{libtest.so} è
 pure disponibile.
 \begin{listcodeBash}
-% gcc -static -o app app.o -L. ?ltest
+% gcc -static -o app app.o -L. -ltest
 \end{listcodeBash}
 
 Il comando \texttt{ldd} mostra le librerie condivise che sono linkate nell'eseguibile. È necessario
-che queste librerie siano disponibili quando l'eseguibile è in esecuzione. Nota che \texttt{ldd} listerà
+che queste librerie siano disponibili quando l'eseguibile è in esecuzione. Nota che \texttt{ldd} elencherà
 una libreria aggiuntiva chiamata \texttt{ld-linux.so}, che è parte del meccanismo di linking
 dinamico di GNU/Linux.
 
@@ -939,7 +941,7 @@ bisogno di specificare esplicitamente. Per esempio, per compilare e fare il link
 programma \texttt{compute.c} che usa funzioni trigonometriche come \texttt{sin} e \texttt{cos}, devi richiamare
 questo codice:
 \begin{listcodeBash}
-% gcc -o compute compute.c ?lm
+% gcc -o compute compute.c -lm
 \end{listcodeBash}
 
 Se scrivi un programma C++ e fai il link usando il comando \texttt{c++} o \texttt{g++}, prenderai
@@ -983,23 +985,23 @@ dei simboli non risolti:
 \begin{listcodeBash}
 % gcc -static -o tifftest tifftest.c -ltiff
 /usr/bin/../lib/libtiff.a(tif_jpeg.o): In function
-?TIFFjpeg_error_exit?:
-tif_jpeg.o(.text+0x2a): undefined reference to ?jpeg_abort?
+	'TIFFjpeg_error_exit':
+tif_jpeg.o(.text+0x2a): undefined reference to 'jpeg_abort'
 /usr/bin/../lib/libtiff.a(tif_jpeg.o): In function
-?TIFFjpeg_create_compress?:
-tif_jpeg.o(.text+0x8d): undefined reference to ?jpeg_std_error?
-tif_jpeg.o(.text+0xcf): undefined reference to ?jpeg_CreateCompress?
+	'TIFFjpeg_create_compress':
+tif_jpeg.o(.text+0x8d): undefined reference to 'jpeg_std_error'
+tif_jpeg.o(.text+0xcf): undefined reference to 'jpeg_CreateCompress'
 ...
 \end{listcodeBash}
-
 Per fare il link di questo programma devi specificare le altre due librerie tu stesso:
 \begin{listcodeBash}
 % gcc -static -o tifftest tifftest.c -ltiff -ljpeg -lz
 \end{listcodeBash}
-
 Occasionalmente, due librerie saranno mutuamente dipendenti. In altre parole, il primo
 archivio farà riferimento a simboli definiti nel secondo archivio e vice versa. La situazione
-generalmente tira fuori mostra la scarsità di design, ma lo fa occasionalmente. Il linker cercherà
+generalmente mostra la scarsità di design, ma lo fa occasionalmente.
+In questo caso, nella riga di comando puoi indicare più volte una singola libreria.
+Il linker cercherà
 la libreria ogni volta che ne ha bisogno. Per esempio, questa linea causa la ricerca in
 \texttt{libfoo.a} più volte:
 \begin{listcodeBash}
@@ -1012,14 +1014,14 @@ programma verrà fatto con successo.
 \subsection{Pro e contro}\label{subsec:2.3.5} % 2.3.5
 
 Adesso che sai tutto riguardo gli archivi statici e le librerie condivise, probabilmente ti
-chiederai come usarle. Ci sono alcune considerazioni importanti da tenere a mente.
+chiederai come usarle. Ci sono poche altre importanti considerazioni da tenere a mente.
 
-Il principale vantaggio di una libreria condivisa è quelli di risparmiare spazio sul sistema nel
-quale il programma è installato. Se stati installando 10 programmi, ed essi fanno tutti uso della
+Il principale vantaggio di una libreria condivisa è quello di risparmiare spazio sul sistema nel
+quale il programma è installato. Se stai installando 10 programmi, ed essi fanno tutti uso della
 stessa libreria condivisa, risparmi molto spazio usando una libreria condivisa. Se invece hai
 utilizzato un archivio statico, l'archivio è incluso in tutti e 10 i programmi. Così, usando una
 libreria condivisa risparmi spazio su disco. Ciò riduce anche il tempo di download se il tuo
-programma lo si sta scaricando dal web.
+programma viene scaricato dal web.
 
 Un vantaggio correlato alle librerie condivise è che gli utenti possono aggiornare le librerie
 senza aggiornare tutti i programmi che dipendono da esse. Per esempio, supponi che hai creato
@@ -1060,7 +1062,7 @@ libreria condivisa chiamata \texttt{libtest.so} chiamando \texttt{dlopen} come q
 dlopen ('libtest.so', RTLD_LAZY)
 \end{listcodeC}
 (Il secondo parametro è un flag che indica come collegare i simboli nella libreria condivisa. Se
-vuoi altre informazioni puoi consultare le pagine di manuale online di dlopen, ma \texttt{RTLD\_LAZY}
+vuoi altre informazioni puoi consultare le pagine di manuale online di \texttt{dlopen}, ma \texttt{RTLD\_LAZY}
 è l'impostazione che ti serve di solito). Per usare le funzioni di caricamento dinamico, includi il
 file header \texttt{<dlfcn.h>} e fai il link con l'opzione \texttt{-ldl} per avere il collegamento alla libreria
 libdl.
@@ -1097,7 +1099,8 @@ condivisa e vuoi accedere ad essa con \texttt{dlsym}, la dovresti dichiarare com
 extern "C" void foo ();
 \end{listcodeC}
 
-Ciò evita che il compilatore ``distrugga'' il nome della funzione per trasformarlo in uno
+Ciò evita che il compilatore C++ ``distrugga'' il nome della funzione,
+cambiando il nome da \texttt{foo} ad uno differente, per trasformarlo in uno
 diverso che rappresenti codificate informazioni extra riguardo la funzione. Un compilatore C
 non distruggerà i nomi; userà qualunque nome che darai alla tua funzione o variabile.
 
