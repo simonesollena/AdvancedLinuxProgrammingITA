@@ -283,7 +283,7 @@ funzione corrente o anche la corrente riga di codice. Ci sono diverse dozzine di
 ognuno con un diverso significato. Ogni tipo di segnale è specificato dal suo numero di segnale,
 ma nei programmi, di solito si fa riferimento ai segnali tramite il loro nome. Su Linux, questi
 sono definiti in \texttt{/usr/include/bits/signum.h} (Non dovresti includere questo file
-header irettamente nei tuoi programmi, piuttosto usa \texttt{<signal.h>}.)
+header direttamente nei tuoi programmi, piuttosto usa \texttt{<signal.h>}.)
 
 Quando un processo riceve un segnale, può fare una delle diverse cose, dipendentemente
 dalle disposizioni del segnale. Per ogni segnale ci sono disposizioni di default, che determinano
@@ -322,8 +322,8 @@ seconda struttura \texttt{sigaction} è \texttt{sa\_handler}. Esso può prendere u
 dovrebbe prendere un parametro, il numero di segnale e restituire un \texttt{void}.}
 \end{itemize}
 
-Poiché i segnali sono asincroni, il programma principale può essere in uno stato molto fragile
-quando viene processato un segnale e quindi mentre mentre viene eseguita una funzione che
+Poiché i segnali sono asincroni, il programma principale può trovarsi in uno stato molto fragile
+nel momento in cui viene processato un segnale e quindi mentre viene eseguita una funzione che
 gestisce il segnale.
 
 Un gestore di segnale dovrebbe effettuare il minimo lavoro necessario per rispondere al
@@ -332,14 +332,14 @@ molti casi, esso consiste semplicemente nel registrare il fatto che si è ricevut
 programma principale quindi verifica periodicamente se è stato ricevuto un segnale e reagisce di
 conseguenza.
 
-Per un gestore di segnale è possibile che sia interrotto dallo smistamento di un altro segnale.
+È possibile che un gestore di segnale venga interrotto dall'invio di un altro segnale.
 Anche se può sembrare un'occorrenza rara, se accade, sarà molto difficile diagnosticare e fare il
-debug del problema. (Questo è un esempio di una condizione rara, discussa nel \numnameref{cap:4}, \numnameref{sec:4.4}\marginpar{
-sezione 4.4 ``Sincronizzazione e sezioni critiche''}). Quindi, dovresti stare molto
+debug del problema. (Questo è un esempio di una condizione rara, discussa nel \numnameref{cap:4}, \numnameref{sec:4.4}.
+Quindi, dovresti stare molto
 attento su cosa fa il tuo programma in un gestore di segnale.
 
 Anche assegnare un valore ad una variabile globale può essere pericoloso poiché
-l'assegnamento potrebbe essere effettuato in due o più istruzioni tra una e l'altra potrebbe
+l'assegnazione potrebbe essere effettuata in due o più istruzioni, e tra una e l'altra potrebbe
 presentarsi un secondo segnale, lasciando la variabile in uno stato corrotto. Se usi una variabile
 globale per memorizzare un segnale da una funzione gestore di segnali, essa dovrebbe essere
 del tipo speciale \texttt{sig\_atomic\_t}. Linux garantisce che gli assegnamenti a variabili di questo
