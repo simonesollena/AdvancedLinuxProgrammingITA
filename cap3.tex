@@ -53,7 +53,7 @@ Il comando \texttt{ps} mostra i processi che stanno girando nel sistema. La vers
 varianti di UNIX. Queste opzioni controllano quali processi sono listati e le informazioni a
 riguardo per ogni visualizzazione.
 
-Per default, invocare \texttt{ps} mostra i processi mostrati dal terminale o dalla finestra di terminale
+Per default, l'invocazione di \texttt{ps} mostra i processi mostrati dal terminale o dalla finestra di terminale
 nella quale \texttt{ps} è invocato. Per esempio:
 \begin{listcodeBash}
 % ps
@@ -62,7 +62,7 @@ PID     TTY     TIME      CMD
 21694   pts/8   00:00:00  ps
 \end{listcodeBash}
 
-L'invocazione di \texttt{ps} mostra due processi. Il primo, \texttt{bash}, è la \texttt{shell} in esecuzione in
+L'invocazione di \texttt{ps} mostra due processi. Il primo, \texttt{bash}, è la shell in esecuzione in
 questo terminale. Il secondo è l'istanza in esecuzione del programma \texttt{ps} stesso. La prima
 colonna, etichettata PID, mostra l'ID di processo di ognuno.
 
@@ -89,7 +89,7 @@ codici di campo. Puoi usare invece le opzioni -f (lista completa), -l (lista lun
 \end{quote}
 
 Ecco le prime righe ed ultime righe di output da questo comando nel mio sistema. Puoi
-notare output differenti, in dipendenza da cosa c'è in esecuzione nel tuo sistema.
+notare output differenti, in base a cosa c'è in esecuzione nel tuo sistema.
 \begin{listcodeBash}
 % ps -e -o pid,ppid,command
 PID     PPID    COMMAND
@@ -113,8 +113,8 @@ sulla linea di comando l'ID di processo del processo da uccidere.
 
 Il comando \texttt{kill} lavora inviando al processo un \texttt{SIGTERM}, o segnale di termine.\footnote{puoi
 anche usare il comando \texttt{kill} per inviare altri segnali a un processo. Questo è descritto nella
-\numnameref{sec:3.4}.} Ciò fa terminare il processo, finché il programma in
-esecuzione non prende esplicitamente o maschera il senale SIGTERM. I segnali sono descritti
+\numnameref{sec:3.4}.} Ciò fa terminare il processo, a meno che il programma in
+esecuzione non prenda esplicitamente o mascheri il senale SIGTERM. I segnali sono descritti
 nella \numnameref{sec:3.3}.
 
 \section{Creare processi}\label{sec:3.2} % 3.2
@@ -245,7 +245,7 @@ esecuzione.
 Devi specificare che un processo è meno importante \--- e gli dovrebbe essere data una priorità
 più bassa \--- assegnandogli un valore alto di \textit{niceness} (futilità). Per default, ogni processo ha un
 niceness pari a zero. Un alto valore di niceness indica che al processo viene data una priorità di
-esecuzione minore; viceversa, un processo con un basso (negativo) niveness ottiene maggior
+esecuzione minore; viceversa, un processo con un basso (negativo) niceness ottiene maggior
 tempo di esecuzione.
 
 Per eseguire un programma con un niceness diverso da zero, usa il comando \texttt{nice},
@@ -256,15 +256,15 @@ con una priorità ridotta in modo che non rallenti troppo il sistema:
 % nice -n 10 sort input.txt > output.txt
 \end{listcodeBash}
 
-Puoi usare il comando renice da riga di comando per cambiare il niceness di un processo in
+Puoi usare il comando \texttt{renice} da riga di comando per cambiare il niceness di un processo in
 esecuzione.
 
-Per camiare il niceness di un processo in esecuzione programmaticamente, usa la funzione
-nice. Il suo argomento è un valore di incremento, che è aggiunto al valore niceness del pocesso
+Per cambiare il niceness di un processo in esecuzione programmaticamente, usa la funzione
+\texttt{nice}. Il suo argomento è un valore di incremento, che è aggiunto al valore niceness del pocesso
 che esso chiama. Ricorda che un valore positivo incrementa il valore niceness e quindi riduce la
 priorità di esecuzione del processo.
 
-Nota che solo un processo senza privilegi di root può eseguire un processo con un valore
+Nota che solo un processo con privilegi di root può eseguire un processo con un valore
 niceness negativo o ridurre il valore niceness di un processo in esecuzione. Ciò significa che
 puoi specificare valori negativi ai comandi nice e renice solo quando sei loggato come root, e
 solo un processo che è in esecuzione come root può passare valori negativi alla funzione nice.
