@@ -414,21 +414,21 @@ finisce con ``XXXXXX'' (sei X maiuscole); \texttt{mkstemp} sostituisce le X con 
 tale che il nome del file sia univoco. Il valore di ritorno è un descrittore di file; a questo punto
 usa le funzioni della famiglia \texttt{write} per scrivere sul file temporaneo.
 
-I file temporanei creati con mkstemp non sono cancellati automaticamente. E' compito tuo
+I file temporanei creati con \texttt{mkstemp} non vengono cancellati automaticamente. E' compito tuo
 rimuovere il file temporaneo quando non è più usato. (I programmatori dovrebbero fare
 attenzione a cancellare i file temporanei; altrimenti il file system /tmp si riempirà, rendendo il
 sistema non funzionante). Se il file temporaneo serve solo per l'utilizzo interno e non verrà
 passato ad un altro programma, sarebbe una buona idea chiamare \texttt{unlink} nel file temporaneo
 immediatamente. La funzione \texttt{unlink} rimuove la voce della directory corrispondente al file,
 ma poiché i file in un file system hanno dei riferimenti, il file stesso non verrà rimosso fino a
-che non ci saranno più dei descrittori di file per quel file. Per questo motivi il tuo programma
+che non ci saranno più dei descrittori di file per quel file. Per questi motivi il tuo programma
 potrà continuare ad usare il file temporaneo, ed il file andrà via automaticamente non appena
 chiuderai il descrittore del file. Poiché Linux chiude i descrittori di file quando un programma
 termina, il file temporaneo verrà rimosso anche se il programma dovesse terminare in modo
 imprevisto.
 
-La coppia di funzioni nel listato 2.5 dimostra mkstemp. Usate insieme, queste funzioni
-rendono facile scrivere il buffer di una memoria in un file temporaneo (in modo tale che la
+La coppia di funzioni nel listato 2.5 dimostra \texttt{mkstemp}. Usate insieme, queste funzioni
+facilitano la scrittura di un buffer di memoria su un file temporaneo (in modo tale che la
 memoria possa essere liberata o riutilizzata) e rileggerlo successivamente.\\
 
 \listfromfile{temp\_file.c}{utilizzo di mkstemp}{list:2.5}
@@ -443,15 +443,16 @@ temporaneo, e restituisce un puntatore di file che punta a questo. Il file tempo
 puntatore al file viene chiuso (con \texttt{fclose}) o quando il programma termina.
 
 GNU/Linux fornisce molte altre funzioni per generare file temporanei e nomi di file
-temporanei, inclusi \texttt{mktemp}, \texttt{tmpnam} e \texttt{tempnam}. Comunque, non usare queste funzioni
+temporanei, inclusi \texttt{mktemp}, \texttt{tmpnam} e \texttt{tempnam}. Comunque,
+non usare queste funzioni poiché
 sono soggette ai problemi di sicurezza già descritti.
 
 \section{Codifica difensiva}\label{sec:2.2} % 2.2
 
 Scrivere programmi che girano correttamente durante l'utilizzo ``normale'' è difficile;
-scrivere programmi che si comportino decentemente in situazioni errori è ancora più duro.
+scrivere programmi che si comportino decentemente in situazioni errori è ancora più difficile.
 Questa sezione dimostra alcune tecniche di codifica per scovare velocemente i bug e per trovare
-e rimettersi in piedi nei problemi in un programma in esecuzione.
+e riprendersi dai problemi in un programma in esecuzione.
 
 Gli esempi di codice presentati successivamente in questo libro saltano volutamente il codice
 di controllo degli errori e di recupero poiché ciò potrebbe oscurare il funzionamento di base che
@@ -469,7 +470,7 @@ l'applicazione non è nelle mani dell'utente.
 Uno dei metodi più semplici per scovare condizioni inaspettate è la macro \texttt{assert} dello
 standard C. L'argomento da passare a questa macro è un'espressione Booleana. Il programma
 viene terminato se ciò che viene valutato dall'espressione è falso, dopo aver stampato un
-messaggio d'errore contenente il file sorgente e il numero di riga ed il testo dell'espressione. La
+messaggio d'errore contenente il file sorgente, il numero di riga ed il testo dell'espressione. La
 macro \texttt{assert} è molto utile per una grande varietà di controlli di consistenza interni al
 programma. Per esempio, usa \texttt{assert} per testare la validità degli argomenti di una funzione,
 per testare le precondizioni e postcondizioni delle chiamate di funzioni (e chiamate di metodi in
@@ -494,9 +495,8 @@ espressione utilizzata con asert non abbia effetti collaterali. Specialmente, no
 chiamate delle funzioni all'interno dell'espressione assert, assegnare variabili o usare operatori
 di modifica come ++. Supponi, per esempio, di chiamare una funzione \texttt{do\_something}
 ripetutamente in un loop. La funzione \texttt{do\_something} restituisce zero in caso di successo e
-
 un valore diverso da zero in caso di fallimento, ma ti aspetti che la funzione non fallisca mai nel
-tuo programma. Potresti quindi essere tentato a scrivere:
+tuo programma. Potresti quindi essere tentato di scrivere:
 
 \begin{listcodeC}
 for (i = 0; i < 100; ++i)
@@ -504,7 +504,7 @@ for (i = 0; i < 100; ++i)
 \end{listcodeC}
 
 Comunque, potresti scoprire che questo controllo a runtime impone al programma troppe
-penality di prestazioni e decidere successivamente di compilare con \texttt{NDEBUG} definito. Ciò
+penalità di prestazioni e decidere successivamente di compilare con \texttt{NDEBUG} definito. Ciò
 rimuoverà interamente la chiamata \texttt{assert}, così l'espressione non sarà mai valutata e
 \texttt{do\_something} non verrà mai chiamata. Piuttosto potresti scrivere questo:
 \begin{listcodeC}
@@ -528,7 +528,7 @@ valido. Il messaggio di errore generato da \texttt{\{assert (pointer != NULL) \}
 \begin{verbatim}
 Assertion 'pointer != ((void *)0)' failed.
 \end{verbatim}
-Fornisce molte più informazioni che il messaggio di errore che ne risulterebbe se il tuo
+Fornisce molte più informazioni rispetto al messaggio di errore che ne risulterebbe se il tuo
 programma facesse riferimento ad un puntatore nullo:
 \begin{verbatim}
 Segmentation fault (core dumped)

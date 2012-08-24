@@ -18,6 +18,7 @@ ____________________
 Sintassi caratteri e comandi utilizzati:
 
 virgolette aperte e chiuse:
+
 	`` e ''
 
 Listati da file:
