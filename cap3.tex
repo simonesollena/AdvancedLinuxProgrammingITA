@@ -1,10 +1,11 @@
 \chapter{Processi}\label{cap:3}
 
-Un'istanza in esecuzione di un programma è chiamata processo. Se hai due finestre di
-terminale visualizzate a schermo, probabilmente stai eseguendo lo stesso programma terminale
-due volte \--- hai due processi di terminale. Ogni finestra di terminale è probabilmente una shell
-in esecuzione; ogni shell è un altro processo. Quando invochi un comando da una shell, il
-programma corrispondente è eseguito in un nuovo processo; il processo schell ricomincia
+UN'ISTANZA DI UN PROGRAMMA IN ESECUZIONE È CHIAMATA PROCESSO.
+Se hai due finestre di
+terminale visualizzate a schermo, con buone probabilità stai eseguendo due volte lo stesso programma terminale
+\--- hai due processi di terminale. Ogni finestra di terminale è probabilmente una shell
+in esecuzione; ogni shell in esecuzione è un altro processo. Quando invochi un comando da una shell, il
+programma corrispondente è eseguito in un nuovo processo; il processo schell si riprende
 quando i processi sono finiti.
 
 I programmatori avanzati spesso usano più processi cooperanti in una singola applicazione
@@ -24,7 +25,7 @@ esecuzione sul tuo computer.
 \subsection{ID dei processi}\label{subsec:3.1.1}
 
 Ogni processo in un sistema Linux è identificato dal suo ID di processo univoco, al queale
-spesso ci si riferisce come pid. Gli ID dei processi sono numeri a 16 bit assegnati
+spesso ci si riferisce come \textit{pid}. Gli ID dei processi sono numeri a 16 bit assegnati
 sequenzialmente da Linux quando viene creato un nuovo processo.
 
 Ogni processo inoltre ha un processo padre (ad eccezione del processo speciale \texttt{init},
