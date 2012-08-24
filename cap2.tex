@@ -297,7 +297,7 @@ esempio:
 \begin{itemize}
 \item USER Contiene il tuo nome utente.
 \item HOME Coniene il percorso della tua home directory.
-\item{PATH Contiene una lista separata da due punti di directory nelle quali Linux cerca i comandi che invochi}
+\item{PATH Contiene una lista di directory separate dai due punti nelle quali Linux cerca i comandi che invochi}
 \item{DISPLAY Contiene il nome ed il numero di display del server X Window nel quale
 appariranno le finestre dell'interfaccia grafica X Window.}
 \end{itemize}
@@ -337,7 +337,7 @@ Per settare o cancellare variabili d'ambiente, usa rispettivamente le funzioni \
 
 Enumerare tutte le variabili d'ambiente è un po' difficile. Per farlo puoi accedere ad una
 speciale variabile globale chiamata \texttt{environ}, definita nella libreria GNU C. Questa variabile,
-di tipo \texttt{char**}, è un array di puntatori a stringhe di caratteri terminato da NULL. Ogni stringa
+di tipo \texttt{char**}, è un array di puntatori a stringhe di caratteri che terminano con NULL. Ogni stringa
 contiene una variabile d'ambiente, nella forma \texttt{VARIABILE=valore}.
 
 Il programma del listato 2.3, per esempio, stampa semplicemente l'intero ambiente facendo
@@ -354,19 +354,19 @@ Così, per esempio, i programmi che esegui dalla shell, possono esaminare i valor
 d'ambiente che hai settato nella shell.
 
 Le variabili d'ambiente sono comunemente usate per comunicare informazioni di
-configurazione ai programmi. Supponi, per esempio, che stai scrivendo un programma che si
+configurazione ai programmi. Supponi, per esempio, di star scrivendo un programma che si
 collega ad un server internet per ottenere alcune informazioni. Potresti scrivere il programma in
 modo tale che il nome del server sia specificato da riga di comando. Comunque, supponi che il
 nome del server non sia qualcosa che l'utente cambia molto spesso. Puoi usare in questo caso
 una speciale variabile d'ambiente \--- detta \texttt{SERVER\_NAME} \--- per specificare il nome del server;
 se questa variabile non esiste, viene usato un valore di default. Una parte del tuo programma
-potrebbe apparire a quello mostrato nel listato 2.4.
+potrebbe somigliare a quello mostrato nel listato 2.4.
 
 \listfromfile{client.c}{Parte di un programma client di rete}{list:2.4}
 	{ALP-listings/chapter-2/client.c}
 
 Sopponi che il programma sia chiamato \texttt{client}. Assumendo che non hai settato la
-variabile \texttt{SERVER\_NAME}, è usato il valore di default per il nome del server:
+variabile \texttt{SERVER\_NAME}, viene utilizzato il valore di default per il nome del server:
 
 \begin{listcodeBash}
 % client
@@ -391,7 +391,7 @@ delle seguente "insidie":
 \item{Più di una istanza del tuo programma può essere eseguita simultaneamente (dallo
 stesso utente o diversi utenti). Le istanze dovrebbero usare diversi nomi dei files
 temporanei cosicché non vadano in collisione.}
-\item{I permessi dei file temporanei dovrebbero essere settato in modo che utenti non
+\item{I permessi dei file temporanei dovrebbero essere settati in modo che utenti non
 autorizzati non possano alterare l'esecuzione del programma modificando o sostituendo
 un file temporaneo.}
 \item{I nomi dei file temporanei dovrebbero essere generati in modo tale che non possano
@@ -410,7 +410,7 @@ I/O di UNIX (\texttt{open}, \texttt{write}, e così via) o le funzioni di stream 
 La funzione \texttt{mkstemp} crea un file temporaneo il cui nome è univoco da un modello di nomi
 di file, crea il file con gli opportuni permessi cosicché solo l'utente corrente vi possa accedere e
 aprire il file per lettura/scrittura. Il modello del nome del file è una stringa di caratteri che
-finisce con ?XXXXXX? (sei X maiuscole); \texttt{mkstemp} sostituisce le X con dei caratteri in modo
+finisce con ``XXXXXX'' (sei X maiuscole); \texttt{mkstemp} sostituisce le X con dei caratteri in modo
 tale che il nome del file sia univoco. Il valore di ritorno è un descrittore di file; a questo punto
 usa le funzioni della famiglia \texttt{write} per scrivere sul file temporaneo.
 

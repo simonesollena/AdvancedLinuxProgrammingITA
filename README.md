@@ -12,3 +12,38 @@ Per la generazione del pdf è stato utilizzato il comando
 `pdflatex alp.tex`
 
 In caso di problemi nel riconoscimento dei caratteri nel sorgente LaTeX provare a visualizzare i documenti impostando nel proprio editor la codifica ISO-8859-1 o Windows-1252.
+
+____________________
+
+Sintassi caratteri e comandi utilizzati:
+
+virgolette aperte e chiuse:
+	`` e ''
+
+Listati da file:
+
+	\listfromfile{nomefile visualizzato}{descrizione}{riferimento list:X.Y}
+		{percorso/nomefile}
+
+Codice in C:
+	\begin{listcodeC}
+		codice codice codice
+	\end{listcodeC}
+
+Codice in Basch
+
+	\begin{listcodeBash}
+		codice
+	\end{listcodeBash}
+
+riferimenti a capitoli/sezioni/sottosezioni, con titolo:
+
+	\numnameref{subsec:x.y.z}
+
+note a margine:
+
+	\marginpar{nota}
+
+nota a piè di pagina:
+
+	\footnote{nota}
