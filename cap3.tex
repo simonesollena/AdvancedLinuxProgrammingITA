@@ -170,7 +170,9 @@ Così, in cosa differiscono i due processi? Primo, il processo figlio è un nuovo 
 quindi ha un nuovo ID di processo, diverso dall'ID del suo processo padre. Un modo per un
 programma per distinguere quando è nel processo padre o nel processo figlio è chiamare
 \texttt{getpid}. Comunque, la funzione \texttt{fork} fornisce diversi valori di ritorno ai processi padre e
-figlio \--- un processo ``va dentro'' la chiamata \texttt{fork} e due processi ``vengono fuori'', con differenti valori di ritorno. Il valore di ritorno nel processo padre è l'ID di processo del figlio. Il valore di ritorno nel processo figlio è zero. Poiché nessun processo ha un ID di
+figlio \--- un processo ``va dentro'' la chiamata \texttt{fork} e due processi ``vengono fuori'',
+con differenti valori di ritorno. Il valore di ritorno nel processo padre è l'ID di processo del figlio.
+Il valore di ritorno nel processo figlio è zero. Poiché nessun processo ha un ID di
 processo pari a zero, ciò rende facile per il programma che sta girando sapere se è nel processo
 padre o figlio.
 
@@ -358,30 +360,54 @@ riservati per l'utilizzo nella applicazioni.\\
 
 \section{Terminazione dei processi}\label{sec:3.4} % 3.4
 
-Normalmente, un processo termina in uno di due modi. O il programma che lo ha mandato in esecuzione chiama la funzione \texttt{exit}, o la funzione \texttt{main} del programma finisce.
-Ogni processo ha un codice di uscita: un numero che il processo restituisce al suo genitore. Il codice di uscita è l'argomento passato alla funzione \texttt{exit}, o il valore restituito dal \texttt{main}.
+Normalmente, un processo termina in uno di due modi. O il programma in esecuzione chiama
+la funzione \texttt{exit}, o la funzione \texttt{main} del programma finisce.
+Ogni processo ha un codice di uscita: un numero che il processo restituisce al suo genitore.
+Il codice di uscita è l'argomento passato alla funzione \texttt{exit}, o il valore restituito dal \texttt{main}.
 
-Un processo può anche terminare non normalmente, in risposta ad un segnale. Per esempio, i segnali \texttt{SIGBUS}, \texttt{SIGSEGN} e \texttt{SIGFPE} menzionati precedentemente causano la terminazione del processo. Altri segnali sono usati per terminare il processo esplicitamente. Il segnale \texttt{SIGINT} è inviato
-ad un processo quando l'utente cerca di terminarlo digitando Ctrl+C nel proprio terminale.
-Il segnale \texttt{SIGTERM} è inviato dal comando \texttt{kill}. La disposizione di default per
-entrambi è quella di teminare il processo. Chiamandola funzione \texttt{abort}, un processo stesso si manda il senale \texttt{SIGABRT}, che emina il processo e produce un file core.
-Il segnale di terminazione più potente è \texttt{SIGKILL}, che termina un processo immediatamente e non può essere bloccato o gestito da un programma.
+Un processo può anche terminare non normalmente, in risposta ad un segnale. Per esempio,
+i segnali \texttt{SIGBUS}, \texttt{SIGSEGV} e \texttt{SIGFPE} menzionati precedentemente
+causano la terminazione del processo. Altri segnali sono usati per terminare il processo
+esplicitamente. Il segnale \texttt{SIGINT} è inviato
+ad un processo quando l'utente cerca di terminarlo premendo Ctrl+C nel proprio terminale.
+Il segnale \texttt{SIGTERM} è inviato dal comando \texttt{kill}. La direttiva di default per
+entrambi è quella di teminare il processo. Chiamando la funzione \texttt{abort}, un processo
+stesso si manda il senale \texttt{SIGABRT}, che emina il processo e produce un file core.
+Il segnale di terminazione più potente è \texttt{SIGKILL}, che termina un processo
+immediatamente e non può essere bloccato o gestito da un programma.
 
 Ognuno di questi segnali può essere inviato usando il comando \texttt{kill} specificando
-un argomento extra da riga di comando; per esempio, per terminare un processo che ha dei problemi inviandogli un \texttt{SIGKILL}, invoca la seguente, dove \texttt{pid} è il suo ID di processo:
+un argomento extra da riga di comando; per esempio, per terminare un processo che ha dei
+problemi inviandogli un \texttt{SIGKILL}, invoca la seguente, dove \texttt{pid} è il suo ID di processo:
 \begin{listcodeBash}
 % kill -KILL pid
 \end{listcodeBash}
-Per inviare un segnale da un programma, usa la funzione \texttt{kill}. Il primo parametro è l'ID del processo obiettivo. Il secondo parametro è il numero di segnale; usa \texttt{SIGTERM} per simulare il comportamento di default del comando \texttt{kill}. Per sempio, dove \texttt{child pid} contiene l'iID di processo del processo figlio, puoi usare la funzion \texttt{kill} per terminare un processo figlio da un processo padre chiamandolo in un modo simile a questo:
+Per inviare un segnale da un programma, usa la funzione \texttt{kill}. Il primo parametro
+è l'ID del processo obiettivo. Il secondo parametro è il numero di segnale; usa \texttt{SIGTERM}
+per simulare il comportamento di default del comando \texttt{kill}. Per sempio, dove
+\texttt{child pid} contiene l'iID di processo del processo figlio, puoi usare la funzion
+\texttt{kill} per terminare un processo figlio da un processo padre chiamandolo in un
+modo simile a questo:
 \begin{listcodeBash}
 kill (child_pid, SIGTERM);
 \end{listcodeBash}
 Se usi la funzione \texttt{kill} includi gli header \texttt{<sys/types.h>} e \texttt{<signal.h>}.
 
-Per convenzione, il codice di uscita è usato per indicare quando un programma è stato eseguito correttamente. Un codice di uscita pari a zero indica la corretta esecuzione, mentre un codice di uscita diverso da zero indica che c'è stato un errore. Nell'ultimo caso, il valore particolare restituito può dare alcune indicazione sulla natura dell'errore. Sarebbe una buona idea riportare questa convenzione nei tuoi programmi poiché altri componenti del sistema GNU/Linux assumono che ci sia questo comportamento. Per esempio, la shell assume la presenza di questa convenzione quando colleghi più programmi con gli operatori \texttt{\&\&}
-(and logico) e \texttt{||} (or logico. Quindi, dovresti restituire zero dal \texttt{main} a meno che non si verifichi un errore.
+Per convenzione, il codice di uscita è usato per indicare se un programma è stato eseguito
+correttamente. Un codice di uscita pari a zero indica la corretta esecuzione, mentre un codice
+di uscita diverso da zero indica che c'è stato un errore. Nell'ultimo caso, il valore particolare
+restituito può dare alcune indicazione sulla natura dell'errore. Sarebbe una buona idea riportare
+questa convenzione nei tuoi programmi poiché altri componenti del sistema GNU/Linux assumono
+che ci sia questo comportamento. Per esempio, la shell assume la presenza di questa convenzione
+quando colleghi più programmi con gli operatori \texttt{\&\&} (and logico) e \texttt{||} (or logico.
+Quindi, dovresti restituire zero dal \texttt{main} a meno che non si verifichi un errore.
 
-Con molte shell è possibile ottenere il codice di uscita del programma eseguito più recentemente usando la variabile speciale \texttt{\$?}. Ecco un esempio nel quale il comando \texttt{ls} è invocato due volte ed è mostrato il codice di uscita dopo ogni chiamata. Nel primo caso, \texttt{ls} viene eseguito correttamente e restituisce il codice di uscita zero. Nel secondo caso, \texttt{ls} incontra un errore (perché il nome del file specificato sulla riga di comando non esiste) e quindi restituisce un codice di uscita diverso da zero.
+Con molte shell è possibile ottenere il codice di uscita del programma eseguito più recentemente
+usando la variabile speciale \texttt{\$?}. Ecco un esempio nel quale il comando \texttt{ls} è invocato
+due volte ed è mostrato il codice di uscita dopo ogni chiamata. Nel primo caso, \texttt{ls} viene
+eseguito correttamente e restituisce il codice di uscita zero. Nel secondo caso, \texttt{ls} incontra
+un errore (perché il nome del file specificato sulla riga di comando non esiste) e quindi restituisce
+un codice di uscita diverso da zero.
 \begin{listcodeBash}
 % ls /
 bin   coda  etc   lib         misc  nfs proc  sbin  usr
@@ -393,80 +419,160 @@ ls: bogusfile: No such file or directory
 % echo $?
 1
 \end{listcodeBash}
-Nota che benché il tipo di parametro della funzione \texttt{exit} sia un \texttt{int} e la funzione \texttt{main} restituisca un \texttt{int}, Linux non riserva tutti i 32 bit del codice di ritorno. In fatti, dovresti usare solo codici di uscita compresi tra zero e 127. I codici di uscita superiori a 128 hanno uno speciale significato \--- quando un processo è terminato da un segnale, il suo codice di uscita è 128 più il numero del segnale.
+Nota che benché il tipo di parametro della funzione \texttt{exit} sia un \texttt{int} e la funzione
+\texttt{main} restituisca un \texttt{int}, Linux non riserva tutti i 32 bit del codice di ritorno.
+In fatti, dovresti usare solo codici di uscita compresi tra zero e 127. I codici di uscita superiori
+a 128 hanno uno speciale significato \--- quando un processo è terminato da un segnale, il
+suo codice di uscita è 128 più il numero del segnale.
 
 \subsection{Attendere che un processo termini}\label{subsec:3.4.1} % 3.4.1
 
-Se hai scritto ed eseguito l'esempio \texttt{fork} ed \texttt{exec} nel listato 3.4, dovresti aver notato che l'output del programma \texttt{ls} spesso appare dopo che il ``programma principale'' è già stato completato. Ciò accade perché il processo figlio, nel quale gira \texttt{ls}, è schedulato indipendentemente dal processo padre. Poiché Linux è un sistema operativo multitasking, entrambi i processi appaiono come eseguiti simultaneamente e non puoi predire quando il programma \texttt{ls} avrà una possibilità di essere eseguito, prima o dopo che venga eseguito il processo padre.
+Se hai scritto ed eseguito l'esempio \texttt{fork} ed \texttt{exec} nel listato 3.4, dovresti
+aver notato che l'output del programma \texttt{ls} spesso appare dopo che il ``programma
+principale'' è già stato completato. Ciò accade perché il processo figlio, nel quale gira
+\texttt{ls}, è schedulato indipendentemente dal processo padre. Poiché Linux è un sistema
+operativo multitasking, entrambi i processi appaiono come eseguiti simultaneamente e non
+puoi predire quando il programma \texttt{ls} avrà una possibilità di essere eseguito, prima
+o dopo che venga eseguito il processo padre.
 
-In alcune situazioni, comunque, è preferibile che il processo padre aspetti fino a che uno o più processi figli non siano stati completati. Ciò può essere fatto con la famiglia di chiamate di sistema \texttt{wait}. Queste funzioni ti permettono di aspettare che un processo completi la propria esecuzione ed abilitare il processo padre ad ottenere informazioni sulla terminazione dei suoi processi figli. Ci sono quattro diverse chiamate di sistema nella famiglia \texttt{wait}; puoi sceglierle per ottenere poche o molte informazioni sul processo che è terminato e puoi scegliere se occuparti del processo figlio che è stato terminato.
+In alcune situazioni, comunque, è preferibile che il processo padre aspetti fino a che uno o
+più processi figli non siano stati completati. Ciò può essere fatto con la famiglia di chiamate
+di sistema \texttt{wait}. Queste funzioni ti permettono di aspettare che un processo completi
+la propria esecuzione ed abilitare il processo padre ad ottenere informazioni sulla terminazione
+dei suoi processi figli. Ci sono quattro diverse chiamate di sistema nella famiglia \texttt{wait};
+puoi scegliere di ottenere poche o molte informazioni sul processo che è terminato e puoi
+scegliere se interessarti su quale processo figlio è stato terminato.
 
-\subsection{La chiamata di sistema \textit{wait}}\label{subsec:3.4.2} % 3.4.2
+\subsection{Le chiamate di sistema \textit{wait}}\label{subsec:3.4.2} % 3.4.2
 
-La funzione più semplice è chiamata semplicemente \texttt{wait}. Essa blocca il processo chiamante fino a che uno dei suoi processi figli non esce (o non c'è un errore). Esso restituisce un codice di stato tramite un argomento di tipo puntatore ad intero, dal quale puoi estrarre informazioni su come il processo figlio è uscito. Per esempio, la macro \texttt{WEXITSTATUS} estrae il codice di uscita del processo figlio.
+La funzione più semplice è chiamata semplicemente \texttt{wait}. Essa blocca il processo
+chiamante fino a che uno dei suoi processi figli non esce (o non c'è un errore). Esso restituisce
+un codice di stato tramite un argomento di tipo puntatore ad intero, dal quale puoi estrarre
+informazioni su come il processo figlio è uscito. Per esempio, la macro \texttt{WEXITSTATUS}
+estrae il codice di uscita del processo figlio.
 
-Puoi usare la macro \texttt{WIFEITED} per determinare dallo stato di uscita di un processo figlio se il processo è terminato normalmente (tramite la funzione \texttt{exit} o uscendo dal \texttt{main}) o è morto in seguito ad un segnale non gestito. Nell'ultimo caso, usa la macro \texttt{WTERMSIG} per estrarre, dal suo stato di uscita, il numero di segnale per il quale è morto.
+Puoi usare la macro \texttt{WIFEXITED} per determinare dallo stato di uscita di un processo
+figlio se il processo è terminato normalmente (tramite la funzione \texttt{exit} o uscendo dal
+\texttt{main}) o è morto in seguito ad un segnale non gestito. Nell'ultimo caso, usa la macro
+\texttt{WTERMSIG} per estrarre, dal suo stato di uscita, il numero di segnale per il quale è morto.
 
-Qui c'è nuovamente la funzione \texttt{main} dall'esempio \texttt{fork} ed \texttt{exec}. Questa volta, il processo padre chiama \texttt{wait} fino a che il processo figlio, che è l'esecuzione del comando \texttt{ls}, non è finito.
+Qui c'è nuovamente la funzione \texttt{main} dall'esempio \texttt{fork} ed \texttt{exec}.
+Questa volta, il processo padre chiama \texttt{wait} per attendere fino a che il processo
+figlio, che è l'esecuzione del comando \texttt{ls}, non è finito.
 \begin{listcodeC}
 int main ()
 {
   int child_status;
 
-  /* The argument list to pass to the ?ls? command. */
+  /* The argument list to pass to the "ls" command. */
   char* arg_list[] = {
-    ?ls?, /* argv[0], the name of the program. */
-    ?-l?,
-    ?/?,
+    "ls", /* argv[0], the name of the program. */
+    "-l",
+    "/",
     NULL /* The argument list must end with a NULL. */
 };
 
-/* Spawn a child process running the ?ls? command. Ignore the
+/* Spawn a child process running the "ls" command. Ignore the
    returned child process ID. */
-spawn (?ls?, arg_list);
+spawn ("ls", arg_list);
 /* Wait for the child process to complete. */
 wait (&child_status);
 if (WIFEXITED (child_status))
-  printf (?the child process exited normally, with exit code %d\n?,
+  printf ("the child process exited normally, with exit code %d\n",
           WEXITSTATUS (child_status));
 else
-  printf (?the child process exited abnormally\n?);
+  printf ("the child process exited abnormally\n");
 
 return 0;
 }
 \end{listcodeC}
-In Linux sono disponibili molte chiamate di sistema simili, che sono più flessibili o forniscono più informazioni sull'uscita del processo figlio. La funzione \texttt{waitpid} può essere usata per attendere che finisca uno specifico processo figlio piuttosto che ogni processo figlio. La funzione \texttt{wait3} restituisce statistiche di utilizzo della CPU riguardo l'uscita del processo figlio e la funzione \texttt{wait4} ti permette di specificare altre opzioni riguardo al processo per il quale stare in attesa.
+In Linux sono disponibili molte chiamate di sistema simili, che sono più flessibili o
+forniscono più informazioni sull'uscita del processo figlio. La funzione \texttt{waitpid}
+può essere usata per attendere che finisca uno specifico processo figlio piuttosto che
+ogni processo figlio. La funzione \texttt{wait3} restituisce statistiche di utilizzo della
+CPU riguardo l'uscita del processo figlio e la funzione \texttt{wait4} ti permette di
+specificare altre opzioni riguardo a quale processo attendere.
 
 \subsection{Processi zombie}\label{subsec:3.4.3} % 3.4.3
-Se un processo figlio termina mentre il suo genitore sta chiamando una funzione \texttt{wait}, il processo figlio scopare ed il suo stato di uscita è passato al suo padre tramite la chiamata \texttt{wait}. Ma cosa accade quando un processo figlio termina ed il processo figlio non sta chiamando \texttt{wait}? Esso semplicemente scopare? No, perché l'informazione sulla sua terminazione \--- come quella se è terminato normalmente e, se così, qual è il suo stato di uscita \--- andrebbe persa. Invece, quando un processo figli termina, è diventato un processo zombie.
+Se un processo figlio termina mentre il suo genitore sta chiamando una funzione \texttt{wait},
+il processo figlio scompare ed il suo stato di uscita è passato al suo padre tramite la chiamata \texttt{wait}.
+Ma cosa accade quando un processo figlio termina ed il processo figlio non sta chiamando \texttt{wait}?
+Esso semplicemente scopare? No, perché l'informazione sulla sua terminazione \--- come quella se è
+terminato normalmente e, se così, qual è il suo stato di uscita \--- andrebbe persa. Invece, quando un
+processo figlio termina, diventa un processo zombie.
 
-Un \textit{processo zombie} è un processo che è terminato ma non è stato ancora cancellato. È responsabilità del processo padre cancellare il proprio figlio zombie. Le funzioni \texttt{wait} fanno anche questo, così non è necessario verificare se il tuo processo figlio sta ancora girando prima di mettersi in attesa per questo. Supponi, per esempio, che un programma faccia il fork in un processo figlio, esegua qualche altra operazione, e quindi chiami \texttt{wait}. Se il processo figlio in quel momento non è ancora terminato, il processo padre resterà bloccato nella chiamata \texttt{wait} fino a che il processo figlio non abbia finito. Se il processo figlio finisce prima che il processo padre chiami \texttt{wait}, il processo figlio diventa uno zombie. Quando il processo padre chiama \texttt{wait}, viene estratto lo stato di uscita del figlio zombie, il processo figlio è cancellato e la chiamata \texttt{wait} ritorna immediatamente.
+Un \textit{processo zombie} è un processo che è terminato ma non è stato ancora cancellato.
+È responsabilità del processo padre cancellare il proprio figlio zombie. Le funzioni \texttt{wait} 
+anno anche questo, così non è necessario verificare se il tuo processo figlio sta ancora girando
+prima di mettersi in attesa per questo. Supponi, per esempio, che un programma faccia il fork
+in un processo figlio, esegua qualche altra operazione, e quindi chiami \texttt{wait}. Se il processo
+figlio in quel momento non è ancora terminato, il processo padre resterà bloccato nella chiamata
+\texttt{wait} fino a che il processo figlio non abbia finito. Se il processo figlio finisce prima che il
+processo padre chiami \texttt{wait}, il processo figlio diventa uno zombie. Quando il processo
+padre chiama \texttt{wait}, viene estratto lo stato di uscita del figlio zombie, il processo figlio è
+cancellato e la chiamata \texttt{wait} ritorna immediatamente.
 
-Cosa accade se il processo padre non cancella il proprio figlio? Essi stanno in giro per il sistema, come processi zombie. Il programma nel listato 3.6 fa il fork in un processo figlio, che termina immediatamente e quindi aspetta per un minuto senza mai cancellare il processo figlio.\\
+Cosa accade se il processo padre non cancella il proprio figlio? Essi stanno in giro per il sistema,
+come processi zombie. Il programma nel listato 3.6 fa il fork in un processo figlio, che termina
+immediatamente e quindi aspetta per un minuto senza mai cancellare il processo figlio.\\
 
 \listfromfile{zombie.c}{Creare un processo zombie}{list:3.6}
 	{ALP-listings/chapter-3/zombie.c}
-Prova a compilare questo file in un eseguibile chiamato \texttt{make-zombie}. Eseguilo e, mentre è ancora in esecuzione, visualizza l'elenco dei processi nel sistema invocando il seguente comando in un'altra finestra:
+Prova a compilare questo file in un eseguibile chiamato \texttt{make-zombie}. Eseguilo e,
+mentre è ancora in esecuzione, visualizza l'elenco dei processi nel sistema invocando il
+seguente comando in un'altra finestra:
 \begin{listcodeBash}
 % ps -e -o pid,ppid,stat,cmd
 \end{listcodeBash}
-Questo lista gli ID di processo, ID di processo padre, stato del processo e riga di comando del processo. Osserva che, in aggiunta al processo padre \texttt{make-zombie}, c'è un altro processo visualizzato \texttt{make-zombie}. Questo è il processo figlio; nota che l'ID del suo processo padre è l'ID del processo principale \texttt{make-zombie}. Il processo figlio è markato come \texttt{<defunct>}, ed il suo codice di uscita è Z, che sta per zombie.
+Questo elenca gli ID di processo, ID di processo padre, stato del processo e riga di comando
+del processo. Osserva che, in aggiunta al processo padre \texttt{make-zombie}, c'è un altro
+processo visualizzato \texttt{make-zombie}. Questo è il processo figlio; nota che l'ID del suo
+processo padre è l'ID del processo principale \texttt{make-zombie}. Il processo figlio è markato
+come \texttt{<defunct>}, ed il suo codice di uscita è Z, che sta per zombie.
 
-Cosa accade quando il programma principale \texttt{make-zombie} termina quando il processo padre esce senza aver mai chiamato \texttt{wait}? Il processo zombie sta ancora in giro? No \--- prova ad eseguire nuovamente \texttt{ps} e nota che entrambi i processi \texttt{make-zombie} sono andati via. Quando un programma termina, il suo figlio è ereditato da un processo speciale, il programma \texttt{init}, che gira sempre con l'ID di processo pari a 1 (Esso è il primo processo avviato quando Linux si avvia). Il processo \texttt{init} cancella automaticamente ogni processo figlio zombie che esso eredita.
+Cosa accade quando il programma principale \texttt{make-zombie} termina nel momento in cui
+il processo padre esce senza aver mai chiamato \texttt{wait}? Il processo zombie sta ancora in giro?
+No \--- prova ad eseguire nuovamente \texttt{ps} e nota che entrambi i processi
+\texttt{make-zombie} sono andati via. Quando un programma termina, il suo figlio è ereditato
+da un processo speciale, il programma \texttt{init}, che gira sempre con l'ID di processo pari
+a 1 (Esso è il primo processo avviato quando Linux si avvia). Il processo \texttt{init} cancella
+automaticamente ogni processo figlio zombie che esso eredita.
 
 \subsection{Cancellare i figli in maniera asincrona}\label{subsec:3.4.4} % 3.4.4
-Se stai usando un processo figlio, semplicemente per eseguire (\texttt{exec}) un altro programma, è bene chiamare \texttt{wait} immediatamente nel processo padre, che si bloccherà fino a che il processo figlio non è stato completato. Ma speso, vorrai che il processo padre continui la sua esecuzione mentre uno o più figli vengono eseguiti in maniera asincrona. Come puoi essere sicuro di cancellare i processi figli che hanno completato la loro esecuzione in modo da non lasciare processi zombie, che consumano risorse di sistema, e stanno in giro?
+Se stai usando un processo figlio, semplicemente per eseguire (\texttt{exec}) un altro programma,
+è bene chiamare \texttt{wait} immediatamente nel processo padre, che si bloccherà fino a che il
+processo figlio non è stato completato. Ma speso, vorrai che il processo padre continui la sua
+esecuzione mentre uno o più figli vengono eseguiti in maniera asincrona. Come puoi essere
+sicuro di cancellare i processi figli che hanno completato la loro esecuzione in modo da non
+lasciare processi zombie, che consumano risorse di sistema, e stanno in giro?
 
-Un approccio per il processo padre potrebbe essere chiamare \texttt{wait3} o \texttt{wait4} periodicamente per cancellare figli zombie. Chiamare \texttt{wait} per questo scopo non funziona bene perché, se nessun figlio ha terminato, la chiamata bloccherà il processo padre finché uno dei figli non avrà terminato. Comunque, \texttt{wait3} e \texttt{wait4} prendono un parametro flag aggiuntivo, al quale puoi passare il valore flag \texttt{WNOHANG}. Con questo flag, la funzione gira in \textit{modalità nonblocking} \--- esso cancellerà un processo figlio terminato, se c'è, o semplicemente dice se non ce ne sono. Il valore di ritorno della chiamata è l'ID di processo del figlio terminato nel caso più comune, o zero nell'ultimo caso.
+Un approccio per il processo padre potrebbe essere chiamare \texttt{wait3} o \texttt{wait4}
+periodicamente per cancellare figli zombie. Chiamare \texttt{wait} per questo scopo non
+funziona bene perché, se nessun figlio ha terminato, la chiamata bloccherà il processo padre
+finché uno dei figli non avrà terminato. Comunque, \texttt{wait3} e \texttt{wait4} prendono
+un parametro flag aggiuntivo, al quale puoi passare il valore flag \texttt{WNOHANG}. Con questo
+flag, la funzione gira in \textit{modalità nonblocking} \--- esso cancellerà un processo figlio
+terminato, se c'è, o semplicemente dice se non ce ne sono. Il valore di ritorno della chiamata
+è l'ID di processo del figlio terminato nel caso più comune, o zero nell'ultimo caso.
 
-Una soluzione più elegante è notificare al processo padre quando un figlio termina. Ci sono molti modi per farlo usando i metodi discussi nel \numnameref{cap:5}\marginpar{
-capitolo 5, ``Comunicazione tra processi''}, ma fortunatamente Linux lo fa al posto tuo, usando i segnali. Quando un processo figlio termina, Linux invia un segnale al processo padre, il segnale \texttt{SIGCHILD}. La disposizione di default di questo segnale è quella di non fare nulla, che è il motivo per il quale puoi non averlo notato prima.
+Una soluzione più elegante è notificare al processo padre quando un figlio termina. Ci sono molti
+modi per farlo usando i metodi discussi nel \numnameref{cap:5}, ma fortunatamente Linux lo fa
+al posto tuo, usando i segnali. Quando un processo figlio termina, Linux invia un segnale al processo
+padre, il segnale \texttt{SIGCHILD}. La disposizione di default di questo segnale è quella di non fare
+nulla, che è il motivo per il quale puoi non averlo notato prima.
 
-Comunque, un modo semplice per cancellare i processi figli è catturando il segnale \texttt{SIGCHILD}. Di certo, quando si cancella un processo figlio, è importante memorizzare il suo stato di terminazione, se questa informazione è necessaria, perché quando il processo sarà stato cancellato usando \texttt{wait}, questa informazione non sarà più disponibile. Il listato 3.7 mostra un esempio di un programma che usa il gestore \texttt{SIGCHILD} per cancellare i suoi processi figli.\\
+Comunque, un modo semplice per cancellare i processi figli è catturando il segnale
+\texttt{SIGCHILD}. Di certo, quando si cancella un processo figlio, è importante memorizzare
+il suo stato di terminazione, se questa informazione è necessaria, perché quando il processo
+sarà stato cancellato usando \texttt{wait}, questa informazione non sarà più disponibile.
+Il listato 3.7 mostra un esempio di un programma che usa il gestore \texttt{SIGCHILD} per
+cancellare i suoi processi figli.\\
 
 \listfromfile{sigchld.c}{Cancellare i figli gestendo SIGCHILD}{list:3.7}
 	{ALP-listings/chapter-3/sigchld.c}
-Nota come il gestore di segnale memorizza lo stato di uscita del processo figlio in una variabile globale, per mezzo della quale il programma principale vi può accedere. Poiché la variabile è assegnata in un gestore di segnale, il suo tipo è \texttt{sig\_atomic\_t}.
+Nota come il gestore di segnale memorizza lo stato di uscita del processo figlio in una variabile
+globale, per mezzo della quale il programma principale vi può accedere. Poiché la variabile è
+assegnata in un gestore di segnale, il suo tipo è \texttt{sig\_atomic\_t}.
 
 
 
