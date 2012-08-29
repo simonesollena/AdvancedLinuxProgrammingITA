@@ -1,33 +1,87 @@
 \chapter{Threads}\label{cap:4}
 
-I thread, come i processi, sono un meccanismo per permettere ad un programma di fare più di una cosa allo stesso tempo. Come con i processi, i thread appaiono in esecuzione concorrente; Il kernel di Linux li schedula in maniera sincrona, interrompendo ogni thread da un momento all'altro per dare agli altri la possibilità di andare in esecuzione.
+I thread, come i processi, sono un meccanismo per permettere ad un programma di
+fare più di una cosa allo stesso tempo. Come con i processi, i thread appaiono
+in esecuzione concorrente; Il kernel di Linux li schedula in maniera sincrona,
+interrompendo ogni thread da un momento all'altro per dare agli altri la
+possibilità di andare in esecuzione.
 
-Concettualmente, un thread esiste in un processo. I thread sono unità di esecuzione più piccole dei processi. Quando invochi un programma, Linux crea un nuovo processo ed in quel processo crea un singnolo thread, che esegue il programma sequenzialmente. Questo thread può creare altri thread; tutti questi thread eseguono lo stesso programma programma nello stesso processo, ma ogni thread può essere l'esecuzione di una diversa parte del programma in qualsiasi momento.
+Concettualmente, un thread esiste in un processo. I thread sono unità di
+esecuzione più piccole dei processi. Quando invochi un programma, Linux crea un
+nuovo processo ed in quel processo crea un singnolo thread, che esegue il
+programma sequenzialmente. Questo thread può creare altri thread; tutti questi
+thread eseguono lo stesso programma nello stesso processo, ma ogni thread può
+essere l'esecuzione di una diversa parte del programma in qualsiasi momento.
 
-Abbiamo visto come un programma può fare il fork in un processo figlio. Il processo figlio inizialmente gira nel suo programma padre, con la memoria virtuale del padre, descrittori di file e così via copiati. Il processo figlio può modificare la propria memoria, chiudere descrittori di file, e simili, senza effetti sul padre, e vice versa. Quando un programma crea un altro thread, comunque, non viene copiato nulla. Il thread creatore ed il thread creato condividono lo stesso spazio di memoria, descrittori di file ed altre risorse di sistema con l'originale. Se un thread cambia il valore di una variabile, per esempio, l'altro thread di conseguenza vedrà il valore modificato. Similmente, se un thread chiude un descrittore di file, gli altri thread non potranno leggere o scrivere in quel descrittore di file. Poiché un processo e tutti i suoi thread possono eseguire solo un programma per volta, se ogni thread all'interno di un processo chiama una delle funzioni \texttt{exec}, tutti gli altri thread vengono terminati (il nuovo programma può, di certo, creare nuovi thread).
-GNU/Linux implementa le API di thread standard POSIX API (conosciute come \textit{pthreads}). Tutte le funzioni di thread e tipi di dati sono dichiarati nel file header \texttt{<pthread.h>}. Le funzioni pthread non sono incluse nella libreria C standard. Piuttosto, esse sono in \texttt{libpthread}, così devi aggiungere \texttt{-lpthread} alla riga di comando quando fai il link del tuo programma.
+Abbiamo visto come un programma può fare il fork in un processo figlio. Il
+processo figlio inizialmente gira nel suo programma padre, con la memoria
+virtuale del padre, descrittori di file e così via copiati. Il processo figlio
+può modificare la propria memoria, chiudere descrittori di file, e simili, senza
+effetti sul padre, e vice versa. Quando un programma crea un altro thread,
+comunque, non viene copiato nulla. Il thread creatore ed il thread creato
+condividono lo stesso spazio di memoria, descrittori di file ed altre risorse di
+sistema con l'originale. Se un thread cambia il valore di una variabile, per
+esempio, l'altro thread di conseguenza vedrà il valore modificato. Similmente,
+se un thread chiude un descrittore di file, gli altri thread non potranno
+leggere o scrivere in quel descrittore di file. Poiché un processo e tutti i
+suoi thread possono eseguire solo un programma per volta, se ogni thread
+all'interno di un processo chiama una delle funzioni \texttt{exec}, tutti gli
+altri thread vengono terminati (il nuovo programma può, di certo, creare nuovi
+thread).
+
+GNU/Linux implementa le API di thread standard POSIX (conosciute come
+\textit{pthreads}). Tutte le funzioni di thread e tipi di dati sono
+dichiarati nel file header \texttt{<pthread.h>}. Le funzioni pthread non sono
+incluse nella libreria C standard. Piuttosto, esse sono in \texttt{libpthread},
+quindi devi aggiungere \texttt{-lpthread} alla riga di comando quando fai il
+link del tuo programma.
 
 \section{Creazione dei thread}\label{sec:4.1} % 4.1
 
-Ogni thread in un processo è identificato da un \textit{thread ID}. Quando si fa riferimento agli ID di thread nei programmi C o C++, si usa il tipo \texttt{pthread\_t}.
+Ogni thread in un processo è identificato da un \textit{thread ID}. Quando si fa
+riferimento agli ID di thread nei programmi C o C++, si usa il tipo
+\texttt{pthread\_t}.
 
-Dopo la creazione, ogni thread esegue una \textit{funzione thread}. Questa è una funzione ordinaria e contiene il codice che il thread dovrebbe eseguire. Quando la funzione ritorna, il thread esiste. Su GNU/Linux, le funzioni thread prendono un singolo parametro, di tipo \texttt{void*}, ed hanno un tipo di ritorno \texttt{void*}. Il parametro è l'\textit{argormento del thread}: GNU/Linux passa il valore nel thread senza guardarlo. Il tuo programma può usare questo parametro per passare i dati ad un nuovo thread. Similmente, il tuo programma può usare il valore di ritorno per passare dati da un thread esistente al suo programma creatore.
+Dopo la creazione, ogni thread esegue una \textit{funzione thread}. Questa è una
+funzione ordinaria e contiene il codice che il thread dovrebbe eseguire. Quando
+la funzione ritorna, il thread esiste. Su GNU/Linux, le funzioni thread prendono
+un singolo parametro, di tipo \texttt{void*}, ed hanno un tipo di ritorno
+\texttt{void*}. Il parametro è l'\textit{argormento del thread}: GNU/Linux passa
+il valore nel thread senza guardarlo. Il tuo programma può usare questo
+parametro per passare i dati ad un nuovo thread. Similmente, il tuo programma
+può usare il valore di ritorno per passare dati da un thread esistente al suo
+programma creatore.
 
-La funzione \texttt{pthread\_create} crea un nuovo thread. La usi assieme ai seguenti:
+La funzione \texttt{pthread\_create} crea un nuovo thread. La usi assieme ai
+seguenti:
 \begin{enumerate}
-\item{Un puntatore alla variabile \texttt{pthread\_t}, nel quale è memorizzato l'ID di thread del nuovo thread}
-\item{Un puntatore ad un oggetto \textit{attributo thread}. Questo oggetto controlla i dettagli di come i thread interagiscono con il resto del programma. Se passi \texttt{NULL} come attributo di thread, verrà creato un thread con gli attributi di thread di default. Gli attributi di thread sono discussi nella
+\item{Un puntatore alla variabile \texttt{pthread\_t}, nel quale è memorizzato
+l'ID di thread del nuovo thread}
+\item{Un puntatore ad un oggetto \textit{attributo thread}. Questo oggetto
+controlla i dettagli di come i thread interagiscono con il resto del programma.
+Se passi \texttt{NULL} come attributo di thread, verrà creato un thread con gli
+attributi di thread di default. Gli attributi di thread sono discussi nella
 \numnameref{subsec:4.1.5}.}
-\item{Un puntatore alla funzione thread. Questo è una funzione puntatore ordinaria, di questo tipo:
+\item{Un puntatore alla funzione thread. Questo è una funzione puntatore
+ordinaria, di questo tipo:
 \begin{listcodeC}
 void* (*) (void*)
 \end{listcodeC}
-\item{Un argomento di thread di tipo \texttt{void*}. Ogni cosa che passi è semplicemente passata come argomento della funzione thread quando il thread inizia la sua esecuzione.}
+\item{Un argomento di thread di tipo \texttt{void*}. Ogni cosa che passi è
+semplicemente passata come argomento della funzione thread quando il thread
+inizia la sua esecuzione.}
 }
 \end{enumerate}
-Una chiamata a \texttt{pthread\_create} ritorna immediatamente ed il thread originale continua ad eseguire le istruzioni seguenti la chiamata. Nel frattempo, il nuovo thread inizia ad eseguire la funzione thread. Linux schedula entrambi i thread in maniera asincrona e il tuo programma non deve fare affidamento sull'ordine relativo nel quale sono eseguite le istruzioni nei due threads.
+Una chiamata a \texttt{pthread\_create} ritorna immediatamente ed il thread
+originale continua ad eseguire le istruzioni seguenti la chiamata. Nel
+frattempo, il nuovo thread inizia ad eseguire la funzione thread. Linux schedula
+entrambi i thread in maniera asincrona e il tuo programma non deve fare
+affidamento sull'ordine relativo nel quale sono eseguite le istruzioni nei due
+threads.
 
-Il programma nel listato 4.1 crea un thread che stampa x continuamente sullo standard error. Dopo aver chiamato \texttt{pthread\_create}, il thread principale stampa o continuamente sullo standard error.\\
+Il programma nel listato 4.1 crea un thread che stampa x continuamente sullo
+standard error. Dopo aver chiamato \texttt{pthread\_create}, il thread
+principale stampa o continuamente sullo standard error.\\
 
 \listfromfile{thread-create.c}{Creare un thread}{list:4.1}
 	{ALP-listings/chapter-4/thread-create.c}
@@ -36,45 +90,107 @@ Compila e fai il link di questo programma usando il seguente codice:
 \begin{listcodeBash}
 % cc -o thread-create thread-create.c -lpthread
 \end{listcodeBash}
-Prova ad eseguirlo per vedere cosa accade. Nota il modello di x ed o imprevedibile, come Linux schedula alternativamente i due thread.
+Prova ad eseguirlo per vedere cosa accade. Nota il modello di x ed o
+imprevedibile, come Linux schedula alternativamente i due thread.
 
-In circostanze normali, un thread esce in uno di due modi. Un modo, come illustrato precedentemente, è ritornando dalla funzione thread. Il valore di ritorno dalla funzione thread è considerato essere il valore di ritorno del thread. In alternativa, un thread può uscire esplicitamente chiamando \texttt{pthread\_exit}. Questa funzione può essere chiamata dall'interno della funzione thread. L'argomento di \texttt{pthread\_exit} è il valore di ritorno del thread.
+In circostanze normali, un thread esce in uno di due modi. Un modo, come
+illustrato precedentemente, è ritornando dalla funzione thread. Il valore di
+ritorno dalla funzione thread è considerato essere il valore di ritorno del
+thread. In alternativa, un thread può uscire esplicitamente chiamando
+\texttt{pthread\_exit}. Questa funzione può essere chiamata dall'interno della
+funzione thread. L'argomento di \texttt{pthread\_exit} è il valore di ritorno
+del thread.
 
 \subsection{Passare dati ai thread}\label{subsec:4.1.1} %4.1.1
-L'argomento dei thread fornisce un metodo conveniente per passare i dati ai thread. Poiché il tipo dell'argomento è \texttt{void*}, comunque, non puoi passare moti dati direttamente tramite l'agomento. Piuttosto, usa l'argomento del thread per passare un puntatore ad alcune strutture o array di dati. Una tecnica comunemente usata è quella di definire una struttura per ogni funzione thread, che contiene i ``parametri'' che la funzione thread si aspetta.
+L'argomento dei thread fornisce un metodo conveniente per passare i dati ai
+thread. Poiché il tipo dell'argomento è \texttt{void*}, comunque, non puoi
+passare moti dati direttamente tramite l'agomento. Piuttosto, usa l'argomento
+del thread per passare un puntatore ad alcune strutture o array di dati. Una
+tecnica comunemente usata è quella di definire una struttura per ogni funzione
+thread, che contiene i ``parametri'' che la funzione thread si aspetta.
 
-Usando l'argomento del thread, è facile riutilizzare la stessa funzione thread per molti thread. Tutti questi thread eseguono lo stesso codice, ma con dati diversi.
+Usando l'argomento del thread, è facile riutilizzare la stessa funzione thread
+per molti thread. Tutti questi thread eseguono lo stesso codice, ma con dati
+diversi.
 
-Il programma nel listato 4.2, è simile all'esempio precedente. Questa volta vengono creati due nuovo thread, uno per stampare x e l'altro per stampare o. Invece di stampare infinitamente, comunque, ogni thread stampa un numero fisso di caratteri e quindi esce ritornando dalla funzione thread. La stessa funzione thread, \texttt{char\_print}, è usata da entrambi i thread, ma ognuno è configurato diversamente usando \texttt{struct} \texttt{char\_print\_parms}.\\
+Il programma nel listato 4.2, è simile all'esempio precedente. Questa volta
+vengono creati due nuovo thread, uno per stampare x e l'altro per stampare o.
+Invece di stampare infinitamente, comunque, ogni thread stampa un numero fisso
+di caratteri e quindi esce ritornando dalla funzione thread. La stessa funzione
+thread, \texttt{char\_print}, è usata da entrambi i thread, ma ognuno è
+configurato diversamente usando \texttt{struct} \texttt{char\_print\_parms}.\\
 
 \listfromfile{thread-create2.c}{Creare due threads}{list:4.2}
 	{ALP-listings/chapter-4/thread-create2-add1.c}
 
-\textit{Ma aspetta!} Il programma nel listato 4.2 contiene un bug serio. Il thread principale (che esegue la funzione \texttt{main}) crea le strutture del parametro del thread (\texttt{thread1\_args} e \texttt{thread2\_args}) come variabili loacali, e quindi passa i puntatori a queste strutture ai thread che esso crea. Cosa fare per evitare che Linux scheduli i tre thread in modo che \texttt{main} completi la sua esecuzione prima che uno degli altri due thread sia completato? \textit{Nulla!} Ma se ciò accade, la memoria contenente le strutture del parametro del thread verranno deallocate mentre gli altri due thread staranno ancora accedendo ad esse. 
+\textit{Ma aspetta!} Il programma nel listato 4.2 contiene un bug serio. Il
+thread principale (che esegue la funzione \texttt{main}) crea le strutture del
+parametro del thread (\texttt{thread1\_args} e \texttt{thread2\_args}) come
+variabili loacali, e quindi passa i puntatori a queste strutture ai thread che
+esso crea. Cosa fare per evitare che Linux scheduli i tre thread in modo che
+\texttt{main} completi la sua esecuzione prima che uno degli altri due thread
+sia completato? \textit{Nulla!} Ma se ciò accade, la memoria contenente le
+strutture del parametro del thread verranno deallocate mentre gli altri due
+thread staranno ancora accedendo ad esse. 
 
 \subsection{Unire i thread}\label{subsec:4.1.2} % 4.1.2
-Una soluzione è quella di forzare il \texttt{main} ad aspettare fino a che gli altri due thread non siano complatati. Ciò di cui abbiamo bisogno è una funzione simile a \texttt{wait} che aspetti che finisca un thread piuttosto che un processo. La funzione è \texttt{pthread\_join}, che prende due argomente: l'ID del thread da aspettare ed un puntatore ad una variabile \texttt{void*} che riceverà il valore di ritorno del thread finito. Se non ti preoccupi del valore di ritorno del thread, passa \texttt{NULL} come secondo argomento.
+Una soluzione è quella di forzare il \texttt{main} ad aspettare fino a che gli
+altri due thread non siano complatati. Ciò di cui abbiamo bisogno è una funzione
+simile a \texttt{wait} che aspetti che finisca un thread piuttosto che un
+processo. La funzione è \texttt{pthread\_join}, che prende due argomente: l'ID
+del thread da aspettare ed un puntatore ad una variabile \texttt{void*} che
+riceverà il valore di ritorno del thread finito. Se non ti preoccupi del valore
+di ritorno del thread, passa \texttt{NULL} come secondo argomento.
 
-Il listato 4.3 mostra la funzione \texttt{main} corretta per l'esempio sbagliato nel listato 4.2. In questa versione, il \texttt{main} non esce fino a che entrambi i thread che stampano x e o non sono completati, così essi non useranno più le strutture degli argomenti.\\
+Il listato 4.3 mostra la funzione \texttt{main} corretta per l'esempio sbagliato
+nel listato 4.2. In questa versione, il \texttt{main} non esce fino a che
+entrambi i thread che stampano x e o non sono completati, così essi non useranno
+più le strutture degli argomenti.\\
 
 \listfromfile{thread-create2.c}
 	{ Funzione \textit{Main} rivista per \textit{thread-create2.c}}{list:4.3}
 	{ALP-listings/chapter-4/thread-create2-add2.c}
 
-Morale della storia: Assicurati che ogni dato che passi a un thread per riferimento non sia deallocato, \textit{anche da un diverso thread}, fino a che non sei sicuro che il thread sia compelto con esso. Ciò è vero sia per variabili locali, che sono deallocate quando esse vanno fuori dal proprio raggio di azione, che per gruppi di variabili allocate in blocco che vengono deallocate chiamando \texttt{free} (o usando \texttt{delete} in C++).
+Morale della storia: Assicurati che ogni dato che passi a un thread per
+riferimento non sia deallocato, \textit{anche da un diverso thread}, fino a che
+non sei sicuro che il thread sia compelto con esso. Ciò è vero sia per variabili
+locali, che sono deallocate quando esse vanno fuori dal proprio raggio di azione,
+che per gruppi di variabili allocate in blocco che vengono deallocate chiamando
+\texttt{free} (o usando \texttt{delete} in C++).
 
 \subsection{Valori di ritorno dei thread}\label{subsec:4.1.3} % 4.1.3
-Se il secondo argomento che passi a \texttt{pthread\_join} non è nullo, il valore di ritorno del thread verrà mesto nella locazione puntata da quell'argomento. Il valore di ritorno del thread, come l'argomento del thread, è di tipo \texttt{void}. Se vuoi passare un singolo \texttt{int} o altri numeri piccoli, puoi farlo facilmente tramite il cast del valore a \texttt{void*} e quindi rifacendo il cast al tipo appropriato dopo aver chiamato \texttt{pthread\_join}.\footnote{Nota che ciò non è portabile ed è compito tuo assicurarti che per il valore può essere effettuato il cast a \texttt{void*} e tornare indietro senza perdita di bit.}
+Se il secondo argomento che passi a \texttt{pthread\_join} non è nullo, il
+valore di ritorno del thread verrà mesto nella locazione puntata da
+quell'argomento. Il valore di ritorno del thread, come l'argomento del thread, è
+di tipo \texttt{void}. Se vuoi passare un singolo \texttt{int} o altri numeri
+piccoli, puoi farlo facilmente tramite il cast del valore a \texttt{void*} e
+quindi rifacendo il cast al tipo appropriato dopo aver chiamato
+\texttt{pthread\_join}.\footnote{Nota che ciò non è portabile ed è compito tuo
+assicurarti che per il valore può essere effettuato il cast a \texttt{void*} e
+tornare indietro senza perdita di bit.}
 
-Il programma nel listato 4.4 calcola l'ennesimo numero primo in un thread separato. Quel thread restituisce il numero primo desiderato come suo valore di ritorno di thread. Il thread principale, nel frattempo, è libero di eseguire altro codice. Nota che l'agoritmo di divisione successivo usato in \texttt{compute\_prime} è un po' inefficiente; se nel tuo programma hai bisogno di calcolare molti numeri primi consulta un libro su algoritmi numerici.\\
+Il programma nel listato 4.4 calcola l'ennesimo numero primo in un thread
+separato. Quel thread restituisce il numero primo desiderato come suo valore di
+ritorno di thread. Il thread principale, nel frattempo, è libero di eseguire
+altro codice. Nota che l'agoritmo di divisione successivo usato in
+\texttt{compute\_prime} è un po' inefficiente; se nel tuo programma hai bisogno
+di calcolare molti numeri primi consulta un libro su algoritmi numerici.\\
 
 \listfromfile{primes.c}{Calcola numeri primi in un thread}{list:4.4}
 	{ALP-listings/chapter-4/primes.c}
 
 \subsection{Ancora sugli ID dei thread}\label{subsec:4.1.4} % 4.1.4
-Occasionalmente, è utile per una sequenza di codice determinare quale thread lo sta eseguendo. La funzione \texttt{pthread\_self} restituisce l'ID di thread del thread nel quale è chiamata. Questo ID di thread può essere confrontato con altri ID di thread usando la funzione \texttt{pthread\_equal}
+Occasionalmente, è utile per una sequenza di codice determinare quale thread lo
+sta eseguendo. La funzione \texttt{pthread\_self} restituisce l'ID di thread del
+thread nel quale è chiamata. Questo ID di thread può essere confrontato con
+altri ID di thread usando la funzione \texttt{pthread\_equal}
 
-Queste funzioni possono essere utili per determinare quando un particolare ID di thread corrisponde al thread corrente. Per esempio, c'è un errore per un thread nel chiamare \texttt{pthread\_join} per unirlo a se stesso. (In questo caso, \texttt{pthread\_join} restituirebbe il codice di errore \texttt{EDEADLK}.) Per verificare questa condizione in anticipo, puoi usare del codice come questo:
+Queste funzioni possono essere utili per determinare quando un particolare ID di
+thread corrisponde al thread corrente. Per esempio, c'è un errore per un thread
+nel chiamare \texttt{pthread\_join} per unirlo a se stesso. (In questo caso,
+	\texttt{pthread\_join} restituirebbe il codice di errore
+	\texttt{EDEADLK}.) Per verificare questa condizione in anticipo, puoi
+usare del codice come questo:
 \begin{listcodeC}
 if (!pthread_equal (pthread_self (), other_thread))
   pthread_join (other_thread, NULL);
@@ -82,192 +198,487 @@ if (!pthread_equal (pthread_self (), other_thread))
 
 \subsection{Attributi dei thread}\label{subsec:4.1.5} % 4.1.5
 
-Gli attributi dei thread forniscono un meccanismo per mettere a punto il comportamento di thread individuali. Ricorda che \texttt{pthread\_create} accetta un argomento che è un puntatore ad un oggetto attributo di thread. Se passi un puntatore nullo, gli attributi di default dei thread sono usati per configurare il nuovo thread. Comunque, puoi creare e personalizzare l'oggetto attributo di un thread per specificare altri valori per gli attributi.
+Gli attributi dei thread forniscono un meccanismo per mettere a punto il
+comportamento di thread individuali. Ricorda che \texttt{pthread\_create}
+accetta un argomento che è un puntatore ad un oggetto attributo di thread. Se
+passi un puntatore nullo, gli attributi di default dei thread sono usati per
+configurare il nuovo thread. Comunque, puoi creare e personalizzare l'oggetto
+attributo di un thread per specificare altri valori per gli attributi.
 
 Per specificare gli attributi dei thread è necessario seguire i seguenti passi:
 \begin{enumerate}
-\item{Creare un oggetto \texttt{pthread\_attr\_t}. La maniera più semplice è dichiarare una variabile automatica di questo tipo.}
-\item{Chiamare \texttt{pthread\_attr\_init}, passando un puntatore a questo oggetto. Ciò inizializza gli attributi ai loro valori di default.}
+\item{Creare un oggetto \texttt{pthread\_attr\_t}. La maniera più semplice è
+dichiarare una variabile automatica di questo tipo.}
+\item{Chiamare \texttt{pthread\_attr\_init}, passando un puntatore a questo
+oggetto. Ciò inizializza gli attributi ai loro valori di default.}
 \item{Modificare l'oggetto attributo in modo che contenga i valori desiderati.}
-\item{Passare un puntatore all'oggetto attributo quando si chiama \texttt{pthread\_create}.}
-\item{Chiamare \texttt{pthread\_attr\_destroy} per rilasciare l'oggetto attributo. La variabile \texttt{pthread\_attr\_t} da sola non è deallocata; può essere reinizializzata con \texttt{pthread\_attr\_init}.}
+\item{Passare un puntatore all'oggetto attributo quando si chiama
+\texttt{pthread\_create}.}
+\item{Chiamare \texttt{pthread\_attr\_destroy} per rilasciare l'oggetto
+attributo. La variabile \texttt{pthread\_attr\_t} da sola non è deallocata; può
+essere reinizializzata con \texttt{pthread\_attr\_init}.}
 \end{enumerate}
-Un singolo oggetto attributo di thread può essere usato per avviare diversi thread. Non è necessario mantenere un oggetto attributo di thread in giro dopo che i thread sono stati creati.
+Un singolo oggetto attributo di thread può essere usato per avviare diversi
+thread. Non è necessario mantenere un oggetto attributo di thread in giro dopo
+che i thread sono stati creati.
 
-Per molti compiti delle applicazioni programmate in GNU/Linux, solo un attributo di thread è tipicamente di interesse (gli altri attributi disponibili servono principalmente per la programmazione realtime specializzata). Questo attributo è lo \textit{stato distaccato} del thread. Un thread può essere creato come un \textit{thread congiungibile} (di default) o come un \textit{thread distaccato}. Un thread congiungibile, come un processo, non è cancellato automaticamente da GNU/Linux quando termina. Invece, lo stato di uscita del thread rimane in sospeso nel sistema (qualcosa di simile ad un processo zombie) finché un altro thread non chiama \texttt{pthread\_join} per ottenere il suo valore di ritorno. Solo allora le sue risorse vengono rilasciate. Un thread distaccato, di contro, viene cancellato automaticamente quando termina. Poiché un thread distaccato è immediatamente cancellato, un altro thread può non riuscire ad essere sincronizzato con il suo completamento usando \texttt{pthread\_join} o ottenere il suo valore di ritorno.
+Per molti compiti delle applicazioni programmate in GNU/Linux, solo un attributo
+di thread è tipicamente di interesse (gli altri attributi disponibili servono
+	principalmente per la programmazione realtime specializzata). Questo
+attributo è lo \textit{stato distaccato} del thread. Un thread può essere creato
+come un \textit{thread congiungibile} (di default) o come un \textit{thread
+distaccato}. Un thread congiungibile, come un processo, non è cancellato
+automaticamente da GNU/Linux quando termina. Invece, lo stato di uscita del
+thread rimane in sospeso nel sistema (qualcosa di simile ad un processo zombie)
+finché un altro thread non chiama \texttt{pthread\_join} per ottenere il suo
+valore di ritorno. Solo allora le sue risorse vengono rilasciate. Un thread
+distaccato, di contro, viene cancellato automaticamente quando termina. Poiché
+un thread distaccato è immediatamente cancellato, un altro thread può non
+riuscire ad essere sincronizzato con il suo completamento usando
+\texttt{pthread\_join} o ottenere il suo valore di ritorno.
 
-Per impostare lo stato distaccato in un oggetto attributo di thread, usa \texttt{pthread\_attr\_setdetachstate}. Il primo argomento è un puntatore all'oggetto attributo del thread, e il secondo è lo stato distaccato desiderato. Poiché lo stato joinable è quello di default, è necessario fare questa chiamata solo per creare thread distaccati; passa \texttt{PTHREAD\_CREATE\_DETACHED} come secondo argomento.
+Per impostare lo stato distaccato in un oggetto attributo di thread, usa
+\texttt{pthread\_attr\_setdetachstate}. Il primo argomento è un puntatore
+all'oggetto attributo del thread, e il secondo è lo stato distaccato desiderato.
+Poiché lo stato joinable è quello di default, è necessario fare questa chiamata
+solo per creare thread distaccati; passa \texttt{PTHREAD\_CREATE\_DETACHED} come
+secondo argomento.
 
-Il codice nel listato 4.5 crea un thread distaccato impostando l'attributo di thread allo stato detach per il thread.\\
+Il codice nel listato 4.5 crea un thread distaccato impostando l'attributo di
+thread allo stato detach per il thread.\\
 
 \listfromfile{detached.c}
 	{Scheletro di un programma che crea un thread distaccato}{list:4.5}
 	{ALP-listings/chapter-4/detached.c}
 
-Anche se un thread è creato in uno stato joinable, può essere successivamente cambiato in thread distaccato. Per fare ciò, chiama \texttt{pthread\_detach}. Una volta che un thread diventa distaccato, non può più tornare ad essere joinable di nuovo.
+Anche se un thread è creato in uno stato joinable, può essere successivamente
+cambiato in thread distaccato. Per fare ciò, chiama \texttt{pthread\_detach}.
+Una volta che un thread diventa distaccato, non può più tornare ad essere
+joinable di nuovo.
 
 \section{Cancellazione di thread}\label{sec:4.2} % 4.2
-In circostanze normali, un thread finisce quando esce normalmente, sia ritornando dalla sua funzione thread sia chiamado \texttt{pthread\_exit}. Comunque, è possibile per un thread richiedere ad un altro thread di terminare. Ciò è chiamato \textit{cancellazione} (\textit{canceling}) di un thread.
+In circostanze normali, un thread finisce quando esce normalmente, sia
+ritornando dalla sua funzione thread sia chiamado \texttt{pthread\_exit}.
+Comunque, è possibile per un thread richiedere ad un altro thread di terminare.
+Ciò è chiamato \textit{cancellazione} (\textit{canceling}) di un thread.
 
-Per cancellare un thread, chiama \texttt{pthread\_cancel} pasandogli l'ID del thread che deve essere cancellato. Un thread cancellato può essere successivamente congiunto (joined); infatti, dovresti collegarti ad un thread cancellato per liberarne le risorse, fino a che il thread è disgiunto (vedi
-\numnameref{subsec:4.1.5}). Il valore di ritorno di un thread cancellato è il valore speciale dato da \texttt{PTHREAD\_CANCELED}.
+Per cancellare un thread, chiama \texttt{pthread\_cancel} pasandogli l'ID del
+thread che deve essere cancellato. Un thread cancellato può essere
+successivamente congiunto (joined); infatti, dovresti collegarti ad un thread
+cancellato per liberarne le risorse, fino a che il thread è disgiunto (vedi
+\numnameref{subsec:4.1.5}). Il valore di ritorno di un thread cancellato è il
+valore speciale dato da \texttt{PTHREAD\_CANCELED}.
 
-Spesso un thread può trovarsi in del codice che può essere eseguito in maniera completa o nulla, senza vie di mezzo. per esempio, il thread può allocare, usarle e quindi deallocarle. Se il thread viene cancellato nel mezzo di questo codice, può non avere l'opportunità di dellocare le risorse e quindi le risorse resteranno bloccate. Per cercare di evitare che ciò accada è possibile per un tread controllare se e quando esso può essere cancellato.
+Spesso un thread può trovarsi in del codice che può essere eseguito in maniera
+completa o nulla, senza vie di mezzo. per esempio, il thread può allocare,
+usarle e quindi deallocarle. Se il thread viene cancellato nel mezzo di questo
+codice, può non avere l'opportunità di dellocare le risorse e quindi le risorse
+resteranno bloccate. Per cercare di evitare che ciò accada è possibile per un
+tread controllare se e quando esso può essere cancellato.
 
-Un thread, per quanto riguarda la cancellazione, può trovarsi in uno di tre stati.
+Un thread, per quanto riguarda la cancellazione, può trovarsi in uno di tre
+stati.
 \begin{itemize}
-\item{Il thread può essere \textit{cancellabile in modo asincrono} (\textit{asynchronously cancelable}). Il thread può essere cancellato in ogni punto della sua esecuzione.}
-\item{Il thread può essere \textit{cancellabile in modo sincrono} (\textit{synchronously cancelable}). Il thread può essere cancellato, ma non proprio ad ogni punto della sua esecuzione. Piuttosto, le richieste di cancellazione sono accodate e il thread è cancellato solo quando raggiunge punti specifici nella sua esecuzione.}
-\item{un thread può essere \textit{incancellabile} (\textit{uncancelable}). I tentativi di cancellare il thread sono silenziosamente ignorati}
+\item{Il thread può essere \textit{cancellabile in modo asincrono}
+	(\textit{asynchronously cancelable}). Il thread può essere cancellato
+	in ogni punto della sua esecuzione.}
+\item{Il thread può essere \textit{cancellabile in modo sincrono}
+	(\textit{synchronously cancelable}). Il thread può essere cancellato,
+	ma non proprio ad ogni punto della sua esecuzione. Piuttosto, le
+	richieste di cancellazione sono accodate e il thread è cancellato solo
+	quando raggiunge punti specifici nella sua esecuzione.}
+\item{un thread può essere \textit{incancellabile} (\textit{uncancelable}).
+	I tentativi di cancellare il thread sono silenziosamente ignorati}
 \end{itemize}
 Quando viene inizialmente creato, un thread è cancellabile in modo sincrono.
 
 \subsection{Thread sincroni ed asincroni}\label{subsec:4.2.1} % 4.2.1
-Un thread cancellabile in modo asincrono può essere cancellato in ogni punto della sua esecuzione. Un thread cancellabile in modo sincrono, di contro, può essere cancellato solo in particolari punti della sua esecuzione. Questi punti sono chiamati \textit{punti di cancellazione} (\textit{cancellation points}). Nel thread verrà accodata una richiesta di cancellazione fino a che esso non raggiunge il prossimo punto di cancellazione.
+Un thread cancellabile in modo asincrono può essere cancellato in ogni punto
+della sua esecuzione. Un thread cancellabile in modo sincrono, di contro, può
+essere cancellato solo in particolari punti della sua esecuzione. Questi punti
+sono chiamati \textit{punti di cancellazione} (\textit{cancellation points}).
+Nel thread verrà accodata una richiesta di cancellazione fino a che esso non
+raggiunge il prossimo punto di cancellazione.
 
-Per rendere un thread cancellabile in modo asincrono, usa \texttt{pthread\_setcanceltype}. Ciò ha effetto sui thread che attualmente chiamano le funzioni. Il primo argomento dovrebbe essere \texttt{PTHREAD\_CANCEL\_ASYNCHRONOUS} per rendere il thread cancellabile in modo asincrono, o \texttt{PTHREAD\_CANCEL\_DEFERRED} per riportarlo nello stato di cancellabile in modo sincrono. Il secondo argomento, se diverso da null, è un puntatore ad una variabile che riceve il tipo di cancellazione precedente per il thread. Questa chiamata, per esempio, rende il thread chiamante cancellabile in modo asincrono.
+Per rendere un thread cancellabile in modo asincrono, usa
+\texttt{pthread\_setcanceltype}. Ciò ha effetto sui thread che attualmente
+chiamano le funzioni. Il primo argomento dovrebbe essere
+\texttt{PTHREAD\_CANCEL\_ASYNCHRONOUS} per rendere il thread cancellabile in
+modo asincrono, o \texttt{PTHREAD\_CANCEL\_DEFERRED} per riportarlo nello stato
+di cancellabile in modo sincrono. Il secondo argomento, se diverso da null, è un
+puntatore ad una variabile che riceve il tipo di cancellazione precedente per il
+thread. Questa chiamata, per esempio, rende il thread chiamante cancellabile in
+modo asincrono.
 \begin{listcodeC}
 pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 \end{listcodeC}
-Cosa costituisce un punto di cancellazione e dove dovrebbero essere posti? La via più diretta per creare un punto di cancellazione è chiamare \texttt{pthread\_testcancel}. Questo non fa nulla ad eccetto il fatto di processare una cancellazione in sospeso in un thread cancellabile in modo sincrono. Dovresti chiamare \texttt{pthread\_testcancel} periodicamente durante i calcoli più lunghi in una funzione thread, nei punti in cui il thread può essere cancellato senza bloccare nessuna risorsa o produrre altri effetti negativi.
-Certe altre funzioni hanno implicitamente dei punti di cancellazione. Questi sono elencati nella pagina di manuale di \texttt{pthread\_cancel}. Nota che altre funzioni possono usare queste funzioni internamente e quindi ci saranno indirettamente dei punti di cancellazione.
+Cosa costituisce un punto di cancellazione e dove dovrebbero essere posti? La
+via più diretta per creare un punto di cancellazione è chiamare
+\texttt{pthread\_testcancel}. Questo non fa nulla ad eccetto il fatto di
+processare una cancellazione in sospeso in un thread cancellabile in modo
+sincrono. Dovresti chiamare \texttt{pthread\_testcancel} periodicamente durante
+i calcoli più lunghi in una funzione thread, nei punti in cui il thread può
+essere cancellato senza bloccare nessuna risorsa o produrre altri effetti
+negativi.
+Certe altre funzioni hanno implicitamente dei punti di cancellazione. Questi
+sono elencati nella pagina di manuale di \texttt{pthread\_cancel}. Nota che
+altre funzioni possono usare queste funzioni internamente e quindi ci saranno
+indirettamente dei punti di cancellazione.
 
 \subsection{Sezioni critiche non cancellabili}\label{subsec:4.2.2} % 4.2.2
-Un thread può disabilitare la cancellazione di se stesso completamente con la funzione \texttt{pthread\_setcancelstate}. Come per \texttt{pthread\_setcanceltype}, questa ha effetto sul thread chiamante. Il primo argomento è \texttt{PTHREAD\_CANCEL\_DISABLE} per disabilitare la cancellazione, o \texttt{PTHREAD\_CANCEL\_ENABLE} per riabilitare la cancellazione. Il secondo argomento, se diverso da null, punta ad una variabile che riceverà lo stato precedente di cancellazione. Questa chiamata, per esempio, disabilita la cancellazione del thread nel thread chiamante.
+Un thread può disabilitare la cancellazione di se stesso completamente con la
+funzione \texttt{pthread\_setcancelstate}. Come per
+\texttt{pthread\_setcanceltype}, questa ha effetto sul thread chiamante. Il
+primo argomento è \texttt{PTHREAD\_CANCEL\_DISABLE} per disabilitare la
+cancellazione, o \texttt{PTHREAD\_CANCEL\_ENABLE} per riabilitare la
+cancellazione. Il secondo argomento, se diverso da null, punta ad una variabile
+che riceverà lo stato precedente di cancellazione. Questa chiamata, per esempio,
+disabilita la cancellazione del thread nel thread chiamante.
 \begin{listcodeC}
 pthread_setcancelstate (PTHREAD_CANCEL_DISABLE, NULL);
 \end{listcodeC}
-L'uso di \texttt{pthread\_setcancelstate} ti permette di implementare \textit{sezioni critiche} (\textit{critical section}). Una sezione critica è una sequenza di codice che può essere eseguito solo interamente o per nulla; in altre parole, se un thread inizia ad eseguire la sezione critica, deve continuare fino alla fine della sezione critica senza essere cancellato.
+L'uso di \texttt{pthread\_setcancelstate} ti permette di implementare
+\textit{sezioni critiche} (\textit{critical section}). Una sezione critica è una
+sequenza di codice che può essere eseguito solo interamente o per nulla; in
+altre parole, se un thread inizia ad eseguire la sezione critica, deve
+continuare fino alla fine della sezione critica senza essere cancellato.
 
-Per esempio, supponi di stare scrivendo una routine per una programma bancario che trasferisce denaro da un conto ad un altro. Per farlo, devi aggiungere valori sul bilancio di un conto e detrarre gli stessi valori dal bilancio di un altro conto. Se succede che il thread che sta eseguendo la tua routine è stato cancellato proprio nel momento sbagliato, tra le due operazioni, il programma potrebbe avere incrementato falsamente il totale del deposito bancario facendo fallire il completamento della transazione. Per prevenire questa possibilità poni le due operazioni in una sezione critica.
+Per esempio, supponi di stare scrivendo una routine per una programma bancario
+che trasferisce denaro da un conto ad un altro. Per farlo, devi aggiungere
+valori sul bilancio di un conto e detrarre gli stessi valori dal bilancio di un
+altro conto. Se succede che il thread che sta eseguendo la tua routine è stato
+cancellato proprio nel momento sbagliato, tra le due operazioni, il programma
+potrebbe avere incrementato falsamente il totale del deposito bancario facendo
+fallire il completamento della transazione. Per prevenire questa possibilità
+poni le due operazioni in una sezione critica.
 
-Puoi implementare il trasferimento con una funzione come \texttt{process\_transaction}, mostrata nel listato 4.6. Questa funzione disabilita la cancellazione del thread per avviare una sezione critica prima di modificare uno dei bilanci del conto.\\
+Puoi implementare il trasferimento con una funzione come
+\texttt{process\_transaction}, mostrata nel listato 4.6. Questa funzione
+disabilita la cancellazione del thread per avviare una sezione critica prima di
+modificare uno dei bilanci del conto.\\
 
 \listfromfile{critical-section.c}
 	{Protegge una transazione bancaria con una sezione critica}{list:4.6}
 	{ALP-listings/chapter-4/critical-section.c}
 
-Nota che è importante ripristinare il vecchio stato di cancellato alla fine della sezione critica piuttosto che impostarlo incondizionatamente a \texttt{PTHREAD\_CANCEL\_ENABLE}. Ciò ti permette di chiamare la funzione \texttt{process\_transaction} senza problemi dall'interno di un'altra sezione critica \--- in questo caso, la tua funzione lascerà lo stato cancel allo stesso modo di come è stato trovato.
+Nota che è importante ripristinare il vecchio stato di cancellato alla fine
+della sezione critica piuttosto che impostarlo incondizionatamente a
+\texttt{PTHREAD\_CANCEL\_ENABLE}. Ciò ti permette di chiamare la funzione
+\texttt{process\_transaction} senza problemi dall'interno di un'altra sezione
+critica \--- in questo caso, la tua funzione lascerà lo stato cancel allo stesso
+modo di come è stato trovato.
 
 \subsection{Quando usare la cancellazione di thread}\label{subsec:4.2.3} % 4.2.3
-In genere, è una buona idea non usare la cancellazione di thread per terminare l'esecuzione di un thread, tranne che in circostanze particolari. durante una normale operazione, la migliore strategia è quella di indicare al thread che dovrebbe uscire, e quindi aspettare che il thread esca da solo in maniera ordinata. Discuteremo delle tecniche per comunicare con i thread più avanti in questo capitolo e nel
+In genere, è una buona idea non usare la cancellazione di thread per terminare
+l'esecuzione di un thread, tranne che in circostanze particolari. durante una
+normale operazione, la migliore strategia è quella di indicare al thread che
+dovrebbe uscire, e quindi aspettare che il thread esca da solo in maniera
+ordinata. Discuteremo delle tecniche per comunicare con i thread più avanti in
+questo capitolo e nel
 \numnameref{cap:5}\marginpar{capitolo 5, ``Comunicazione tra processi''}.
 
 \section{Dati specifici dei thread}\label{sec:4.3} % 4.3
-Diversamente dai processi, tutti i thread in un singolo programma condividono lo stesso spazio di indirizzi. Ciò significa che se un thread modifica una locazione di memoria (per esempio, una variabile globale), la modifica è visibile a tutti gli altri thread. Ciò permette a diversi thread di operare sugli stessi dati senza usare i meccanismi della comunicazione tra processi (che sono descritti nel \autoref{cap:5}\marginpar{capitolo 5}).
+Diversamente dai processi, tutti i thread in un singolo programma condividono lo
+stesso spazio di indirizzi. Ciò significa che se un thread modifica una
+locazione di memoria (per esempio, una variabile globale), la modifica è
+visibile a tutti gli altri thread. Ciò permette a diversi thread di operare
+sugli stessi dati senza usare i meccanismi della comunicazione tra processi
+(che sono descritti nel \autoref{cap:5}\marginpar{capitolo 5}).
 
-Ogni thread, comunque, ha la sua lista di chiamate. Ciò permette ad ogni thread di eseguire diversi pezzi di codice e di chiamare e ritornare da subroutines nel suo modo usuale. Come in un programma a thread singolo, ogni invocazione di una subroutine in ogni thread ha il proprio insieme di variabili locali, che sono memorizzate nella lista (stack) per quel trhead.
+Ogni thread, comunque, ha la sua lista di chiamate. Ciò permette ad ogni thread
+di eseguire diversi pezzi di codice e di chiamare e ritornare da subroutines nel
+suo modo usuale. Come in un programma a thread singolo, ogni invocazione di una
+subroutine in ogni thread ha il proprio insieme di variabili locali, che sono
+memorizzate nella lista (stack) per quel trhead.
 
-A volte, comunque, è desiderabile duplicare certe variabili in modo che ogni thread abbia una copia separata. GNU/Linux lo permette fornendo ad ogni thread un'area dei \textit{dati sepcifici dei thread}. Le variabili memorizzante in quest'area sono duplicate per ogni thread, ed ogni thread può modificare la sua copia di una variabile senza avere effetto sugli altri thread. Poiché tutti i thread condividono lo stesso spazio di memoria, i dati specifici dei thread non possono essere accessibili usando normali variabili di riferimento. GNU/Linux fornisce funzioni speciali per assegnare e ritrovare valori dall'area di dati specifica dei thread.
+A volte, comunque, è desiderabile duplicare certe variabili in modo che ogni
+thread abbia una copia separata. GNU/Linux lo permette fornendo ad ogni thread
+un'area dei \textit{dati sepcifici dei thread}. Le variabili memorizzante in
+quest'area sono duplicate per ogni thread, ed ogni thread può modificare la sua
+copia di una variabile senza avere effetto sugli altri thread. Poiché tutti i
+thread condividono lo stesso spazio di memoria, i dati specifici dei thread non
+possono essere accessibili usando normali variabili di riferimento. GNU/Linux
+fornisce funzioni speciali per assegnare e ritrovare valori dall'area di dati
+specifica dei thread.
 
-Puoi creare tanti elementi di dati specifici per i thread quanti ne vuoi, ognuno di tipo \texttt{void*}. ogni elemento è referenziato da una chiave. Per creare una nuova chiave, e quindi un nuovo elemento di dati per ogni thread, usa \texttt{pthread\_key\_create}. Il primo argomento è un puntatore a una variabile \texttt{pthrea\_key\_t}. Questo valore della chiave può essere usato da ogni thread per accedere alla propria copia dell'elemento di dati corrispondente. Il secondo argomento di \texttt{pthread\_key\_t} è una funzione di pulizia. Se qui passi un puntatore a funzione, GNU/Linux chiama automaticamente quella funzione quando ogni thread esiste, passando il valore specifico di thread corrispondente a quella chiave. Questo è particolarmente comodo perché la funzione di pulizia è chiamata anche se il thread è cancellato ad un punto arbitrario durante la sua esecuzione. Se il valore specifico di thread è null, la funzione di pulizia dei thread non è cancellata. Se non hai bisogno di una funzione di pulizia, puoi passare null piuttosto che un puntatore a funzione.
+Puoi creare tanti elementi di dati specifici per i thread quanti ne vuoi, ognuno
+di tipo \texttt{void*}. ogni elemento è referenziato da una chiave. Per creare
+una nuova chiave, e quindi un nuovo elemento di dati per ogni thread, usa
+\texttt{pthread\_key\_create}. Il primo argomento è un puntatore a una variabile
+\texttt{pthrea\_key\_t}. Questo valore della chiave può essere usato da ogni
+thread per accedere alla propria copia dell'elemento di dati corrispondente. Il
+secondo argomento di \texttt{pthread\_key\_t} è una funzione di pulizia. Se qui
+passi un puntatore a funzione, GNU/Linux chiama automaticamente quella funzione
+quando ogni thread esiste, passando il valore specifico di thread corrispondente
+a quella chiave. Questo è particolarmente comodo perché la funzione di pulizia è
+chiamata anche se il thread è cancellato ad un punto arbitrario durante la sua
+esecuzione. Se il valore specifico di thread è null, la funzione di pulizia dei
+thread non è cancellata. Se non hai bisogno di una funzione di pulizia, puoi
+passare null piuttosto che un puntatore a funzione.
 
-Dopo che hai creato una chiave, ogni thread può impostare il suo valore specifico del thread corrispondente a quella chiave, chiamando \texttt{pthread\_setspecific}. Il primo argomento è la chiave ed il secondo è il valore specifico di thread \texttt{void*} da memorizzare. Per ritrovare un elemento di dati specifico di thread, chiama \texttt{pthread\_getspecific}, passando la chiave come suo argomento.
+Dopo che hai creato una chiave, ogni thread può impostare il suo valore
+specifico del thread corrispondente a quella chiave, chiamando
+\texttt{pthread\_setspecific}. Il primo argomento è la chiave ed il secondo è il
+valore specifico di thread \texttt{void*} da memorizzare. Per ritrovare un
+elemento di dati specifico di thread, chiama \texttt{pthread\_getspecific},
+passando la chiave come suo argomento.
 
-Supponi, per esempio, che la tua applicazione divida un compito tra diversi thread.
-Per scopi di verifica, ogni thread deve avare un file di log separato, nel quale vengono registrati messaggi di esecuzione per i compiti di quel thread. L'area di dati specifica del thread è una zona conveniente per memorizzare il puntatore di file per il file di log di ogni thread individuale.
+Supponi, per esempio, che la tua applicazione divida un compito tra diversi
+thread.
+Per scopi di verifica, ogni thread deve avare un file di log separato, nel quale
+vengono registrati messaggi di esecuzione per i compiti di quel thread. L'area
+di dati specifica del thread è una zona conveniente per memorizzare il puntatore
+di file per il file di log di ogni thread individuale.
 
-Il listato 4.7 mostra come dovresti implementare ciò. La funzione \texttt{main} in questo programma di esempio crea una chiave per memorizzare il puntatore di file specifico del thread e quindi lo memorizza in \texttt{thread\_log\_key}. Poichè questa è una variabile globale, è condivisa da tutti i thread. Quando ogni thread comincia ad eseguire la sua funzione thread, esso apre un filedi log e memorizza il puntatore a file in quella chiave. Successivamente, ognuno di questi thread può chiamare \texttt{wtrite\_to\_thread\_log} per scrivere un messaggio nel file di log specifico del thread. Questa funzione ritrova il puntatore di file per il file di log del thread dai dati specifici del thread e scrive il messaggio.\\
+Il listato 4.7 mostra come dovresti implementare ciò. La funzione \texttt{main}
+in questo programma di esempio crea una chiave per memorizzare il puntatore di
+file specifico del thread e quindi lo memorizza in \texttt{thread\_log\_key}.
+Poichè questa è una variabile globale, è condivisa da tutti i thread. Quando
+ogni thread comincia ad eseguire la sua funzione thread, esso apre un filedi log
+e memorizza il puntatore a file in quella chiave. Successivamente, ognuno di
+questi thread può chiamare \texttt{wtrite\_to\_thread\_log} per scrivere un
+messaggio nel file di log specifico del thread. Questa funzione ritrova il
+puntatore di file per il file di log del thread dai dati specifici del thread e
+scrive il messaggio.\\
 
 \listfromfile{tsd.c}
-	{Files di Log implementati per ogni thread con i dati specifici dei thread}{list:4.7}
+	{Files di Log implementati per ogni thread con i dati specifici dei thread}
+	{list:4.7}
 	{ALP-listings/chapter-4/tsd.c}
 
-Nota che \texttt{thread\_funcion} non ha bisogno di chiudere il file di log. Ciò accade perché quando la chiave file di log è stata creata, è stato specificato \texttt{close\_thread\_log} come funzione di pulizia per quella chiave. Ogni volta che un thread esce, GNU/Linux chiama quella funzione, passando il valore specifico di thread per la chiave log del thread. Questa funzione si preoccupa di chiudere il file di log.
+Nota che \texttt{thread\_funcion} non ha bisogno di chiudere il file di log. Ciò
+accade perché quando la chiave file di log è stata creata, è stato specificato
+\texttt{close\_thread\_log} come funzione di pulizia per quella chiave. Ogni
+volta che un thread esce, GNU/Linux chiama quella funzione, passando il valore
+specifico di thread per la chiave log del thread. Questa funzione si preoccupa
+di chiudere il file di log.
 
 \subsection{Gestori di pulizia}\label{subsec:4.3.1} % 4.3.1
-Le funzioni di pulizia per le chiavi dei dati specifiche dei thread possono risultare molto comodi per assicurare che le risorse non vengano disperse quando un thread esiste o è cancellato. A volte, benché, può risultare utile specificare delle funzioni di pulizia senza creare un nuovo elemento di dati specifico di thread che è duplicato per ogni thread. GNU/Linux fornisce per questo scopo dei \textit{gestori di pulizia} (\textit{cleanup handlers}).
+Le funzioni di pulizia per le chiavi dei dati specifiche dei thread possono
+risultare molto comodi per assicurare che le risorse non vengano disperse quando
+un thread esiste o è cancellato. A volte, benché, può risultare utile
+specificare delle funzioni di pulizia senza creare un nuovo elemento di dati
+specifico di thread che è duplicato per ogni thread. GNU/Linux fornisce per
+questo scopo dei \textit{gestori di pulizia} (\textit{cleanup handlers}).
 
-Un gestore di pulizia è semplicemente una funzione che dovrebbe essere invocata quando un thread esce. Il gestore prende un solo parametro \texttt{void*} ed il valore del suo argomento è fornito quando il gestore è registrato \--- Ciò rende facile usare la stessa funzione di gestione per deallocare più istanze di risorse.
+Un gestore di pulizia è semplicemente una funzione che dovrebbe essere invocata
+quando un thread esce. Il gestore prende un solo parametro \texttt{void*} ed il
+valore del suo argomento è fornito quando il gestore è registrato \--- Ciò rende
+facile usare la stessa funzione di gestione per deallocare più istanze di risorse.
 
-Un gestore di pulizia è una misura temporanea, usata per deallocare una risorsa solo se il thread esce o è cancellato senza aver terminato l'esecuzione di una particolare porzione di codice.
-In circostanze normali, quando il thread non esce e non è cancellato, le risorse dovrebbero essere deallocate esplicitamente e il gestore di pulizia dovrebbe venire rimosso.
+Un gestore di pulizia è una misura temporanea, usata per deallocare una risorsa
+solo se il thread esce o è cancellato senza aver terminato l'esecuzione di una
+particolare porzione di codice.
+In circostanze normali, quando il thread non esce e non è cancellato, le risorse
+dovrebbero essere deallocate esplicitamente e il gestore di pulizia dovrebbe
+venire rimosso.
 
-Per registrare un gestore di pulizia, chiama \texttt{pthread\_cleanup\_push}, passando un puntatore alla funzione di pulizia ed il valore \texttt{void*} del suo argomento. La chiamata a \texttt{pthread\_cleanup\_push} deve essere bilanciata da una corrispondente chiamata a \texttt{pthread\_cleanup\_pop}, che termina il gestore di pulizia. Per comodità, \texttt{pthread\_cleanup\_pop} prende un argomento \texttt{int}; se l'argomento è diverso da zero, l'azione di pulizia è eseguita e quindi chiusa.
+Per registrare un gestore di pulizia, chiama \texttt{pthread\_cleanup\_push},
+passando un puntatore alla funzione di pulizia ed il valore \texttt{void*} del
+suo argomento. La chiamata a \texttt{pthread\_cleanup\_push} deve essere
+bilanciata da una corrispondente chiamata a \texttt{pthread\_cleanup\_pop}, che
+termina il gestore di pulizia. Per comodità, \texttt{pthread\_cleanup\_pop}
+prende un argomento \texttt{int}; se l'argomento è diverso da zero, l'azione di
+pulizia è eseguita e quindi chiusa.
 
-Il frammento di programma nel listato 4.8 mostra come dovresti usare un gestore di pulizia per assicurarti che a buffer allocato dinamicamente viene ripulito se il thread termina.\\
+Il frammento di programma nel listato 4.8 mostra come dovresti usare un gestore
+di pulizia per assicurarti che a buffer allocato dinamicamente viene ripulito se
+il thread termina.\\
 
 \listfromfile{cleanup.c}
 	{Frammento di programma che dimostra un gestore di pulizia di thread}
 	{list:4.8}
 	{ALP-listings/chapter-4/cleanup.c}
 
-Poiché l'argomento di \texttt{pthread\_cleanup\_pop} in questo caso non è zero, la funzione di pulizia
-\texttt{deallocate\_buffer} viene chiamata automaticamente qui e non ha bisogno di essere chiamata
-esplicitamente. In questo semplice caso, potremmo aver usato direttamente la funzione di
-libreria standard \texttt{free} come nostro gestore di pulizia al posto di \texttt{deallocate\_buffer}.
+Poiché l'argomento di \texttt{pthread\_cleanup\_pop} in questo caso non è zero,
+la funzione di pulizia
+\texttt{deallocate\_buffer} viene chiamata automaticamente qui e non ha bisogno
+di essere chiamata
+esplicitamente. In questo semplice caso, potremmo aver usato direttamente la
+funzione di
+libreria standard \texttt{free} come nostro gestore di pulizia al posto di
+\texttt{deallocate\_buffer}.
 
 
 \subsection{Pulizia del Thread in C++}\label{subsec:4.3.2} % 4.3.2
-I programmatori C++ sono abituati ad ottenere la pulizia ``gratuitamente'' raggruppando
-le azioni di pulizia in oggetti distruttori. Quando gli oggetti vanno al di fuori del loro campo di operabilità, o perchè un blocco è eseguito per completamento o perché viene lanciata un'eccezione, il C++ si assicura che i distruttori siano chiamati per queel variabili automatiche che loro hanno. Ciò fornisce un meccanismo manuale per assicurarsi che il codice di pulizia venga chiamato, senza curarsi di come il blocco è andato in uscita.
+I programmatori C++ sono abituati ad ottenere la pulizia ``gratuitamente''
+raggruppando
+le azioni di pulizia in oggetti distruttori. Quando gli oggetti vanno al di
+fuori del loro campo di operabilità, o perchè un blocco è eseguito per
+completamento o perché viene lanciata un'eccezione, il C++ si assicura che i
+distruttori siano chiamati per queel variabili automatiche che loro hanno. Ciò
+fornisce un meccanismo manuale per assicurarsi che il codice di pulizia venga
+chiamato, senza curarsi di come il blocco è andato in uscita.
 
-Se un thread chiama \texttt{pthread\_exit}, tuttavia, il C++ non garantisce che i distruttori sono chiamati per tutte le variabili automatiche nello stack del thread. Un modo ingegnoso per recuperare questa funzionalità è quello di invocare \texttt{pthread\_exit} al livello alto della funzione thread lanciando una speciale eccezione.
+Se un thread chiama \texttt{pthread\_exit}, tuttavia, il C++ non garantisce che
+i distruttori sono chiamati per tutte le variabili automatiche nello stack del
+thread. Un modo ingegnoso per recuperare questa funzionalità è quello di
+invocare \texttt{pthread\_exit} al livello alto della funzione thread lanciando
+una speciale eccezione.
 
-Il programma nel listato 4.9 lo dimostra. Usando questa tecnica, una funzione indica la sua intenzione di uscire dal thread lanciando una \texttt{ThreadExitException} piutossto
-che chiamare direttamente \texttt{pthread\_exit}. Poiché l'eccezione è catturata nella funzione del thread ad alto livello, tutte le variabili locali nello stack del trhread verranno distrutte appropriatamente quando l'eccezione si propaga.
+Il programma nel listato 4.9 lo dimostra. Usando questa tecnica, una funzione
+indica la sua intenzione di uscire dal thread lanciando una
+\texttt{ThreadExitException} piutossto
+che chiamare direttamente \texttt{pthread\_exit}. Poiché l'eccezione è catturata
+nella funzione del thread ad alto livello, tutte le variabili locali nello stack
+del trhread verranno distrutte appropriatamente quando l'eccezione si propaga.
 
 \listfromfile{cxx-exit.cpp}
 	{Implemente l'uscita sicura dal Thread con le eccezioni C++}{list:4.9}
 	{ALP-listings/chapter-4/cxx-exit.cpp}
 
 \section{Sincronizzazione e Sezioni Critiche}\label{sec:4.4} % 4.4
-La programmazione con i thread è molto complessa perché molti programmi con i thread sono programmi concorrenti. In particolare, non c'è modo di sapere quando il sistema schedulerà un thread da eseguire e quando ne eseguirà un altro. Un thread può girare per un tempo molto lungo, o il sistema può commutare tre i thread molto velocemente. In un sistema con più processore, il sistema può anche schedulare thread multipli da eseguire letteralmente allo stesso tempo.
+La programmazione con i thread è molto complessa perché molti programmi con i
+thread sono programmi concorrenti. In particolare, non c'è modo di sapere quando
+il sistema schedulerà un thread da eseguire e quando ne eseguirà un altro. Un
+thread può girare per un tempo molto lungo, o il sistema può commutare tre i
+thread molto velocemente. In un sistema con più processore, il sistema può anche
+schedulare thread multipli da eseguire letteralmente allo stesso tempo.
 
-Debuggare un programma con thread è difficile perché non puoi sempre e facilmente riprodurre il comportamente che ha causato il problema. Puoi eseguire il programma una volta ed avere ogni cosa che funziona bene; la prossima volta che lo esegui può andare in crash. Non c'è verso di fare in modo che il sistema scheduli i thread esattamente allo stesso modo in cui lo ha fatto prima.
+Debuggare un programma con thread è difficile perché non puoi sempre e
+facilmente riprodurre il comportamente che ha causato il problema. Puoi eseguire
+il programma una volta ed avere ogni cosa che funziona bene; la prossima volta
+che lo esegui può andare in crash. Non c'è verso di fare in modo che il sistema
+scheduli i thread esattamente allo stesso modo in cui lo ha fatto prima.
 
-L'ultima causa di molti bug che riguardano i thread è che i thread cercano di accedere agli stessi dati. Come detto precedentemente, questo è uno dei più potenti aspetti dei trhread, ma può anche essere pericoloso. Se un thread è solo a metà strada dell'aggiornamento di una struttura dati mentre un altro thread accede alla stessa struttura dati, è facile che ne risulti il caos. Spesso, programmi con thread buggati contengono codice che funzionerà solo se un thread viene schedulato più spesso \--- o più raramente \--- di un altro trhead. Questi bug sono chiamati \textit{condizioni in competizione} (\textit{race conditions}); I thread stanno gareggiando con altri per modificare la stessa struttura dati.
+L'ultima causa di molti bug che riguardano i thread è che i thread cercano di
+accedere agli stessi dati. Come detto precedentemente, questo è uno dei più
+potenti aspetti dei trhread, ma può anche essere pericoloso. Se un thread è solo
+a metà strada dell'aggiornamento di una struttura dati mentre un altro thread
+accede alla stessa struttura dati, è facile che ne risulti il caos. Spesso,
+programmi con thread buggati contengono codice che funzionerà solo se un thread
+viene schedulato più spesso \--- o più raramente \--- di un altro trhead. Questi
+bug sono chiamati \textit{condizioni in competizione} (\textit{race conditions});
+I thread stanno gareggiando con altri per modificare la stessa struttura dati.
 
 \subsection{Condizioni in competizione}\label{subsec:4.4.1} % 4.4.1
-Supponi che il tuo programma abbia usa serie di lavori in coda che vengono processare di molti thread concorrenti. La coda di lavori è rappresentata da una lista collegata di oggetti \texttt{struct job}.
+Supponi che il tuo programma abbia usa serie di lavori in coda che vengono
+processare di molti thread concorrenti. La coda di lavori è rappresentata da una
+lista collegata di oggetti \texttt{struct job}.
 
-Dopo che ogni trhead termina un'operazione, esso controlla la coda per vedere se è disponibile un altro lavoro. Se \texttt{job\_queue} è diverso da null, il thread rimuove l'intestazione della lista collegata e setta \texttt{job\_queue} al prossimo lavoro nella lista.
+Dopo che ogni trhead termina un'operazione, esso controlla la coda per vedere se
+è disponibile un altro lavoro. Se \texttt{job\_queue} è diverso da null, il
+thread rimuove l'intestazione della lista collegata e setta \texttt{job\_queue}
+al prossimo lavoro nella lista.
 
-La funzione thread che processa il lavoro nella coda dovrebbe somigliare al listato 4.10
+La funzione thread che processa il lavoro nella coda dovrebbe somigliare al
+listato 4.10
 
 \listfromfile{job-queue1.c}
 	{Funzione Thread per processare un lavoro dalla coda}
 	{list:4.10}
 	{ALP-listings/chapter-4/job-queue1.c}
 
-Adesso supponi che a due thread accada di finire un lavoro più o meno allo stesso tempo, ma un solo lavoro rimanga in coda. Il primo thread verifica se \texttt{job\_queue} è null; vedendo che non lo è, il thread entra nel loop e memorizza il puntatore all'oggetto lavoro in \texttt{netx\_job}. A questo punto, succede che Linux interrompe il primo thread e schedula il secondo. Anche il secondo thread verifica \texttt{job\_queue} vedendo che non è null, assegna pure lo stesso puntatore lavoro a \texttt{next\_job}. Per la sfortunata coincidenza, adesso abbiamo due thread che eseguono lo stesso lavoro.
+Adesso supponi che a due thread accada di finire un lavoro più o meno allo
+stesso tempo, ma un solo lavoro rimanga in coda. Il primo thread verifica se
+\texttt{job\_queue} è null; vedendo che non lo è, il thread entra nel loop e
+memorizza il puntatore all'oggetto lavoro in \texttt{netx\_job}. A questo punto,
+succede che Linux interrompe il primo thread e schedula il secondo. Anche il
+secondo thread verifica \texttt{job\_queue} vedendo che non è null, assegna pure
+lo stesso puntatore lavoro a \texttt{next\_job}. Per la sfortunata coincidenza,
+adesso abbiamo due thread che eseguono lo stesso lavoro.
 
-Per rendere la situazione peggiore, un thread scollegherà l'oggetto lavoro dalla coda, lasciando \texttt{job\_queue} contenente \texttt{null}. Quando l'altro thread valuta \texttt{job\_queue->next}, ne risulta un errore di segmentazione.
+Per rendere la situazione peggiore, un thread scollegherà l'oggetto lavoro dalla
+coda, lasciando \texttt{job\_queue} contenente \texttt{null}. Quando l'altro
+thread valuta \texttt{job\_queue->next}, ne risulta un errore di segmentazione.
 
-Questo è un esempio di una condizione di competizione. In circostanze ``fortunate'', questo particolare schedulamento dei due thread può non verificarsi mai o la condizione di competizione può non mostrarsi mai. Solo in diverse circostanze, probabilmente quando eseguito in un sistema molto caricato (o in un nuovo server multiprocessore di un cliente importante) il bug si può mostrare.
+Questo è un esempio di una condizione di competizione. In circostanze
+``fortunate'', questo particolare schedulamento dei due thread può non
+verificarsi mai o la condizione di competizione può non mostrarsi mai. Solo in
+diverse circostanze, probabilmente quando eseguito in un sistema molto caricato
+(o in un nuovo server multiprocessore di un cliente importante) il bug si può
+mostrare.
 
-Per eliminare le condizioni di competizione è necessario un modo per fare operazione \textit{atomiche} (\textit{atomic}). Un'operazione atomica è indivisibile e non interrompibile; una volta che l'operazione si avvia non può essere messa in pausa o interrotta finché non completa, e nessun altra operazione avrà luogo nel frattempo. In questo particolare esempio verificherai \texttt{job\_queue}; se esso non è vuoto, rimuovi il primo lavoro, tutto come una singola operazione atomica.
+Per eliminare le condizioni di competizione è necessario un modo per fare
+operazione \textit{atomiche} (\textit{atomic}). Un'operazione atomica è
+indivisibile e non interrompibile; una volta che l'operazione si avvia non può
+essere messa in pausa o interrotta finché non completa, e nessun altra 
+operazione avrà luogo nel frattempo. In questo particolare esempio verificherai
+\texttt{job\_queue}; se esso non è vuoto, rimuovi il primo lavoro, tutto come
+una singola operazione atomica.
 
 \subsection{Mutex \--- Mutua esclusione}\label{subsec:4.4.2} % 4.4.2
-La soluzione al problema della coda di lavoro in condizione di competizione è di permettere solo ad un thread per volta di accedere alla coda di lavoro. Una volta che un thread inizia a guardare la coda nessun altro thread dovrebbe essere in grado di accedervi finché un thread non ha deciso se processare un lavoro, e, se così, ha rimosso il lavoro dalla lista.
+La soluzione al problema della coda di lavoro in condizione di competizione è di
+permettere solo ad un thread per volta di accedere alla coda di lavoro. Una
+volta che un thread inizia a guardare la coda nessun altro thread dovrebbe
+essere in grado di accedervi finché un thread non ha deciso se processare un
+lavoro, e, se così, ha rimosso il lavoro dalla lista.
 
-Implementare ci richiede il supporto da parte del sistema operativo. GNU/Linux fornisce i \textit{mutexes}, abbreviazione di \textit{MUTual EXclusion locks}. Un mutex è una speciale chiusura che un solo thread per volta ha il permesso di chiudere. Se un thread chiude un mutex e quindi anche un secondo thread cerca di chiudere lo stesso mutex, il secondo thread viene \textit{bloccato}, o messo in attesa. Solo quando il primo thread sblocca il mutex il secondo thread viene \textit{sbloccato} \--- permesso di riprendere l'esecuzione. GNU/Linux garantisce che le condizioni di competizione non si verifichino tra thread che cercano di bloccare un mutex; solo un thread avrà sempre la possibilità di ottenerne la chiusura e tutti gli altri thread verranno bloccati.
+Implementare ci richiede il supporto da parte del sistema operativo. GNU/Linux
+fornisce i \textit{mutexes}, abbreviazione di \textit{MUTual EXclusion locks}.
+Un mutex è una speciale chiusura che un solo thread per volta ha il permesso di
+chiudere. Se un thread chiude un mutex e quindi anche un secondo thread cerca di
+chiudere lo stesso mutex, il secondo thread viene \textit{bloccato}, o messo in
+attesa. Solo quando il primo thread sblocca il mutex il secondo thread viene
+\textit{sbloccato} \--- permesso di riprendere l'esecuzione. GNU/Linux
+garantisce che le condizioni di competizione non si verifichino tra thread che
+cercano di bloccare un mutex; solo un thread avrà sempre la possibilità di
+ottenerne la chiusura e tutti gli altri thread verranno bloccati.
 
-Immagina un mutex come la porta del bagno. Chiunque vi arriva prima, entra e blocca la porta. Se qualcun altro cerca di entrare nel bagno mentre è occupato, quella persona troverà la porta bloccata e sarà costretto ad aspettare fuori finché chi l'ha occupato non esce.
+Immagina un mutex come la porta del bagno. Chiunque vi arriva prima, entra e
+blocca la porta. Se qualcun altro cerca di entrare nel bagno mentre è occupato,
+quella persona troverà la porta bloccata e sarà costretto ad aspettare fuori
+finché chi l'ha occupato non esce.
 
-Per creare un mutex, crea una variabile di tipo \texttt{pthread\_mutex\_t} e passa un puntatore ad essa a \texttt{pthread\_mutex\_init}. Il secondo argomento a \texttt{pthread\_mutex\_init} è un puntatore ad un oggetto attributo mutex, che specifica gli attributi del mutex. Come con \texttt{pthread\_create}, se l'attributo puntatore è null, si assumono gli attributi di default. La variabile mutex dovrebbe essere inizializzata solo una volta. Questo frammento di codice dimostra la dichiarazione ed inizializzazione di una variabile mutex.
+Per creare un mutex, crea una variabile di tipo \texttt{pthread\_mutex\_t} e
+passa un puntatore ad essa a \texttt{pthread\_mutex\_init}. Il secondo argomento
+a \texttt{pthread\_mutex\_init} è un puntatore ad un oggetto attributo mutex,
+che specifica gli attributi del mutex. Come con \texttt{pthread\_create}, se
+l'attributo puntatore è null, si assumono gli attributi di default. La variabile
+mutex dovrebbe essere inizializzata solo una volta. Questo frammento di codice
+dimostra la dichiarazione ed inizializzazione di una variabile mutex.
 \begin{listcodeC}
 pthread_mutex_t mutex;
 pthread_mutex_init (&mutex, NULL);
 \end{listcodeC}
-Un altro semplice modo di creare un mutex con gli attributi di default è quello di inizializzarlo con lo speciale valore \texttt{PTHREAD\_MUTEX\_INITIALIZER}. Non è necessaria nessuna ulteriore chiamata a \texttt{pthread\_mutex\_init}. Ciò è particolarmente conveniente per variabili globali (e, in C++, membri di dati statici). Il precedente frammento di codice può essere scritto equivalentemente come questo:
+Un altro semplice modo di creare un mutex con gli attributi di default è quello
+di inizializzarlo con lo speciale valore \texttt{PTHREAD\_MUTEX\_INITIALIZER}.
+Non è necessaria nessuna ulteriore chiamata a \texttt{pthread\_mutex\_init}. Ciò
+è particolarmente conveniente per variabili globali (e, in C++, membri di dati
+	statici). Il precedente frammento di codice può essere scritto
+equivalentemente come questo:
 \begin{listcodeC}
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 \end{listcodeC}
-Un thread può cercare di bloccare un mutex chiamando in esso \texttt{pthread\_mutex\_lock}. Se il mutex non era bloccato, esso diventa bloccato e la funzione ritorna immediatamente. Se il mutex era bloccato da un altro thread, \texttt{pthread\_mutex\_lokc} blocca l'esecuzione e ritorna solo eventualmente quando il mutex non è bloccato dall'altro thread. Più di un thread per volta può essere bloccato su un mutex chiuso. Quando il mutex è sbloccato, solo uno dei thread fermati (scelto in modi imprevedibile) viene sbloccato e gli è permesso di chiudere il mutex; gli altri thread stanno bloccati.
+Un thread può cercare di bloccare un mutex chiamando in esso
+\texttt{pthread\_mutex\_lock}. Se il mutex non era bloccato, esso diventa
+bloccato e la funzione ritorna immediatamente. Se il mutex era bloccato da un
+altro thread, \texttt{pthread\_mutex\_lokc} blocca l'esecuzione e ritorna solo
+eventualmente quando il mutex non è bloccato dall'altro thread. Più di un thread
+per volta può essere bloccato su un mutex chiuso. Quando il mutex è sbloccato,
+solo uno dei thread fermati (scelto in modi imprevedibile) viene sbloccato e gli
+è permesso di chiudere il mutex; gli altri thread stanno bloccati.
 
-Una chiamata a \texttt{pthread\_mutex\_unlock} sblocca un mutex. Questa funzione dovrebbe essere sempre chiamata dallo stesso thread che ha bloccato il mutex.
-Il listato 4.11 mostra un'altra versione dell'esempio della coda di lavoro. Adesso la coda è protetta da un mutex. Prima di accedere alla coda (sia in scrittura che in lettura), ogni thread blocca prima un mutex. Solo quando l'intere sequenza di verifica della coda e rimozione del lavoro è completa il mutex viene sbloccato. Ciò previene la condizione di competizione precedentemente descritta.
+Una chiamata a \texttt{pthread\_mutex\_unlock} sblocca un mutex. Questa funzione
+dovrebbe essere sempre chiamata dallo stesso thread che ha bloccato il mutex.
+Il listato 4.11 mostra un'altra versione dell'esempio della coda di lavoro.
+Adesso la coda è protetta da un mutex. Prima di accedere alla coda (sia in
+	scrittura che in lettura), ogni thread blocca prima un mutex. Solo
+quando l'intere sequenza di verifica della coda e rimozione del lavoro è
+completa il mutex viene sbloccato. Ciò previene la condizione di competizione
+precedentemente descritta.
 
 \listfromfile{job-queue2.c}
 	{Funzione Thread della coda di lavoro, protetta da un Mutex}
 	{list:4.11}
 	{ALP-listings/chapter-4/job-queue2.c}
-Tutti accedono a \texttt{job\_queue}, il puntatore ai dati condiviso, viene tra la chiamata a \texttt{pthread\_mutex\_lock} e la chiamata a \texttt{pthread\_mutex\_unlock}. Ad un oggetto lavoro, memorizzato in \texttt{next\_job}, si accede al di fuori di questa regione solo dopo che quell'oggetto è stato rimosso dalla coda ed è quindi inaccessibile ad altri thread.
+Tutti accedono a \texttt{job\_queue}, il puntatore ai dati condiviso, viene tra
+la chiamata a \texttt{pthread\_mutex\_lock} e la chiamata a
+\texttt{pthread\_mutex\_unlock}. Ad un oggetto lavoro, memorizzato in
+\texttt{next\_job}, si accede al di fuori di questa regione solo dopo che
+quell'oggetto è stato rimosso dalla coda ed è quindi inaccessibile ad altri
+thread.
 
-Nota che se la coda è vuota (\texttt{job\_queue} è null), non usciamo immediatamente dal loop perché ciò lascerebbe il mutex permanentemente bloccato ed eviterebbe ad ogni altro thread di accedere nuovamente alla coda di lavoro. Piuttosto, ricordiamo questo fatto impostando \texttt{next\_job} a null ed uscendo solo dopo aver sbloccato il mutex.
+Nota che se la coda è vuota (\texttt{job\_queue} è null), non usciamo
+immediatamente dal loop perché ciò lascerebbe il mutex permanentemente bloccato
+ed eviterebbe ad ogni altro thread di accedere nuovamente alla coda di lavoro.
+Piuttosto, ricordiamo questo fatto impostando \texttt{next\_job} a null ed
+uscendo solo dopo aver sbloccato il mutex.
 
-L'uso del mutex per bloccare \texttt{job\_queue} non è automatico; ti permette di aggiungere il codice per bloccare il mutex prima di accedere a quella variabile e quindi sbloccarlo in seguito. Per esempio, una funzione per aggiungere un lavoro alla coda di lavoro potrebbe somigliare a questa:
+L'uso del mutex per bloccare \texttt{job\_queue} non è automatico; ti permette
+di aggiungere il codice per bloccare il mutex prima di accedere a quella
+variabile e quindi sbloccarlo in seguito. Per esempio, una funzione per
+aggiungere un lavoro alla coda di lavoro potrebbe somigliare a questa:
 
 \begin{listcodeC}
 void enqueue_job (struct job* new_job)
@@ -280,16 +691,43 @@ void enqueue_job (struct job* new_job)
 \end{listcodeC}
 
 \subsection{Stallo del Mutex - Deadlocks}\label{subsec:4.4.3} % 4.4.3
-I mutex forniscono un meccanismo per permettere ad un thread di bloccare l'esecuzione di un altro. Ciò apre la possibilità di una nuova classe di bug, chiamati \textit{deadlocks}. Uno stallo si verifica quando uno o più thread sono fermi in attesa di qualcosa che non si verifica mai.
-Un semplice tipo di stallo può verificarsi quando lo stesso thread cerca di bloccare un mutex due volte in una riga. Il comportamento in questo caso dipende da quale tipo di mutex viene usato. Esistono tre tipi di mutex:
+I mutex forniscono un meccanismo per permettere ad un thread di bloccare
+l'esecuzione di un altro. Ciò apre la possibilità di una nuova classe di bug,
+chiamati \textit{deadlocks}. Uno stallo si verifica quando uno o più thread sono
+fermi in attesa di qualcosa che non si verifica mai.
+Un semplice tipo di stallo può verificarsi quando lo stesso thread cerca di
+bloccare un mutex due volte in una riga. Il comportamento in questo caso dipende
+da quale tipo di mutex viene usato. Esistono tre tipi di mutex:
 \begin{itemize}
-\item Bloccare un \textit{mutex veloce} (\textit{fast mutex}) (il tipo di default) causerà il verificarsi di uno stallo. Un tentativo di chiudere un mutex bloccherà finché il mutex non sarà sbloccato. Ma poiché il thread che ha chiuso il mutex è bloccato nello stesso mutex, la chiusura non può mai essere rilasciata.
-\item Bloccare un \textit{mutex ricorsivo} non causa lo stallo. Un mutex ricorsivo può essere chiuso diverse volte senza problemi dallo stesso thread. Il mutex ricorda quante volte \texttt{pthread\_mutex\_lock} è stato chiamato su di esso dal thread che tiene la chiusura; quel thread deve fare lo stesso numero di chiamate a \texttt{pthread\_mutex\_unlock} prima che il mutex venga attualmente sbloccato ed un altro threadabbia il permesso di bloccarlo.
-\item GNU/Linux troverà e segnerà una doppia chiusura su un \textit{errore di verifica del mutex} (\textit{error-checking mutex}) che potrebbe altrimente causare uno stallo. La seconda chiamata consecutiva a \texttt{pthread\_mutex\_lock} restituisce il codice d'errore \texttt{EDEADLK}.
+\item Bloccare un \textit{mutex veloce} (\textit{fast mutex}) (il tipo di
+	default) causerà il verificarsi di uno stallo. Un tentativo di chiudere
+un mutex bloccherà finché il mutex non sarà sbloccato. Ma poiché il thread che
+ha chiuso il mutex è bloccato nello stesso mutex, la chiusura non può mai essere
+rilasciata.
+\item Bloccare un \textit{mutex ricorsivo} non causa lo stallo. Un mutex
+ricorsivo può essere chiuso diverse volte senza problemi dallo stesso thread. Il
+mutex ricorda quante volte \texttt{pthread\_mutex\_lock} è stato chiamato su di
+esso dal thread che tiene la chiusura; quel thread deve fare lo stesso numero di
+chiamate a \texttt{pthread\_mutex\_unlock} prima che il mutex venga attualmente
+sbloccato ed un altro threadabbia il permesso di bloccarlo.
+\item GNU/Linux troverà e segnerà una doppia chiusura su un \textit{errore di
+verifica del mutex} (\textit{error-checking mutex}) che potrebbe altrimente
+causare uno stallo. La seconda chiamata consecutiva a
+\texttt{pthread\_mutex\_lock} restituisce il codice d'errore \texttt{EDEADLK}.
 \end{itemize}
-Per default, un mutex GNU/Linux è del tipo veloce. Per creare un mutex di uno degli altri due tipi, prima si crea un oggetto attributo mutex dichiarando una variabile \texttt{pthread\_mutexattr\_t} e chiamando \texttt{pthread\_mutexattr\_init} su un puntatore ad essa. Quindi impostare il tipo di mutex chiamando \texttt{pthread\_mutexattr\_setkind\_np}; il primo argomento è un puntatore all'oggetto attributo mutex, il secondo è \texttt{PTHREAD\_MUTEX\_RECURSIVE\_NP} per un mutex ricorsivo, o \texttt{PTHREAD\_MUTEX\_ERRORCHECK\_NP} per un mutex con controllo d'errore. Passare un puntatorea questo oggetto attributo a \texttt{pthread\_mutex\_destroy}.
+Per default, un mutex GNU/Linux è del tipo veloce. Per creare un mutex di uno
+degli altri due tipi, prima si crea un oggetto attributo mutex dichiarando una
+variabile \texttt{pthread\_mutexattr\_t} e chiamando
+\texttt{pthread\_mutexattr\_init} su un puntatore ad essa. Quindi impostare il
+tipo di mutex chiamando \texttt{pthread\_mutexattr\_setkind\_np}; il primo
+argomento è un puntatore all'oggetto attributo mutex, il secondo è
+\texttt{PTHREAD\_MUTEX\_RECURSIVE\_NP} per un mutex ricorsivo, o
+\texttt{PTHREAD\_MUTEX\_ERRORCHECK\_NP} per un mutex con controllo d'errore.
+Passare un puntatorea questo oggetto attributo a
+\texttt{pthread\_mutex\_destroy}.
 
-La sequenza di codice illustra la creazione di un mutex con controllo d'errore, per esempio:
+La sequenza di codice illustra la creazione di un mutex con controllo d'errore,
+per esempio:
 \begin{listcodeC}
 pthread_mutexattr_t attr;
 pthread_mutex_t mutex;
@@ -298,112 +736,314 @@ pthread_mutexattr_setkind_np (&attr, PTHREAD_MUTEX_ERRORCHECK_NP);
 pthread_mutex_init (&mutex, &attr);
 pthread_mutexattr_destroy (&attr);
 \end{listcodeC}
-Come suggerito dal suffisso "np", i tipi di mutex ricorsivo e con controllo d'errore sono specifici per GNU/Linux e non sono portabili. Quindi, generalmente non è consigliato usarli nei programmi (comunque, i mutex con controllo d'errore possono essere utili per debugging).
+Come suggerito dal suffisso "np", i tipi di mutex ricorsivo e con controllo
+d'errore sono specifici per GNU/Linux e non sono portabili. Quindi, generalmente
+non è consigliato usarli nei programmi (comunque, i mutex con controllo d'errore
+	possono essere utili per debugging).
 
 \subsection{Verifiche non bloccanti dei Mutex}\label{subsec:4.4.4} % 4.4.4
-Occasionalmente, è utile verificare se un mutex è attualmente chiuso senza bloccarsi su di esso. Per esempio, un thread può aver bisogno di chiudere un mutex ma può avere altro lavoro da fare invece di bloccarsi se il mutex è già chiuso. Poiché \texttt{pthread\_mutex\_lock} non ritornerà finché il mutex non diventa sbloccato è necessaria qualche altra funzione.
+Occasionalmente, è utile verificare se un mutex è attualmente chiuso senza
+bloccarsi su di esso. Per esempio, un thread può aver bisogno di chiudere un
+mutex ma può avere altro lavoro da fare invece di bloccarsi se il mutex è già
+chiuso. Poiché \texttt{pthread\_mutex\_lock} non ritornerà finché il mutex non
+diventa sbloccato è necessaria qualche altra funzione.
 
-GNU/Linux fornisce \texttt{pthread\_mutex\_trylock} per questo scopo. Se chiami \texttt{pthread\_mutex\_trylock} su un mutex non chiuso, chiuderai il mutex come se avessi chiamato \texttt{pthread\_mutex\_lock} e \texttt{pthread\_mutex\_trylock} ritornerà zero. Comunque, se il mutex è già chiuso da un altro thread, \texttt{pthread\_mutex\_trylock} non si bloccherà. Piuttosto, esso ritornerà immediatamente con il codice d'errore \texttt{EBUSY}. La chiusurà del mutex tenuta dall'altro thread non sarà influenzata. Potrai provare nuovamente dopo a chiudere il mutex.
+GNU/Linux fornisce \texttt{pthread\_mutex\_trylock} per questo scopo. Se chiami
+\texttt{pthread\_mutex\_trylock} su un mutex non chiuso, chiuderai il mutex come
+se avessi chiamato \texttt{pthread\_mutex\_lock} e
+\texttt{pthread\_mutex\_trylock} ritornerà zero. Comunque, se il mutex è già
+chiuso da un altro thread, \texttt{pthread\_mutex\_trylock} non si bloccherà.
+Piuttosto, esso ritornerà immediatamente con il codice d'errore \texttt{EBUSY}.
+La chiusurà del mutex tenuta dall'altro thread non sarà influenzata. Potrai
+provare nuovamente dopo a chiudere il mutex.
 
 \subsection{Semafori per i Thread}\label{subsec:4.4.5} % 4.4.5
-Nell'esempio precedente, nel quale molti thread processano i lavori da una coda, la funzione thread principale dei thread tira fuori il prossimo lavoro finché non ci sono più lavori rimasti e quindi esce dal thread. Questo schema funziona se tutti i lavori sono accodati in anticipo o se i nuovi lavori sono accodati al più tanto velocemente quanto vengono processati dai thread. Comunque, se i thread lavorano troppo velocemente, la coda dei lavori verrà svuotata e i thread usciranno. Se successivamente vengono accodati nuovi lavori, non può rimanere nessun thread per precessarli. A noi piacerebbe piuttosto un meccanismo per bloccare i thread quando la coda è vuota, finché non tornano disponibili nuovi lavori.
+Nell'esempio precedente, nel quale molti thread processano i lavori da una coda,
+la funzione thread principale dei thread tira fuori il prossimo lavoro finché
+non ci sono più lavori rimasti e quindi esce dal thread. Questo schema funziona
+se tutti i lavori sono accodati in anticipo o se i nuovi lavori sono accodati al
+più tanto velocemente quanto vengono processati dai thread. Comunque, se i
+thread lavorano troppo velocemente, la coda dei lavori verrà svuotata e i thread
+usciranno. Se successivamente vengono accodati nuovi lavori, non può rimanere
+nessun thread per precessarli. A noi piacerebbe piuttosto un meccanismo per
+bloccare i thread quando la coda è vuota, finché non tornano disponibili nuovi
+lavori.
 
-Un \textit{semaforo} fornisce un metodo conveniente per far ciò. Un semaforo è un contatore che può essere utilizzato per sincronizzare thread multipli. Come con un mutex, GNU/Linux garantisce che verificare o modificare il valore di un semaforo possa essere fatto senza problemi, senza creare condizioni di competizione.
+Un \textit{semaforo} fornisce un metodo conveniente per far ciò. Un semaforo è
+un contatore che può essere utilizzato per sincronizzare thread multipli. Come
+con un mutex, GNU/Linux garantisce che verificare o modificare il valore di un
+semaforo possa essere fatto senza problemi, senza creare condizioni di
+competizione.
 
-Ogni semaforo ha un valore contatore, che è un intero non negativo. Un semaforo supporta due operazioni di base:
+Ogni semaforo ha un valore contatore, che è un intero non negativo. Un semaforo
+supporta due operazioni di base:
 \begin{itemize}
-\item un'operazione (\textit{wait}) decrementa il valore del semaforo di 1. Se il valore è già ero, l'operazione si blocca finché il valore del semaforo non diventa positivo (dovuto ad un'azione di qualche altro thread). Quando il valore del semaforo diventa positivo, esso è decrementato di 1 e l'operazione wait ritorna.
-\item un'operazione \textit{post} incrementa il valore del semaforo di 1. Se il semaforo era precedentemente zero e altri thread sono bloccati in un'operazione wait su quel semaforo, uno di questi thread viene sbloccato e la sua operazione wait si completa (ciò fa tornare il valore del semaforo nuovamente a zero)
+\item un'operazione (\textit{wait}) decrementa il valore del semaforo di 1. Se
+il valore è già ero, l'operazione si blocca finché il valore del semaforo non
+diventa positivo (dovuto ad un'azione di qualche altro thread). Quando il valore
+del semaforo diventa positivo, esso è decrementato di 1 e l'operazione wait
+ritorna.
+\item un'operazione \textit{post} incrementa il valore del semaforo di 1. Se il
+semaforo era precedentemente zero e altri thread sono bloccati in un'operazione
+wait su quel semaforo, uno di questi thread viene sbloccato e la sua operazione
+wait si completa (ciò fa tornare il valore del semaforo nuovamente a zero)
 \end{itemize}
-Nota che GNU/Linux fornisce due implemntazioni di semaforo leggermente diverse. Quella che noi descriviamo qui è l'implementazione del semaforo standard POSIX. Usa questi semafori nella comunicazione tra thread. L'altra implementazione, usata per la comunicazione tra i procesi, è descritta nella \numnameref{sec:5.2} \marginpar{Sezione 5.2, Processare Semafori}. Se usi i semafori, inlcudi \texttt{<semaphore.h>}.
+Nota che GNU/Linux fornisce due implemntazioni di semaforo leggermente diverse.
+Quella che noi descriviamo qui è l'implementazione del semaforo standard POSIX.
+Usa questi semafori nella comunicazione tra thread. L'altra implementazione,
+usata per la comunicazione tra i procesi, è descritta nella
+\numnameref{sec:5.2} \marginpar{Sezione 5.2, Processare Semafori}. Se usi i
+semafori, inlcudi \texttt{<semaphore.h>}.
 
-Un semaforo è rappresentato da una variabile \texttt{sem\_t}. Prima di usarla, devi inizializzarla usado la funzione \texttt{sem\_init}, passando un puntatore alla variabile \texttt{sem\_t}. Il secondo parametro dovrebbe essere zero\footnote{Un valore diverso da zero indicherebbe un semaforo che può essere condiviso dai processi, che non è supportato da GNU/Linux per questo tipo di semaforo}, e il terzo parametro è il valore iniziale del semaforo. Se non hai più bisogno di un semaforo, è bene deallocarlo con \texttt{sem\_destroy}.
+Un semaforo è rappresentato da una variabile \texttt{sem\_t}. Prima di usarla,
+devi inizializzarla usado la funzione \texttt{sem\_init}, passando un puntatore
+alla variabile \texttt{sem\_t}. Il secondo parametro dovrebbe essere zero
+\footnote{Un valore diverso da zero indicherebbe un semaforo che può essere
+condiviso dai processi, che non è supportato da GNU/Linux per questo tipo di
+semaforo}, e il terzo parametro è il valore iniziale del semaforo. Se non hai
+più bisogno di un semaforo, è bene deallocarlo con \texttt{sem\_destroy}.
 
-Per aspettare su un semaforo, usa \texttt{sem\_wait}. Per postare su un semaforo, usa \texttt{sem\_post}. Viene fornita anche una funzione wait non bloccante, \texttt{sem\_trywait}, è simile a \texttt{pthread\_mutex\_trylock} \--- se l'attesa potrebbe essere stata bloccata poiché il valore del semaforo era zero la funzione ritorna immediatamente, con un valore d'errore \texttt{EAGAIN}, piuttosto che bloccarsi.
+Per aspettare su un semaforo, usa \texttt{sem\_wait}. Per postare su un
+semaforo, usa \texttt{sem\_post}. Viene fornita anche una funzione wait non
+bloccante, \texttt{sem\_trywait}, è simile a \texttt{pthread\_mutex\_trylock}
+\--- se l'attesa potrebbe essere stata bloccata poiché il valore del semaforo
+era zero la funzione ritorna immediatamente, con un valore d'errore
+\texttt{EAGAIN}, piuttosto che bloccarsi.
 
-GNU/Linux fornisce anche una funzione per ottenere il valore corrente di un semaforo, \texttt{sem\_getvalue}, che mette il valore nella variabile \texttt{int} puntata dal suo secondo argomento. Non dovresti comunque usare il valore di un semaforo che hai ottenuto da questa funzione per prendere una decisione sul postare a aspettare in un semaforo. Far ciò potrebbe portare ad una condizione di competizione: un altro thread potrebbe cambiare il valore del semaforo tra la chiamata a \texttt{sem\_getvalue} e la chiamata ad un'altra funzione semaforo. Usa piuttosto le funzioni atomiche post e wait.
+GNU/Linux fornisce anche una funzione per ottenere il valore corrente di un
+semaforo, \texttt{sem\_getvalue}, che mette il valore nella variabile
+\texttt{int} puntata dal suo secondo argomento. Non dovresti comunque usare il
+valore di un semaforo che hai ottenuto da questa funzione per prendere una
+decisione sul postare a aspettare in un semaforo. Far ciò potrebbe portare ad
+una condizione di competizione: un altro thread potrebbe cambiare il valore del
+semaforo tra la chiamata a \texttt{sem\_getvalue} e la chiamata ad un'altra
+funzione semaforo. Usa piuttosto le funzioni atomiche post e wait.
 
-Tornando al nostro esempio della coda di lavoro, possiamo usare un semaforo per contare il numero di lavori in attesa sulla coda. Il listato 4.12 controlla la coda con un semaforo. La funzione \texttt{enqueue\_job} aggiunge un nuovo lavoro alla coda.
+Tornando al nostro esempio della coda di lavoro, possiamo usare un semaforo per
+contare il numero di lavori in attesa sulla coda. Il listato 4.12 controlla la
+coda con un semaforo. La funzione \texttt{enqueue\_job} aggiunge un nuovo lavoro
+alla coda.
 
 \listfromfile{job-queue3.c}
 	{Coda di lavoro controllata da un semaforo}
 	{list:4.12}
 	{ALP-listings/chapter-4/job-queue3.c}
-Prima di prendere un lavoro dall'inizio della coda, ogni thread prima aspetterà al semaforo. Se il valore del semaforo è zero, che indica che la coda è vuota, il thread semplicemente si bloccherà finché il valore del semaforo non diventa positivo, indicando che un lavoro è stato aggiunto alla coda.
+Prima di prendere un lavoro dall'inizio della coda, ogni thread prima aspetterà
+al semaforo. Se il valore del semaforo è zero, che indica che la coda è vuota,
+il thread semplicemente si bloccherà finché il valore del semaforo non diventa
+positivo, indicando che un lavoro è stato aggiunto alla coda.
 
-La funzione \texttt{enqueue\_job} aggiunge un lavoro alla coda. Proprio come \texttt{thread\_function}, esso ha bisogno di vedere il mutex coda prima di modificare la coda \marginpar{verificare traduzione di vedere il mutex coda}. Dopo aver aggiunto un lavoro alla coda, esso posta al semaforo, indicando che è disponibile un nuovo lavoro. Nella versione mostrata nel listato 4.12, i thread che processano i lavori non escono mai; se non ci sono lavori disponibili per un po', tutti i thread semplicemente si bloccano in \texttt{sem\_wait}.
+La funzione \texttt{enqueue\_job} aggiunge un lavoro alla coda. Proprio come
+\texttt{thread\_function}, esso ha bisogno di vedere il mutex coda prima di
+modificare la coda \marginpar{verificare traduzione di vedere il mutex coda}.
+Dopo aver aggiunto un lavoro alla coda, esso posta al semaforo, indicando che è
+disponibile un nuovo lavoro. Nella versione mostrata nel listato 4.12, i thread
+che processano i lavori non escono mai; se non ci sono lavori disponibili per un
+po', tutti i thread semplicemente si bloccano in \texttt{sem\_wait}.
 
 \subsection{Variabili condizione}\label{subsec:4.4.6} % 4.4.6
-Abbiamo mostrato come usare un mutex per proteggere una variabile da accessi simultanei da due thread e come usare i semafori per implementare un contatore condiviso. Una \textit{variabile condizione} è un terzo dispositivo di sincronizzazione che GNU/Linux fornisce; con esso, puoi implementare condizioni più complesse sotto le quali eseguire i thread.
+Abbiamo mostrato come usare un mutex per proteggere una variabile da accessi
+simultanei da due thread e come usare i semafori per implementare un contatore
+condiviso. Una \textit{variabile condizione} è un terzo dispositivo di
+sincronizzazione che GNU/Linux fornisce; con esso, puoi implementare condizioni
+più complesse sotto le quali eseguire i thread.
 
-Supponi di aver scritto una funzione thread che esegue un loop all'infinito, facendo qualche lavoro ad ogni iterazione. Il loop thread, comunque, ha bisogno di essere controllato da un flag: il loop gira solo quando il flag è settato; quando il flag non è settato, il loop va in pausa.
+Supponi di aver scritto una funzione thread che esegue un loop all'infinito,
+facendo qualche lavoro ad ogni iterazione. Il loop thread, comunque, ha bisogno
+di essere controllato da un flag: il loop gira solo quando il flag è settato;
+quando il flag non è settato, il loop va in pausa.
 
-Il listato 4.13 mostra come puoi implementare ciò girando in un loop. Durante ogni iterazione del loop, la funzione thread verifica che il flag sia impostato. Poiché al flag accedono più thread, esso è protetto da un mutex. Questa implementazione può essere corretta, ma non è efficiente. La funzione thread spenderà molta CPU ogni volta che il flag non è impostato, verificando e riverificando il flag, ogni volta chiudendo e aprendo il mutex. Ciò che realmente vuoi è un modo per far dormire il thread quando il flag non è impostato, finché il cambiamento di qualche circostanza non fa diventare il flag impostato.
+Il listato 4.13 mostra come puoi implementare ciò girando in un loop. Durante
+ogni iterazione del loop, la funzione thread verifica che il flag sia impostato.
+Poiché al flag accedono più thread, esso è protetto da un mutex. Questa
+implementazione può essere corretta, ma non è efficiente. La funzione thread
+spenderà molta CPU ogni volta che il flag non è impostato, verificando e
+riverificando il flag, ogni volta chiudendo e aprendo il mutex. Ciò che
+realmente vuoi è un modo per far dormire il thread quando il flag non è
+impostato, finché il cambiamento di qualche circostanza non fa diventare il flag
+impostato.
 
 \listfromfile{spin-condvar.c}{Una semplice implementazione della variabile condizione}
 	{list:4.13}
 	{ALP-listings/chapter-4/spin-condvar.c}
-Una variabile condizione ti permette di implementare una condizione sotto la quale un thread si esegue e, al contrario, la condizione sotto la quale il thread è bloccato.
-Finché ogni thread che potenzialmente cambia il senso della condizione usa la variabile condizione in maniera appropriata, Linux garantisce che i thread bloccati nella condizione verranno sbloccati quando la condizione cambia.
+Una variabile condizione ti permette di implementare una condizione sotto la
+quale un thread si esegue e, al contrario, la condizione sotto la quale il
+thread è bloccato.
+Finché ogni thread che potenzialmente cambia il senso della condizione usa la
+variabile condizione in maniera appropriata, Linux garantisce che i thread
+bloccati nella condizione verranno sbloccati quando la condizione cambia.
 
-Come con un semaforo, un thread può \textit{aspettare} su una variabile condizione. Se il thread A aspetta su una variabile condizione, esso è bloccato finché un altro thread, thread B, segnala la stessa variabile codizione. Diversamente da un semaforo, una variabile condizione non ha un contatore o memoria; il thread A deve restare in attesa sulla variabile condizione \textit{prima} che il thread B la segnali. Se il thread B segnala la variabile condizione prima che il thread A aspetti su essa, il segnale è perso,\marginpar{verificare traduzione} e il thread A si blocca finché qualche altro thread non segnala la variabile condizione nuovamente.
+Come con un semaforo, un thread può \textit{aspettare} su una variabile
+condizione. Se il thread A aspetta su una variabile condizione, esso è bloccato
+finché un altro thread, thread B, segnala la stessa variabile codizione.
+Diversamente da un semaforo, una variabile condizione non ha un contatore o
+memoria; il thread A deve restare in attesa sulla variabile condizione
+\textit{prima} che il thread B la segnali. Se il thread B segnala la variabile
+condizione prima che il thread A aspetti su essa, il segnale è perso,
+\marginpar{verificare traduzione} e il thread A si blocca finché qualche altro
+thread non segnala la variabile condizione nuovamente.
 
-Ciò è come dovresti usare una variabile condizione per rendere l'esempio precedente più efficiente:
+Ciò è come dovresti usare una variabile condizione per rendere l'esempio
+precedente più efficiente:
 \begin{itemize}
-\item Il loop nella \texttt{thread\_function} verifica il flag. Se il flag non è impostato, il thread aspetta sulla variabile condizione.
-\item La funzione \texttt{set\_thread\_flag} segnala la variabile condizione dopo aver cambiato il valore del flag. In questo modo, se \texttt{thread\_function} è bloccata sulla variabile condizione, esso verrà sbloccato e la condizione verificata nuovamente.
+\item Il loop nella \texttt{thread\_function} verifica il flag. Se il flag non è
+impostato, il thread aspetta sulla variabile condizione.
+\item La funzione \texttt{set\_thread\_flag} segnala la variabile condizione
+dopo aver cambiato il valore del flag. In questo modo, se
+\texttt{thread\_function} è bloccata sulla variabile condizione, esso verrà
+sbloccato e la condizione verificata nuovamente.
 \end{itemize}
-In questo c'è un problema: c'è una condizione di competizione tra il verificare il valore del flag e segnalare o aspettare sulla variabile condizione. Supponi che \texttt{thread\_function} abbia verificato il flag e visto che non era impostato. In quel momento, lo scheduler di Linux abbia messo in pausa quel thread e ripreso quello principale. Per qualche coincidenza, il thread principale è in \texttt{set\_thread\_flag}. Esso imposta il flag e quindi segnala la variabile condizione. Poiché nessun thread sta aspettando sulla variabile condizione in quel momnento (ricorda che \texttt{thread\_function} era stata messa in pausa prima che potesse aspettare sulla variabile condizione), il segnale è perso. Adesso, quando Linux rischedula l'altro thread, inizia aspettando sulla variabile condizione e può finire per restare bloccato per sempre.
+In questo c'è un problema: c'è una condizione di competizione tra il verificare
+il valore del flag e segnalare o aspettare sulla variabile condizione. Supponi
+che \texttt{thread\_function} abbia verificato il flag e visto che non era
+impostato. In quel momento, lo scheduler di Linux abbia messo in pausa quel
+thread e ripreso quello principale. Per qualche coincidenza, il thread
+principale è in \texttt{set\_thread\_flag}. Esso imposta il flag e quindi
+segnala la variabile condizione. Poiché nessun thread sta aspettando sulla
+variabile condizione in quel momnento (ricorda che \texttt{thread\_function}
+	era stata messa in pausa prima che potesse aspettare sulla variabile
+	condizione), il segnale è perso. Adesso, quando Linux rischedula l'altro
+thread, inizia aspettando sulla variabile condizione e può finire per restare
+bloccato per sempre.
 
-Per risolvere questo problema, abbiamo bisogno di un modo per bloccare il flag e la variabile condizione assieme con un singolo mutex. Fortunatamente, GNU/Linux fornisce esattamente questo meccanismo. Ogni variabile condizione deve essere usata in congiunzione con un mutex, per evitare questo tipo di condizione di competizione. Usando questo schema, la funzione thread segue questi passi:
+Per risolvere questo problema, abbiamo bisogno di un modo per bloccare il flag e
+la variabile condizione assieme con un singolo mutex. Fortunatamente, GNU/Linux
+fornisce esattamente questo meccanismo. Ogni variabile condizione deve essere
+usata in congiunzione con un mutex, per evitare questo tipo di condizione di
+competizione. Usando questo schema, la funzione thread segue questi passi:
 \begin{enumerate}
-\item Il loop nella \texttt{thread\_function} chiude il mutex e legge il valore del flag.
-\item Se il flag è impostato, esso sblocca il mutex ed esegue la funzione lavoro.
-\item Se il flag non è impostato, esso automaticamnete sblocca il mutex ed aspetta sulla variabile condizione
+\item Il loop nella \texttt{thread\_function} chiude il mutex e legge il valore
+	del flag.
+\item Se il flag è impostato, esso sblocca il mutex ed esegue la funzione
+	lavoro.
+\item Se il flag non è impostato, esso automaticamnete sblocca il mutex ed
+	aspetta sulla variabile condizione
 \end{enumerate}
-La caratteristica criticq qui è nel passo 3, nel quale GNU/Linux ti permette di sbloccare il mutex e aspettare sulla variabile condizione automaticamente, senza la possibilità che un altro thread intervenga. Questo elimina la possibilità che un altro thread possa cambiare il valore del flag e segnalare la variabile condizione tra la verifica del valore del flag di \texttt{thread\_function} e l'attesa sulla variabile condizione.
+La caratteristica criticq qui è nel passo 3, nel quale GNU/Linux ti permette di
+sbloccare il mutex e aspettare sulla variabile condizione automaticamente, senza
+la possibilità che un altro thread intervenga. Questo elimina la possibilità che
+un altro thread possa cambiare il valore del flag e segnalare la variabile
+condizione tra la verifica del valore del flag di \texttt{thread\_function} e
+l'attesa sulla variabile condizione.
 
-Una variabile condizione è rappresentata da un'istanza di \texttt{pthread\_cond\_t}. Ricorda che ogni variabile condizione dovrebbe essere accompagnata da un mutex. Queste sono le funzioni che gestiscono le variabili condizione:
+Una variabile condizione è rappresentata da un'istanza di
+\texttt{pthread\_cond\_t}. Ricorda che ogni variabile condizione dovrebbe essere
+accompagnata da un mutex. Queste sono le funzioni che gestiscono le variabili
+condizione:
 \begin{itemize}
-\item \texttt{pthread\_cond\_init} inizializza una variabile condizione. Il primo argomento è un puntatore a un'istanza di \texttt{pthread\_cond\_t}. Il secondo argomento, un puntatore ad un oggetto attributo di una variabile condizione, è ignorato sotto GNU/Linux.\\
-Il mutex deve essere inizializzato separatamente, come descritto nella \numnameref{subsec:4.4.2}.
-\item \texttt{pthread\_cond\_signal} segnala una variabile condizione. Un singolo thread che è stato bloccato sulla variabile condizione verrà sbloccato. Se nessun altro thread è bloccato sulla variabile condizione, il segnale è ignorato. L'argomento è un puntatore all'istanza di \texttt{pthread\_cond\_t}\\
-Una chiamata simile, \texttt{pthread\_cond\_broadcast}, sblocca \textit{tutti} i thread che sono bloccati sulla variabile condizione, invece di uno solo.
-\item \texttt{pthread\_cond\_wait} blocca il thread chiamante finché la variabile condizione non è segnalata. L'argomento è un puntatore all'istanza di \texttt{pthread\_cond\_t}. Il secondo argomento è un puntatore all'istanza di \texttt{pthread\_mutex\_t}.\\
-Quando \texttt{pthread\_cond\_wait} è chiamato, il mutex deve essere già chiuso dal thread chiamante. La funzione apre automaticamente il mutex e blocca sulla variabile condizione. Quando la variabile condizione è segnalata e il thread chiamante sbloccato, \texttt{pthread\_cond\_wait} riacquisisce automaticamente la chiusura sul mutex.
+\item \texttt{pthread\_cond\_init} inizializza una variabile condizione. Il
+	primo argomento è un puntatore a un'istanza di
+	\texttt{pthread\_cond\_t}. Il secondo argomento, un puntatore ad un 
+	oggetto attributo di una variabile condizione, è ignorato sotto
+	GNU/Linux.\\
+	Il mutex deve essere inizializzato separatamente, come descritto
+	nella \numnameref{subsec:4.4.2}.
+\item \texttt{pthread\_cond\_signal} segnala una variabile condizione. Un
+	singolo thread che è stato bloccato sulla variabile condizione verrà
+	sbloccato. Se nessun altro thread è bloccato sulla variabile condizione,
+	il segnale è ignorato. L'argomento è un puntatore all'istanza di
+	\texttt{pthread\_cond\_t}\\
+	Una chiamata simile, \texttt{pthread\_cond\_broadcast}, sblocca
+	\textit{tutti} i thread che sono bloccati sulla variabile condizione,
+	invece di uno solo.
+\item \texttt{pthread\_cond\_wait} blocca il thread chiamante finché la
+	variabile condizione non è segnalata. L'argomento è un puntatore
+	all'istanza di \texttt{pthread\_cond\_t}. Il secondo argomento è un
+	puntatore all'istanza di \texttt{pthread\_mutex\_t}.\\
+	Quando \texttt{pthread\_cond\_wait} è chiamato, il mutex deve essere già
+	chiuso dal thread chiamante. La funzione apre automaticamente il mutex e
+	blocca sulla variabile condizione. Quando la variabile condizione è
+	segnalata e il thread chiamante sbloccato, \texttt{pthread\_cond\_wait}
+	riacquisisce automaticamente la chiusura sul mutex.
 \end{itemize}
-Ogni volta che il tuo programma esegue un'azione che può cambiare il senso della condizione che stai proteggendo con la variabile condizione, esso dovrebbe eseguire questi passi. (Nel nostro esempio, la condizione è lo stato del flag thread, così questi passi devono essere fatti ogni volta che il flag è cambiato).
+Ogni volta che il tuo programma esegue un'azione che può cambiare il senso della
+condizione che stai proteggendo con la variabile condizione, esso dovrebbe
+eseguire questi passi. (Nel nostro esempio, la condizione è lo stato del flag
+thread, così questi passi devono essere fatti ogni volta che il flag è cambiato).
 \begin{enumerate}
 \item Chiudere il mutex assieme alla variabile condizione.
-\item Eseguire l'azione che può cambiare il senso della condizione (nel nostro esempio, impostare il flag).
-\item segnalare o broadcast la variabile condizione, dipendentemente dal comportamento desiderato.
+\item Eseguire l'azione che può cambiare il senso della condizione (nel nostro
+	esempio, impostare il flag).
+\item segnalare o broadcast la variabile condizione, dipendentemente dal
+	comportamento desiderato.
 \item Aprire il mutex assieme alla variabile condizione.
 \end{enumerate}
-Il listato 4.14 mostre nuovamente l'esempio precedente, adesso usando una variabile condizione per proteggere il flag thread. Nota che nella \texttt{thread\_function}, viene tenuta una chiusura sul mutex prima di verificare il valore di \texttt{thread\_flag}. Questa chiusura è rilasciata automaticamente da \texttt{pthread\_cond\_wait} prima di bloccare ed è automaticamente riacquisita dopo. Nota anche che \texttt{set\_thread\_flag} chiude il mutex prima di ipostare il valore di \texttt{thread\_flag} e segnalare il mutex.
+Il listato 4.14 mostre nuovamente l'esempio precedente, adesso usando una
+variabile condizione per proteggere il flag thread. Nota che nella
+\texttt{thread\_function}, viene tenuta una chiusura sul mutex prima di
+verificare il valore di \texttt{thread\_flag}. Questa chiusura è rilasciata
+automaticamente da \texttt{pthread\_cond\_wait} prima di bloccare ed è
+automaticamente riacquisita dopo. Nota anche che \texttt{set\_thread\_flag}
+chiude il mutex prima di ipostare il valore di \texttt{thread\_flag} e segnalare
+il mutex.
 
 \listfromfile{condvar.c}{Controllare un thread usando una variabile condizione}
 	{list:4.14}
 	{ALP-listings/chapter-4/condvar.c}
-La condizione protetta da una variabile condizione può essere arbitrariamente complessa. Comunque, prima di eseguire ogni operazione che può cambiare il senso della condizione, dovrebbe essere richiesta una chiusura del mutex, e la variabile condizione dovrebbe essere segnalata successivamente.
+La condizione protetta da una variabile condizione può essere arbitrariamente
+complessa. Comunque, prima di eseguire ogni operazione che può cambiare il senso
+della condizione, dovrebbe essere richiesta una chiusura del mutex, e la
+variabile condizione dovrebbe essere segnalata successivamente.
 
-Una variabile condizione può anche essere usata senza una condizione, semplicemente come un meccanismo per bloccare un thread finché un altro tread non ``lo sveglia''. Può anche essere usato un semaforo per questo scopo. La differenza principale è che un semaforo ``ricorda'' la chiamata wake-up (risveglio) anche se nessun thread era bloccato su di esso in quel momento, mentre una variabile condizione scarta la chiamata wake-up finché qualche thread è attualmente bloccato su di esso al momento. Inoltre, un semaforo smista solo un singolo wake-up per post; con \texttt{pthread\_cond\_broadcast}, può essere risvegliato un numero sconosciuto e arbitrario di thread allo stesso tempo.
+Una variabile condizione può anche essere usata senza una condizione,
+semplicemente come un meccanismo per bloccare un thread finché un altro tread
+non ``lo sveglia''. Può anche essere usato un semaforo per questo scopo. La
+differenza principale è che un semaforo ``ricorda'' la chiamata wake-up
+(risveglio) anche se nessun thread era bloccato su di esso in quel momento,
+mentre una variabile condizione scarta la chiamata wake-up finché qualche thread
+è attualmente bloccato su di esso al momento. Inoltre, un semaforo smista solo
+un singolo wake-up per post; con \texttt{pthread\_cond\_broadcast}, può essere
+risvegliato un numero sconosciuto e arbitrario di thread allo stesso tempo.
 
 \subsection{Deadlocks (stalli) con due o più thread}\label{subsec:4.4.7} % 4.4.7
-Gli stalli possono verificarsi quando due o più thread sono bloccati, nell'attesa che si verifichi una condizione che solo l'altro può causare. Per esempio, se il thread A è bloccato su una variabile condizione in attesa che il thread B la segnali, e il thread B è bloccato su una variabile condizione in attesa che il thread A la segnali, si è verificato un deaklock perché nessun thread segnalerà mai l'altro. Dovresti fare attenzione ed evitare la possibilità di situazioni del genere perché sono un po' difficili da individuare.
+Gli stalli possono verificarsi quando due o più thread sono bloccati,
+nell'attesa che si verifichi una condizione che solo l'altro può causare. Per
+esempio, se il thread A è bloccato su una variabile condizione in attesa che il
+thread B la segnali, e il thread B è bloccato su una variabile condizione in
+attesa che il thread A la segnali, si è verificato un deaklock perché nessun
+thread segnalerà mai l'altro. Dovresti fare attenzione ed evitare la possibilità
+di situazioni del genere perché sono un po' difficili da individuare.
 
-Un errore comune che può causare un deadlock riguarda un problema nel quale più di un thread cerca di bloccare lo stesso insieme di oggetti. Per esempio, considera un programma nel quale due diversi thread, che eseguono due diverse funzioni thread, hanno bisogno di chiudere gli stessi due mutex. Supponi che il thread A chiuda il mutex 1 e quindi il mutex 2, e che sia successo che il thread B abbia chiuso il mutex 2 prima del mutex 1. In uno scenario di scheduling sufficientemente sfortunato, Linux può schedulare A abbastanza a lungo per chiudere il mutex 1 e quindi schedulare il thread B che prontamente chiude il mutex 2. Adesso nessun thread può andare avanti erché ognuno è bloccato in un mutex che l'altro thread tiene chiuso.
+Un errore comune che può causare un deadlock riguarda un problema nel quale più
+di un thread cerca di bloccare lo stesso insieme di oggetti. Per esempio,
+considera un programma nel quale due diversi thread, che eseguono due diverse
+funzioni thread, hanno bisogno di chiudere gli stessi due mutex. Supponi che il
+thread A chiuda il mutex 1 e quindi il mutex 2, e che sia successo che il thread
+B abbia chiuso il mutex 2 prima del mutex 1. In uno scenario di scheduling
+sufficientemente sfortunato, Linux può schedulare A abbastanza a lungo per
+chiudere il mutex 1 e quindi schedulare il thread B che prontamente chiude il
+mutex 2. Adesso nessun thread può andare avanti erché ognuno è bloccato in un
+mutex che l'altro thread tiene chiuso.
 
-Questo è un esempio di un problema di deadlock più generale, che può includere non solo la sincronizzazione di oggetti come mutex, ma anche altre risorse, come blocco di files o dispositivi. Il problema si verifica quando thread multipli cercano di chiudere lo stesso insieme di risorse in ordini diversi. La soluzione è quella di assicurarsi che tutti i thread che chiudono più di una risorsa le chiudano nello stesso ordine.
+Questo è un esempio di un problema di deadlock più generale, che può includere
+non solo la sincronizzazione di oggetti come mutex, ma anche altre risorse, come
+blocco di files o dispositivi. Il problema si verifica quando thread multipli
+cercano di chiudere lo stesso insieme di risorse in ordini diversi. La soluzione
+è quella di assicurarsi che tutti i thread che chiudono più di una risorsa le
+chiudano nello stesso ordine.
 
 \section{Implementazione dei Thread in GNU/Linux}\label{sec:4.5} % 4.5
-L'implementazione dei thread POSIX su GNU/Linux differisce dall'implementazione dei thread su molti altri sistemi UNIX-like in maniera importante: su GNU/Linux, i thread sono implementati come processi. Ogni volta che chiami 	\texttt{pthread\_create} per creare un nuovo thread, Linux crea un nuovo processo che esegue quel thread. Comunque, questo processo non è lo stesso di un processo che creeresti con \texttt{fork}; in particolare, esso condivide lo stesso spazio di indirizzi e le stesse risorse come il processo originale piuttosto che riceverne delle copie.
+L'implementazione dei thread POSIX su GNU/Linux differisce dall'implementazione
+dei thread su molti altri sistemi UNIX-like in maniera importante: su GNU/Linux,
+i thread sono implementati come processi. Ogni volta che chiami 
+\texttt{pthread\_create} per creare un nuovo thread, Linux crea un nuovo
+processo che esegue quel thread. Comunque, questo processo non è lo stesso di
+un processo che creeresti con \texttt{fork}; in particolare, esso condivide lo
+stesso spazio di indirizzi e le stesse risorse come il processo originale
+piuttosto che riceverne delle copie.
 
-Il programma \texttt{thread-pid} mostrato nel listato 4.15 lo dimostra. Il programma crea un threa; sia il thread originale che quello nuovo chiamano la funzione \texttt{getpid} e stampano i loro rispettivi ID di processo e quindi girano all'infinito.
+Il programma \texttt{thread-pid} mostrato nel listato 4.15 lo dimostra. Il
+programma crea un threa; sia il thread originale che quello nuovo chiamano la
+funzione \texttt{getpid} e stampano i loro rispettivi ID di processo e quindi
+girano all'infinito.
 
 \listfromfile{thread-pid}{Stampa l'ID di processo per i Thread}
 	{list:4.15}
 	{ALP-listings/chapter-4/thread-pid.c}
-Esegui il programma in background e invoca quindi \texttt{ps x} per visualizzare i tuoi processi in esecuzione. Non dimenticare di uccidere successivamente il programma \texttt{thread-pid} \--- esso consuma molta CPU e non fa nulla. Ecco a cosa dovrebbe somigliare l'output
+Esegui il programma in background e invoca quindi \texttt{ps x} per visualizzare
+i tuoi processi in esecuzione. Non dimenticare di uccidere successivamente il
+programma \texttt{thread-pid} \--- esso consuma molta CPU e non fa nulla. Ecco a
+cosa dovrebbe somigliare l'output
 \begin{listcodeBash}
 % cc thread-pid.c -o thread-pid -lpthread
 % ./thread-pid &
@@ -423,34 +1063,92 @@ child thread pid is 14610
 
 \begin{quote}
 {\large\textbf{Notifica del controllo dei lavori nella Shell}}\\
-Le righe che iniziano con \texttt{[1]} sono della shelle. Quando esegui un programma in background, la shell gli assegna un numero di lavoro \--- in questo caso, 1 \--- e  stampa il pid del programma. Se un lavoro in background termina, la shell riporta questo fatto la prossima volta che invochi un comando.
+Le righe che iniziano con \texttt{[1]} sono della shelle. Quando esegui un
+programma in background, la shell gli assegna un numero di lavoro \--- in questo
+caso, 1 \--- e  stampa il pid del programma. Se un lavoro in background termina,
+la shell riporta questo fatto la prossima volta che invochi un comando.
 \end{quote}
-Nota che ci sono tre processi che stanno eseguendo il programma \texttt{thread-pid}. Il primo di questi, con pid 14608, è il thread principale del programma; il terzo, con pid 14610, è il thread che abbiamo creato per eseguire \texttt{thread\_function}.
+Nota che ci sono tre processi che stanno eseguendo il programma
+\texttt{thread-pid}. Il primo di questi, con pid 14608, è il thread principale
+del programma; il terzo, con pid 14610, è il thread che abbiamo creato per
+eseguire \texttt{thread\_function}.
 
-Riguardo al secondo thread, con pid 14609? Questo è il ``thread manager'', che è parte dell'implementazione interna dei thread di GNU/Linux. Il thread manager è creato la prima volta che un programma chiama \texttt{pthread\_create} per creare un nuovo thread.
+Riguardo al secondo thread, con pid 14609? Questo è il ``thread manager'', che è
+parte dell'implementazione interna dei thread di GNU/Linux. Il thread manager è
+creato la prima volta che un programma chiama \texttt{pthread\_create} per
+creare un nuovo thread.
 
 \subsection{Gestione dei segnali}\label{subsec:4.5.1} % 4.5.1
-Supponi che un programma multithread riceva un segnale. In quale thread è invocato il gestore del segnale? Il comportamento dell'interazione tra segnali e trhead varia da un sistema UNIX-like a un'altro. In GNU/Linux, il comportamento è dettato dal fatto che i thread sono implementati come processi.
+Supponi che un programma multithread riceva un segnale. In quale thread è
+invocato il gestore del segnale? Il comportamento dell'interazione tra segnali e
+trhead varia da un sistema UNIX-like a un'altro. In GNU/Linux, il comportamento
+è dettato dal fatto che i thread sono implementati come processi.
 
-Poiché ogni thread è un processo separato e poiché un segnale è inviato ad un particolare processo, non c'è ambiguità su quale thread riceve il segnale. Tipicamente, i segnali inviati dall'esterno del programma sono inviati al processo corrispondente al thread principale del programma. Per esempio, se un programma fa il fork ed il processo figlio esegue un programma multithread, il processo padre terrà l'id di processo del thread principale del programma del processo figlio e userà quell'id di processo per inviare segnali al suo figlio. Questa è generalmente una buona convenzione che dovresti seguire tu stesso quando invii segnali ad un programma multithread.
+Poiché ogni thread è un processo separato e poiché un segnale è inviato ad un
+particolare processo, non c'è ambiguità su quale thread riceve il segnale.
+Tipicamente, i segnali inviati dall'esterno del programma sono inviati al
+processo corrispondente al thread principale del programma. Per esempio, se un
+programma fa il fork ed il processo figlio esegue un programma multithread, il
+processo padre terrà l'id di processo del thread principale del programma del
+processo figlio e userà quell'id di processo per inviare segnali al suo figlio.
+Questa è generalmente una buona convenzione che dovresti seguire tu stesso
+quando invii segnali ad un programma multithread.
 
-Nota che quest'aspetto dell'implementazione GNU/Linux de pthread è una variante con il thread standard POSIX. Non fare affidamento a questo comportamento in programmi che si intendono essere portabili.
+Nota che quest'aspetto dell'implementazione GNU/Linux de pthread è una variante
+con il thread standard POSIX. Non fare affidamento a questo comportamento in
+programmi che si intendono essere portabili.
 
-All'interno di un programma multithread, è possibile per un thread inviare un segnale specificatamente ad un altro thread. Usa la funzione \texttt{pthread\_kill} per farlo. Il suo primo parametro è un ID di thread e il suo secondo parametro è un numero di segnale.
+All'interno di un programma multithread, è possibile per un thread inviare un
+segnale specificatamente ad un altro thread. Usa la funzione
+\texttt{pthread\_kill} per farlo. Il suo primo parametro è un ID di thread e il
+suo secondo parametro è un numero di segnale.
 
 \subsection{La chiamata di sistema \textit{clone}}\label{subsec:4.5.2} % 4.5.2
-Sebbene i thread GNU/Linux creati nello stesso programma sono implementati come processi separati, essi condividono il loro spazio virtuale di memoria ed altre risorse. Un processo figlio creato con \texttt{fork}, comunque, ottiene copie di questi elementi. Com'è creato il tipo di forma dei processi?
-La chiamata di sistema Linux \texttt{clone} è una forma generalizzata di \texttt{fork} e \texttt{pthread\_create} che permette al chiamante di specificare quali risorse sono condivise tra il processo chiamante e il nuovo processo creato. Inoltre, \texttt{clone} richiede che venga specificata l'area di memoria per l'esecuzione dello stack che i nuovi processi useranno. Comunque, menzioniamo \texttt{clone} qui per soddisfare la curiosità del lettore. Questa chiamata di sistema non dovrebbe essere ordinariamente usata nei programmi. Usa \texttt{fork} per creare nuovi processi o \texttt{pthread\_create} per creare thread.
+Sebbene i thread GNU/Linux creati nello stesso programma sono implementati come
+processi separati, essi condividono il loro spazio virtuale di memoria ed altre
+risorse. Un processo figlio creato con \texttt{fork}, comunque, ottiene copie di
+questi elementi. Com'è creato il tipo di forma dei processi?
+La chiamata di sistema Linux \texttt{clone} è una forma generalizzata di
+\texttt{fork} e \texttt{pthread\_create} che permette al chiamante di
+specificare quali risorse sono condivise tra il processo chiamante e il nuovo
+processo creato. Inoltre, \texttt{clone} richiede che venga specificata l'area
+di memoria per l'esecuzione dello stack che i nuovi processi useranno. Comunque,
+menzioniamo \texttt{clone} qui per soddisfare la curiosità del lettore. Questa
+chiamata di sistema non dovrebbe essere ordinariamente usata nei programmi. Usa
+\texttt{fork} per creare nuovi processi o \texttt{pthread\_create} per creare
+thread.
 
 \section{Processi Vs. Thread}\label{sec:4.6} % 4.6
-Per alcuni programmi che traggono benefici dalla concorrenza, la decisione se usare i processi o i thread può essere difficile. Qui ci sono alcune linee guida per aiutarti a decidere quale modello di concorrenza si addice meglio al tuo programma:
+Per alcuni programmi che traggono benefici dalla concorrenza, la decisione se
+usare i processi o i thread può essere difficile. Qui ci sono alcune linee guida
+per aiutarti a decidere quale modello di concorrenza si addice meglio al tuo
+programma:
 \begin{itemize}
-\item Tutti i thread in un programma devono eseguire lo stesso eseguibile. Un processo figlio, d'altro canto, può eseguire un diverso eseguibile chiamando la funzione \texttt{exec}.
-\item Un thread che sbaglia può danneggiare altri thread nello stesso processo poiché i thread condividono lo stesso spazio di memoria ed altre risorse. Per esempio, una scrittura in un'area di memoria tramite un puntatore non inizializzato in un thread può corrompere la memoria visibile ad un altro thread.\\
-Un processo che sbaglia, d'altro canto, non può farlo perché ogni processo ha una copia dello spazio di memoria del programma.
-\item Copiare la memoria per un nuovo processo aggiunge sovraccarico addizionale alle prestazioni, relativo al creare un nuovo thread. Comunque, la compia è fatta solo quando la memoria viene modificata, così la penalità è minima se il processo figlio soltanto legge la memoria.
-\item I thread dovrebbero essere usati per programmi che hanno bisogno di parallelismo \textit{a grana fine}. Per esempio, se un problema può essere rotto in più thread con compiti pressoché identici, potrebbe essere una buona scelta. I processi dovrebbero essere usati per programmi che hanno bisogno di un parallelismo meno preciso.
-\item Condividere i dati tra i thread è inutile perché i thread condividono la stessa memoria. (Comunque, si deve dare più attenzione per evitare le condizioni di competizione, come descritto precedentemente). Condividere i dati tra i processi richiede l'uso di meccanismi IPC, come descritto nel capitolo 5. Questo può essere più lento ma permette a più processi di soffrire di meno del bug della concorrenza.
+\item Tutti i thread in un programma devono eseguire lo stesso eseguibile. Un
+	processo figlio, d'altro canto, può eseguire un diverso eseguibile 
+	chiamando la funzione \texttt{exec}.
+\item Un thread che sbaglia può danneggiare altri thread nello stesso processo
+	poiché i thread condividono lo stesso spazio di memoria ed altre
+	risorse. Per esempio, una scrittura in un'area di memoria tramite un
+	puntatore non inizializzato in un thread può corrompere la memoria
+	visibile ad un altro thread.\\
+	Un processo che sbaglia, d'altro canto, non può farlo perché ogni
+	processo ha una copia dello spazio di memoria del programma.
+\item Copiare la memoria per un nuovo processo aggiunge sovraccarico addizionale
+	alle prestazioni, relativo al creare un nuovo thread. Comunque, la
+	compia è fatta solo quando la memoria viene modificata, così la penalità
+	è minima se il processo figlio soltanto legge la memoria.
+\item I thread dovrebbero essere usati per programmi che hanno bisogno di
+	parallelismo \textit{a grana fine}. Per esempio, se un problema può
+	essere rotto in più thread con compiti pressoché identici, potrebbe
+	essere una buona scelta. I processi dovrebbero essere usati per
+	programmi che hanno bisogno di un parallelismo meno preciso.
+\item Condividere i dati tra i thread è inutile perché i thread condividono la
+	stessa memoria. (Comunque, si deve dare più attenzione per evitare le
+	condizioni di competizione, come descritto precedentemente). Condividere
+	i dati tra i processi richiede l'uso di meccanismi IPC, come descritto
+	nel capitolo 5. Questo può essere più lento ma permette a più processi
+	di soffrire di meno del bug della concorrenza.
 \end{itemize}
 
 
