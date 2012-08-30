@@ -39,12 +39,12 @@ link del tuo programma.
 \section{Creazione dei thread}\label{sec:4.1} % 4.1
 
 Ogni thread in un processo è identificato da un \textit{thread ID}. Quando si fa
-riferimento agli ID di thread nei programmi C o C++, si usa il tipo
+riferimento agli ID dei thread nei programmi C o C++, si usa il tipo
 \texttt{pthread\_t}.
 
 Dopo la creazione, ogni thread esegue una \textit{funzione thread}. Questa è una
 funzione ordinaria e contiene il codice che il thread dovrebbe eseguire. Quando
-la funzione ritorna, il thread esiste. Su GNU/Linux, le funzioni thread prendono
+la funzione ritorna, il thread esce. Su GNU/Linux, le funzioni thread prendono
 un singolo parametro, di tipo \texttt{void*}, ed hanno un tipo di ritorno
 \texttt{void*}. Il parametro è l'\textit{argormento del thread}: GNU/Linux passa
 il valore nel thread senza guardarlo. Il tuo programma può usare questo
@@ -79,9 +79,9 @@ entrambi i thread in maniera asincrona e il tuo programma non deve fare
 affidamento sull'ordine relativo nel quale sono eseguite le istruzioni nei due
 threads.
 
-Il programma nel listato 4.1 crea un thread che stampa x continuamente sullo
+Il programma nel listato 4.1 crea un thread che stampa continuamente \texttt{x} sullo
 standard error. Dopo aver chiamato \texttt{pthread\_create}, il thread
-principale stampa o continuamente sullo standard error.\\
+principale stampa continuamente \texttt{o} sullo standard error.\\
 
 \listfromfile{thread-create.c}{Creare un thread}{list:4.1}
 	{ALP-listings/chapter-4/thread-create.c}
@@ -90,8 +90,8 @@ Compila e fai il link di questo programma usando il seguente codice:
 \begin{listcodeBash}
 % cc -o thread-create thread-create.c -lpthread
 \end{listcodeBash}
-Prova ad eseguirlo per vedere cosa accade. Nota il modello di x ed o
-imprevedibile, come Linux schedula alternativamente i due thread.
+Prova ad eseguirlo per vedere cosa accade. Nota il modello di \texttt{x} ed
+\texttt{o} imprevedibile, come Linux schedula alternativamente i due thread.
 
 In circostanze normali, un thread esce in uno di due modi. Un modo, come
 illustrato precedentemente, è ritornando dalla funzione thread. Il valore di
@@ -102,9 +102,9 @@ funzione thread. L'argomento di \texttt{pthread\_exit} è il valore di ritorno
 del thread.
 
 \subsection{Passare dati ai thread}\label{subsec:4.1.1} %4.1.1
-L'argomento dei thread fornisce un metodo conveniente per passare i dati ai
+L'argomento del thread fornisce un modo conveniente per passare i dati ai
 thread. Poiché il tipo dell'argomento è \texttt{void*}, comunque, non puoi
-passare moti dati direttamente tramite l'agomento. Piuttosto, usa l'argomento
+passare molti dati direttamente tramite l'agomento. Piuttosto, usa l'argomento
 del thread per passare un puntatore ad alcune strutture o array di dati. Una
 tecnica comunemente usata è quella di definire una struttura per ogni funzione
 thread, che contiene i ``parametri'' che la funzione thread si aspetta.
@@ -114,7 +114,7 @@ per molti thread. Tutti questi thread eseguono lo stesso codice, ma con dati
 diversi.
 
 Il programma nel listato 4.2, è simile all'esempio precedente. Questa volta
-vengono creati due nuovo thread, uno per stampare x e l'altro per stampare o.
+vengono creati due nuovi thread, uno per stampare \texttt{x} e l'altro per stampare \texttt{o}.
 Invece di stampare infinitamente, comunque, ogni thread stampa un numero fisso
 di caratteri e quindi esce ritornando dalla funzione thread. La stessa funzione
 thread, \texttt{char\_print}, è usata da entrambi i thread, ma ognuno è
@@ -135,11 +135,11 @@ thread staranno ancora accedendo ad esse.
 
 \subsection{Unire i thread}\label{subsec:4.1.2} % 4.1.2
 Una soluzione è quella di forzare il \texttt{main} ad aspettare fino a che gli
-altri due thread non siano complatati. Ciò di cui abbiamo bisogno è una funzione
+altri due thread non siano compleatati. Ciò di cui abbiamo bisogno è una funzione
 simile a \texttt{wait} che aspetti che finisca un thread piuttosto che un
-processo. La funzione è \texttt{pthread\_join}, che prende due argomente: l'ID
+processo. La funzione è \texttt{pthread\_join}, che prende due argomenti: l'ID
 del thread da aspettare ed un puntatore ad una variabile \texttt{void*} che
-riceverà il valore di ritorno del thread finito. Se non ti preoccupi del valore
+riceverà il valore di ritorno del thread finito. Se non ti interessa il valore
 di ritorno del thread, passa \texttt{NULL} come secondo argomento.
 
 Il listato 4.3 mostra la funzione \texttt{main} corretta per l'esempio sbagliato
@@ -151,9 +151,9 @@ più le strutture degli argomenti.\\
 	{ Funzione \textit{Main} rivista per \textit{thread-create2.c}}{list:4.3}
 	{ALP-listings/chapter-4/thread-create2-add2.c}
 
-Morale della storia: Assicurati che ogni dato che passi a un thread per
+Morale della favola: Assicurati che ogni dato che passi a un thread per
 riferimento non sia deallocato, \textit{anche da un diverso thread}, fino a che
-non sei sicuro che il thread sia compelto con esso. Ciò è vero sia per variabili
+non sei sicuro che il thread abbia finito con esso. Ciò è vero sia per variabili
 locali, che sono deallocate quando esse vanno fuori dal proprio raggio di azione,
 che per gruppi di variabili allocate in blocco che vengono deallocate chiamando
 \texttt{free} (o usando \texttt{delete} in C++).

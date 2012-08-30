@@ -13,6 +13,8 @@ Per la generazione del pdf è stato utilizzato il comando
 
 In caso di problemi nel riconoscimento dei caratteri nel sorgente LaTeX provare a visualizzare i documenti impostando nel proprio editor la codifica ISO-8859-1 o Windows-1252.
 
+La directory `ALP-Listings` contiene i sorgenti dei programmi che vengono inclusi nel testo del libro alla generazione del pdf.
+
 ____________________
 
 Sintassi caratteri e comandi utilizzati:
