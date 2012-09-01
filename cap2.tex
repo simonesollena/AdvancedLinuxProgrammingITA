@@ -1,7 +1,7 @@
 % !TEX encoding = ISO-8859-1
 % !TEX root = alp.tex
 % !TEX program = pdflatex
-% !TEX spellcheck = it-IT
+% !TEX spellcheck = it_IT
 
 \chapter{Scrivere del buon software GNU/Linux}\label{cap:2}
 
@@ -68,7 +68,7 @@ Il listato 2.1 dimostra come usare \texttt{argc} e \texttt{argv}.\\
 Quasi tutti i programmi GNU/Linux obbediscono ad alcune convenzioni su come sono
 interpretati gli argomenti della riga di comando. Gli argomenti che i programmi si aspettano
 rientrano in due categorie: opzioni (o flag) e altri argomenti. Le opzioni modificano il modo in
-cui si comporta il programa, mentre gli altri argomenti forniscono gli input (per esempio, i nomi
+cui si comporta il programma, mentre gli altri argomenti forniscono gli input (per esempio, i nomi
 dei file di input).
 
 Le opzioni sono di due forme:
@@ -220,7 +220,7 @@ sintassi è questa:
 \end{listcodeBash}
 
 La sintassi \texttt{2>\&1} indica che il descrittore di file 2 (\texttt{stderr}) dovrebbe essere unita al
-descrittore di file 1 (\texttt{stdout}). Nota che \texttt{2>\&1} deve seguire una redirezione di file (il primo
+descrittore di file 1 (\texttt{stdout}). Nota che \texttt{2>\&1} deve seguire una ridirezione di file (il primo
 esempio) ma deve precedere una ridirezione di pipe (il secondo esempio).
 
 Nota che \texttt{stdout} è bufferizzato. I dati scritti sullo \texttt{stdout} non sono inviati alla console (o
@@ -661,7 +661,7 @@ senza aver completato l'operazione. In questo caso, \texttt{errno} è settato a \
 questi casi, vorrai ritentare la chiamata di sistema.
 
 Ecco un frammento di codice che usa la chiamata \texttt{chown} per cambiare il proprietario di un
-file dato da \texttt{path} all'utente da \texttt{user\_id}. Se la chiamata fillisce, il programma esegue l'azione
+file dato da \texttt{path} all'utente da \texttt{user\_id}. Se la chiamata fallisce, il programma esegue l'azione
 in base al valore di \texttt{errno}. Nota che quando troviamo un possibile bug nel programma,
 usciamo usando \texttt{abort} o \texttt{assert}, che causa la generazione di un file \textit{core}. Ciò può esser
 utile per un debug post-mortem. Per altri errori non recuperabili,
@@ -769,7 +769,7 @@ memoria condivisa, che potrebbero potenzialmente persistere nel programma.
 Virtualmente tutti i programmi sono linkati con una o più librerie. Ogni programma che usa
 una funzione C (come \texttt{printf} o \texttt{malloc}) sarà linkato con la libreria di runtime C. Se il tuo
 programma ha un'interfaccia utente grafica (GUI), esso sarà linkato con le librerie delle finestre.
-Se il tuo programma usa un database, il fornitore del database ti darà le librerire che potrai usare
+Se il tuo programma usa un database, il fornitore del database ti darà le librerie che potrai usare
 per accedere al database.
 
 In ognuno di questi casi, devi decidere come linkare la libreria, statica o dinamica. Se scegli
@@ -847,7 +847,7 @@ sono linkati ad essa.
 
 Una seconda importante differenza è che la libreria condivisa non è semplicemente una
 collezione di file oggetto nel quale il linker sceglie quelli che servono a soddisfare i riferimenti
-indefiniti. Piuttosto, i file oggetto che compongono la libreria condivisa sono ombinati in un
+indefiniti. Piuttosto, i file oggetto che compongono la libreria condivisa sono combinati in un
 singolo file oggetto cosicché un programma che linka assieme una libreria condivisa include
 sempre tutto il codice della libreria piuttosto che solo quelle porzioni di cui ha bisogno.
 
