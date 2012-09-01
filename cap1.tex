@@ -1,14 +1,15 @@
 % !TEX encoding = ISO-8859-1
 % !TEX root = alp.tex
 % !TEX program = pdflatex
-% !TEX spellcheck = it-IT
+% !TEX spellcheck = it_IT
 
 \chapter{Programmazione UNIX avanzata con Linux}\label{cap:1}
 
 \firstsentence{Q}{uesto capitolo ci mostra come effettuare i passi di base} richiesti per creare un programma
 Linux in C o C++. In particolare, questo capitolo ci mostra come creare e modificare del codice
 sorgente C e C++, compilare questo codice, ed effettuare il debug del risultato. Se si è già
-abituati a programmare su Linux, si può andare avanti al \numnameref{cap:2}; si presti molta attenzione alla \numnameref{sec:2.3}, in
+abituati a programmare su Linux, si può andare avanti al
+\numnameref{cap:2}; si presti molta attenzione alla \numnameref{sec:2.3}, in
 particolare riguardo al linking statico Vs. Dinamico che potresti non ancora conoscere.
 
 Nel corso di questo libro, assumeremo che tu abbia familiarit\`a con i linguaggi di programmazione
@@ -285,8 +286,9 @@ disponibili per Linux, in questo libro non ne parleremo. Invece, questo libro ti
 usare GNU Make per automatizzare la ricompilazione del codice, che è ciò che fanno molti dei
 programmatori Linux.
 
-L'idea di base che sta dietro a \texttt{make} è semplice. Dici a \texttt{make} quali \textit{obiettivi} vuoi compilare,
-quindi fornisci delle \textit{regole} spiegando come compilarli. Specifichi inoltre le dipendenze che
+L'idea di base che sta dietro a \texttt{make} è semplice. Dici a \texttt{make}
+quali \textit{obiettivi} vuoi compilare, quindi fornisci delle \textit{regole}
+spiegando come compilarli. Specifichi inoltre le dipendenze che
 indicano quando un particolare obiettivo dovrebbe essere ricompilato.
 
 Nel nostro progetto di esempio \texttt{reciprocal} ci sono tre obiettivi ovvi: \texttt{reciprocal.o},
@@ -483,7 +485,8 @@ Puoi impostare un breakpoint usando il comando \texttt{break}:
 Breakpoint 1 at 0x804862e: file main.c, line 8.
 \end{listcodeBash}
 
-Questo comando imposta un punto di interruzione (breakpoint) sulla prima linea del \texttt{main}.\footnote{Certa gente ha
+Questo comando imposta un punto di interruzione (breakpoint) sulla prima
+linea del \texttt{main}.\footnote{Certa gente ha
 commentato che dire di interrompere il \texttt{main} è un po' bizzarro perchè solitamente questo
 lo si vuol fare solo quando il \texttt{main} è già interrotto}
 Adesso prova ad
@@ -553,7 +556,9 @@ I numeri indicano le sezioni delle pagine di manuale. Le pagine di manuale di Li
 installate nel tuo sistema; usa il comando \texttt{man} per accedere ad esse. Per trovare una pagina di
 manuale digita semplicemente \texttt{man nome}, dove \texttt{nome} è il nome di un comando o di una
 funzione. In alcuni casi lo stesso nome si trova in più di una sezione; puoi specificare
-esplicitamente la sezione anteponendo il numero della sezione al nome. Per esempio, se digiti quanto segue, otterrai la pagina di manuale per il comando \texttt{sleep} (nella sezione 1 delle pagine di
+esplicitamente la sezione anteponendo il numero della sezione al nome.
+Per esempio, se digiti quanto segue, otterrai la pagina di manuale per il
+comando \texttt{sleep} (nella sezione 1 delle pagine di
 manuale di Linux):
 
 \begin{listcodeBash}
@@ -618,12 +623,12 @@ per esempio, ottieni degli errori di compilazione dall'utilizzo di una chiamata 
 un'occhiata al file header corrispondente per verificare che la signature della funzione sia
 uguale a quella visualizzata nella pagina di manuale.
 
-Sui sistemi linux, gran parte dei dettagli fondamenteli su come lavorano le chiamate di sistema si
+Sui sistemi linux, gran parte dei dettagli fondamentali su come lavorano le chiamate di sistema si
 riflette nei files header nelle directory \texttt{/usr/include/bits}, \texttt{/usr/include/asm}, e
 \texttt{/usr/include/linux}. Per esempio, i valori numerici dei segnali (descritti nella
 \numnameref{sec:3.3}, nel \numnameref{cap:3}) sono definiti in 
 \texttt{/usr/include/bits/signum.h}. Questi file header facilitano la lettura alle menti
-curiose. Tuttavia, non includere direttamente qeusti nel programa; usa sempre i file header in \texttt{/usr/include}
+curiose. Tuttavia, non includere direttamente questi nel programma; usa sempre i file header in \texttt{/usr/include}
 come menzionato nella pagina di manuale per la funzione che stai usando.
 
 \subsection{Codice sorgente}\label{subsec:1.5.4} % 1.5.4
