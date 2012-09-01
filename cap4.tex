@@ -512,14 +512,14 @@ libreria standard \texttt{free} come nostro gestore di pulizia al posto di
 I programmatori C++ sono abituati ad ottenere la pulizia ``gratuitamente''
 raggruppando
 le azioni di pulizia in oggetti distruttori. Quando gli oggetti vanno al di
-fuori del loro campo di operabilità, o perché un blocco è eseguito per
+fuori del loro campo di operabilità, o perché un blocco è eseguito fino al
 completamento o perché viene lanciata un'eccezione, il C++ si assicura che i
 distruttori siano chiamati per quelle variabili automatiche che loro hanno. Ciò
 fornisce un meccanismo manuale per assicurarsi che il codice di pulizia venga
 chiamato, senza curarsi di come il blocco è andato in uscita.
 
 Se un thread chiama \texttt{pthread\_exit}, tuttavia, il C++ non garantisce che
-i distruttori sono chiamati per tutte le variabili automatiche nello stack del
+i distruttori siano chiamati per tutte le variabili automatiche nello stack del
 thread. Un modo ingegnoso per recuperare questa funzionalità è quello di
 invocare \texttt{pthread\_exit} al livello alto della funzione thread lanciando
 una speciale eccezione.
@@ -539,21 +539,21 @@ del trhread verranno distrutte appropriatamente quando l'eccezione si propaga.
 La programmazione con i thread è molto complessa perché molti programmi con i
 thread sono programmi concorrenti. In particolare, non c'è modo di sapere quando
 il sistema schedulerà un thread da eseguire e quando ne eseguirà un altro. Un
-thread può girare per un tempo molto lungo, o il sistema può commutare tre i
-thread molto velocemente. In un sistema con più processore, il sistema può anche
+thread può girare per un tempo molto lungo, o il sistema può commutare tra i
+thread molto velocemente. In un sistema con più processori, il sistema può anche
 schedulare thread multipli da eseguire letteralmente allo stesso tempo.
 
 Debuggare un programma con thread è difficile perché non puoi sempre e
-facilmente riprodurre il comportamente che ha causato il problema. Puoi eseguire
+facilmente riprodurre il comportamento che ha causato il problema. Puoi eseguire
 il programma una volta ed avere ogni cosa che funziona bene; la prossima volta
 che lo esegui può andare in crash. Non c'è verso di fare in modo che il sistema
 scheduli i thread esattamente allo stesso modo in cui lo ha fatto prima.
 
-L'ultima causa di molti bug che riguardano i thread è che i thread cercano di
+La maggior causa di molti bug che riguardano i thread è che i thread cercano di
 accedere agli stessi dati. Come detto precedentemente, questo è uno dei più
-potenti aspetti dei trhread, ma può anche essere pericoloso. Se un thread è solo
+potenti aspetti dei thread, ma può anche essere pericoloso. Se un thread è solo
 a metà strada dell'aggiornamento di una struttura dati mentre un altro thread
-accede alla stessa struttura dati, è facile che ne risulti il caos. Spesso,
+accede alla stessa struttura dati, è facile che ne venga fuori il caos. Spesso,
 programmi con thread buggati contengono codice che funzionerà solo se un thread
 viene schedulato più spesso \--- o più raramente \--- di un altro trhead. Questi
 bug sono chiamati \textit{condizioni in competizione} (\textit{race conditions});
@@ -561,10 +561,10 @@ I thread stanno gareggiando con altri per modificare la stessa struttura dati.
 
 \subsection{Condizioni in competizione}\label{subsec:4.4.1} % 4.4.1
 Supponi che il tuo programma abbia usa serie di lavori in coda che vengono
-processare di molti thread concorrenti. La coda di lavori è rappresentata da una
+processati da molti thread concorrenti. La coda di lavori è rappresentata da una
 lista collegata di oggetti \texttt{struct job}.
 
-Dopo che ogni trhead termina un'operazione, esso controlla la coda per vedere se
+Dopo che ogni thread termina un'operazione, esso controlla la coda per vedere se
 è disponibile un altro lavoro. Se \texttt{job\_queue} è diverso da null, il
 thread rimuove l'intestazione della lista collegata e setta \texttt{job\_queue}
 al prossimo lavoro nella lista.
@@ -598,9 +598,9 @@ diverse circostanze, probabilmente quando eseguito in un sistema molto caricato
 mostrare.
 
 Per eliminare le condizioni di competizione è necessario un modo per fare
-operazione \textit{atomiche} (\textit{atomic}). Un'operazione atomica è
+operazioni \textit{atomiche} (\textit{atomic}). Un'operazione atomica è
 indivisibile e non interrompibile; una volta che l'operazione si avvia non può
-essere messa in pausa o interrotta finché non completa, e nessun altra 
+essere messa in pausa o interrotta finché non è stata completa, e nessun'altra 
 operazione avrà luogo nel frattempo. In questo particolare esempio verificherai
 \texttt{job\_queue}; se esso non è vuoto, rimuovi il primo lavoro, tutto come
 una singola operazione atomica.
@@ -612,13 +612,13 @@ volta che un thread inizia a guardare la coda nessun altro thread dovrebbe
 essere in grado di accedervi finché un thread non ha deciso se processare un
 lavoro, e, se così, ha rimosso il lavoro dalla lista.
 
-Implementare ci richiede il supporto da parte del sistema operativo. GNU/Linux
+L'implementazione richiede il supporto da parte del sistema operativo. GNU/Linux
 fornisce i \textit{mutexes}, abbreviazione di \textit{MUTual EXclusion locks}.
 Un mutex è una speciale chiusura che un solo thread per volta ha il permesso di
 chiudere. Se un thread chiude un mutex e quindi anche un secondo thread cerca di
 chiudere lo stesso mutex, il secondo thread viene \textit{bloccato}, o messo in
 attesa. Solo quando il primo thread sblocca il mutex il secondo thread viene
-\textit{sbloccato} \--- permesso di riprendere l'esecuzione. GNU/Linux
+\textit{sbloccato} \--- gli viene permesso di riprendere l'esecuzione. GNU/Linux
 garantisce che le condizioni di competizione non si verifichino tra thread che
 cercano di bloccare un mutex; solo un thread avrà sempre la possibilità di
 ottenerne la chiusura e tutti gli altri thread verranno bloccati.
@@ -633,7 +633,7 @@ passa un puntatore ad essa a \texttt{pthread\_mutex\_init}. Il secondo argomento
 a \texttt{pthread\_mutex\_init} è un puntatore ad un oggetto attributo mutex,
 che specifica gli attributi del mutex. Come con \texttt{pthread\_create}, se
 l'attributo puntatore è null, si assumono gli attributi di default. La variabile
-mutex dovrebbe essere inizializzata solo una volta. Questo frammento di codice
+mutex dovrebbe essere inizializzata una sola volta. Questo frammento di codice
 dimostra la dichiarazione ed inizializzazione di una variabile mutex.
 \begin{listcodeC}
 pthread_mutex_t mutex;
@@ -648,13 +648,13 @@ equivalentemente come questo:
 \begin{listcodeC}
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 \end{listcodeC}
-Un thread può cercare di bloccare un mutex chiamando in esso
+Un thread può cercare di bloccare un mutex chiamando su questo
 \texttt{pthread\_mutex\_lock}. Se il mutex non era bloccato, esso diventa
 bloccato e la funzione ritorna immediatamente. Se il mutex era bloccato da un
 altro thread, \texttt{pthread\_mutex\_lokc} blocca l'esecuzione e ritorna solo
 eventualmente quando il mutex non è bloccato dall'altro thread. Più di un thread
 per volta può essere bloccato su un mutex chiuso. Quando il mutex è sbloccato,
-solo uno dei thread fermati (scelto in modi imprevedibile) viene sbloccato e gli
+solo uno dei thread bloccati (scelto in modi imprevedibile) viene sbloccato e gli
 è permesso di chiudere il mutex; gli altri thread stanno bloccati.
 
 Una chiamata a \texttt{pthread\_mutex\_unlock} sblocca un mutex. Questa funzione
@@ -662,7 +662,7 @@ dovrebbe essere sempre chiamata dallo stesso thread che ha bloccato il mutex.
 Il listato 4.11 mostra un'altra versione dell'esempio della coda di lavoro.
 Adesso la coda è protetta da un mutex. Prima di accedere alla coda (sia in
 	scrittura che in lettura), ogni thread blocca prima un mutex. Solo
-quando l'intere sequenza di verifica della coda e rimozione del lavoro è
+quando l'intera sequenza di verifica della coda e rimozione del lavoro è
 completa il mutex viene sbloccato. Ciò previene la condizione di competizione
 precedentemente descritta.
 
