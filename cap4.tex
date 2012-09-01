@@ -1,3 +1,8 @@
+% !TEX encoding = ISO-8859-1
+% !TEX root = alp.tex
+% !TEX program = pdflatex
+% !TEX spellcheck = it_IT
+
 \chapter{Threads}\label{cap:4}
 
 I thread, come i processi, sono un meccanismo per permettere ad un programma di
@@ -8,7 +13,7 @@ possibilità di andare in esecuzione.
 
 Concettualmente, un thread esiste in un processo. I thread sono unità di
 esecuzione più piccole dei processi. Quando invochi un programma, Linux crea un
-nuovo processo ed in quel processo crea un singnolo thread, che esegue il
+nuovo processo ed in quel processo crea un singolo thread, che esegue il
 programma sequenzialmente. Questo thread può creare altri thread; tutti questi
 thread eseguono lo stesso programma nello stesso processo, ma ogni thread può
 essere l'esecuzione di una diversa parte del programma in qualsiasi momento.
@@ -46,7 +51,7 @@ Dopo la creazione, ogni thread esegue una \textit{funzione thread}. Questa è una
 funzione ordinaria e contiene il codice che il thread dovrebbe eseguire. Quando
 la funzione ritorna, il thread esce. Su GNU/Linux, le funzioni thread prendono
 un singolo parametro, di tipo \texttt{void*}, ed hanno un tipo di ritorno
-\texttt{void*}. Il parametro è l'\textit{argormento del thread}: GNU/Linux passa
+\texttt{void*}. Il parametro è l'\textit{argomento del thread}: GNU/Linux passa
 il valore nel thread senza guardarlo. Il tuo programma può usare questo
 parametro per passare i dati ad un nuovo thread. Similmente, il tuo programma
 può usare il valore di ritorno per passare dati da un thread esistente al suo
@@ -104,7 +109,7 @@ del thread.
 \subsection{Passare dati ai thread}\label{subsec:4.1.1} %4.1.1
 L'argomento del thread fornisce un modo conveniente per passare i dati ai
 thread. Poiché il tipo dell'argomento è \texttt{void*}, comunque, non puoi
-passare molti dati direttamente tramite l'agomento. Piuttosto, usa l'argomento
+passare molti dati direttamente tramite l'argomento. Piuttosto, usa l'argomento
 del thread per passare un puntatore ad alcune strutture o array di dati. Una
 tecnica comunemente usata è quella di definire una struttura per ogni funzione
 thread, che contiene i ``parametri'' che la funzione thread si aspetta.
@@ -179,7 +184,7 @@ di calcolare molti numeri primi consulta un libro su algoritmi numerici.\\
 \listfromfile{primes.c}{Calcola numeri primi in un thread}{list:4.4}
 	{ALP-listings/chapter-4/primes.c}
 
-\subsection{Ancora sugli ID dei thread}\label{subsec:4.1.4} % 4.1.4
+\subsection{Altro sugli ID dei thread}\label{subsec:4.1.4} % 4.1.4
 Occasionalmente, è utile per una sequenza di codice determinare quale thread lo
 sta eseguendo. La funzione \texttt{pthread\_self} restituisce l'ID di thread del
 thread nel quale è chiamata. Questo ID di thread può essere confrontato con
@@ -201,14 +206,14 @@ if (!pthread_equal (pthread_self (), other_thread))
 Gli attributi dei thread forniscono un meccanismo per mettere a punto il
 comportamento di thread individuali. Ricorda che \texttt{pthread\_create}
 accetta un argomento che è un puntatore ad un oggetto attributo di thread. Se
-passi un puntatore nullo, gli attributi di default dei thread sono usati per
-configurare il nuovo thread. Comunque, puoi creare e personalizzare l'oggetto
+passi un puntatore nullo, per configurare il nuovo thread vengono utilizzati
+gli attributi di default dei thread. Comunque, puoi creare e personalizzare l'oggetto
 attributo di un thread per specificare altri valori per gli attributi.
 
 Per specificare gli attributi dei thread è necessario seguire i seguenti passi:
 \begin{enumerate}
-\item{Creare un oggetto \texttt{pthread\_attr\_t}. La maniera più semplice è
-dichiarare una variabile automatica di questo tipo.}
+\item{Creare un oggetto \texttt{pthread\_attr\_t}. La maniera più facile è
+dichiarare semplicemente una variabile automatica di questo tipo.}
 \item{Chiamare \texttt{pthread\_attr\_init}, passando un puntatore a questo
 oggetto. Ciò inizializza gli attributi ai loro valori di default.}
 \item{Modificare l'oggetto attributo in modo che contenga i valori desiderati.}
@@ -222,12 +227,15 @@ Un singolo oggetto attributo di thread può essere usato per avviare diversi
 thread. Non è necessario mantenere un oggetto attributo di thread in giro dopo
 che i thread sono stati creati.
 
-Per molti compiti delle applicazioni programmate in GNU/Linux, solo un attributo
-di thread è tipicamente di interesse (gli altri attributi disponibili servono
-	principalmente per la programmazione realtime specializzata). Questo
-attributo è lo \textit{stato distaccato} del thread. Un thread può essere creato
+Per molti lavori di programmazione delle applicazioni in GNU/Linux,
+è tipicamente di interesse un solo attributo di thread
+(gli altri attributi disponibili servono principalmente per la programmazione
+realtime specializzata). Questo
+attributo è lo \textit{stato distaccato} (\textit{detached state}) del thread.
+Un thread può essere creato
 come un \textit{thread congiungibile} (di default) o come un \textit{thread
-distaccato}. Un thread congiungibile, come un processo, non è cancellato
+distaccato}.
+Un thread congiungibile (\textit{joinable thread}), come un processo, non è cancellato
 automaticamente da GNU/Linux quando termina. Invece, lo stato di uscita del
 thread rimane in sospeso nel sistema (qualcosa di simile ad un processo zombie)
 finché un altro thread non chiama \texttt{pthread\_join} per ottenere il suo
@@ -254,15 +262,15 @@ thread allo stato detach per il thread.\\
 Anche se un thread è creato in uno stato joinable, può essere successivamente
 cambiato in thread distaccato. Per fare ciò, chiama \texttt{pthread\_detach}.
 Una volta che un thread diventa distaccato, non può più tornare ad essere
-joinable di nuovo.
+nuovamente congiungibile (\textit{joinable}).
 
 \section{Cancellazione di thread}\label{sec:4.2} % 4.2
 In circostanze normali, un thread finisce quando esce normalmente, sia
-ritornando dalla sua funzione thread sia chiamado \texttt{pthread\_exit}.
-Comunque, è possibile per un thread richiedere ad un altro thread di terminare.
+ritornando dalla sua funzione thread sia chiamando \texttt{pthread\_exit}.
+Comunque, è possibile per un thread richiedere che un altro thread di termini.
 Ciò è chiamato \textit{cancellazione} (\textit{canceling}) di un thread.
 
-Per cancellare un thread, chiama \texttt{pthread\_cancel} pasandogli l'ID del
+Per cancellare un thread, chiama \texttt{pthread\_cancel} passandogli l'ID del
 thread che deve essere cancellato. Un thread cancellato può essere
 successivamente congiunto (joined); infatti, dovresti collegarti ad un thread
 cancellato per liberarne le risorse, fino a che il thread è disgiunto (vedi
@@ -270,11 +278,11 @@ cancellato per liberarne le risorse, fino a che il thread è disgiunto (vedi
 valore speciale dato da \texttt{PTHREAD\_CANCELED}.
 
 Spesso un thread può trovarsi in del codice che può essere eseguito in maniera
-completa o nulla, senza vie di mezzo. per esempio, il thread può allocare,
+completa o nulla, senza vie di mezzo. per esempio, il thread può allocare delle risorse,
 usarle e quindi deallocarle. Se il thread viene cancellato nel mezzo di questo
 codice, può non avere l'opportunità di dellocare le risorse e quindi le risorse
 resteranno bloccate. Per cercare di evitare che ciò accada è possibile per un
-tread controllare se e quando esso può essere cancellato.
+thread controllare se e quando esso può essere cancellato.
 
 Un thread, per quanto riguarda la cancellazione, può trovarsi in uno di tre
 stati.
@@ -370,12 +378,12 @@ modo di come è stato trovato.
 
 \subsection{Quando usare la cancellazione di thread}\label{subsec:4.2.3} % 4.2.3
 In genere, è una buona idea non usare la cancellazione di thread per terminare
-l'esecuzione di un thread, tranne che in circostanze particolari. durante una
-normale operazione, la migliore strategia è quella di indicare al thread che
+l'esecuzione di un thread, tranne che in circostanze particolari. Durante una
+normale operazione, la migliore strategia è quella di comunicare al thread che
 dovrebbe uscire, e quindi aspettare che il thread esca da solo in maniera
 ordinata. Discuteremo delle tecniche per comunicare con i thread più avanti in
 questo capitolo e nel
-\numnameref{cap:5}\marginpar{capitolo 5, ``Comunicazione tra processi''}.
+\numnameref{cap:5}.
 
 \section{Dati specifici dei thread}\label{sec:4.3} % 4.3
 Diversamente dai processi, tutti i thread in un singolo programma condividono lo
@@ -383,7 +391,7 @@ stesso spazio di indirizzi. Ciò significa che se un thread modifica una
 locazione di memoria (per esempio, una variabile globale), la modifica è
 visibile a tutti gli altri thread. Ciò permette a diversi thread di operare
 sugli stessi dati senza usare i meccanismi della comunicazione tra processi
-(che sono descritti nel \autoref{cap:5}\marginpar{capitolo 5}).
+(che sono descritti nel \autoref{cap:5}.
 
 Ogni thread, comunque, ha la sua lista di chiamate. Ciò permette ad ogni thread
 di eseguire diversi pezzi di codice e di chiamare e ritornare da subroutines nel
