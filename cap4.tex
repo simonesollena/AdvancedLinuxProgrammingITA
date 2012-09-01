@@ -391,7 +391,7 @@ stesso spazio di indirizzi. Ciò significa che se un thread modifica una
 locazione di memoria (per esempio, una variabile globale), la modifica è
 visibile a tutti gli altri thread. Ciò permette a diversi thread di operare
 sugli stessi dati senza usare i meccanismi della comunicazione tra processi
-(che sono descritti nel \autoref{cap:5}.
+(che sono descritti nel \autoref{cap:5}).
 
 Ogni thread, comunque, ha la sua lista di chiamate. Ciò permette ad ogni thread
 di eseguire diversi pezzi di codice e di chiamare e ritornare da subroutines nel
@@ -417,11 +417,11 @@ una nuova chiave, e quindi un nuovo elemento di dati per ogni thread, usa
 thread per accedere alla propria copia dell'elemento di dati corrispondente. Il
 secondo argomento di \texttt{pthread\_key\_t} è una funzione di pulizia. Se qui
 passi un puntatore a funzione, GNU/Linux chiama automaticamente quella funzione
-quando ogni thread esiste, passando il valore specifico di thread corrispondente
+quando ogni thread esce, passando il valore specifico di thread corrispondente
 a quella chiave. Questo è particolarmente comodo perché la funzione di pulizia è
 chiamata anche se il thread è cancellato ad un punto arbitrario durante la sua
 esecuzione. Se il valore specifico di thread è null, la funzione di pulizia dei
-thread non è cancellata. Se non hai bisogno di una funzione di pulizia, puoi
+thread non viene chiamata. Se non hai bisogno di una funzione di pulizia, puoi
 passare null piuttosto che un puntatore a funzione.
 
 Dopo che hai creato una chiave, ogni thread può impostare il suo valore
@@ -438,13 +438,13 @@ vengono registrati messaggi di esecuzione per i compiti di quel thread. L'area
 di dati specifica del thread è una zona conveniente per memorizzare il puntatore
 di file per il file di log di ogni thread individuale.
 
-Il listato 4.7 mostra come dovresti implementare ciò. La funzione \texttt{main}
+Il listato 4.7 mostra come dovresti implementarlo. La funzione \texttt{main}
 in questo programma di esempio crea una chiave per memorizzare il puntatore di
 file specifico del thread e quindi lo memorizza in \texttt{thread\_log\_key}.
-Poichè questa è una variabile globale, è condivisa da tutti i thread. Quando
-ogni thread comincia ad eseguire la sua funzione thread, esso apre un filedi log
+Poiché questa è una variabile globale, è condivisa da tutti i thread. Quando
+ogni thread comincia ad eseguire la sua funzione thread, esso apre un file di log
 e memorizza il puntatore a file in quella chiave. Successivamente, ognuno di
-questi thread può chiamare \texttt{wtrite\_to\_thread\_log} per scrivere un
+questi thread può chiamare \texttt{write\_to\_thread\_log} per scrivere un
 messaggio nel file di log specifico del thread. Questa funzione ritrova il
 puntatore di file per il file di log del thread dai dati specifici del thread e
 scrive il messaggio.\\
@@ -464,7 +464,7 @@ di chiudere il file di log.
 \subsection{Gestori di pulizia}\label{subsec:4.3.1} % 4.3.1
 Le funzioni di pulizia per le chiavi dei dati specifiche dei thread possono
 risultare molto comodi per assicurare che le risorse non vengano disperse quando
-un thread esiste o è cancellato. A volte, benché, può risultare utile
+un thread esce o è cancellato. A volte, comunque, può risultare utile
 specificare delle funzioni di pulizia senza creare un nuovo elemento di dati
 specifico di thread che è duplicato per ogni thread. GNU/Linux fornisce per
 questo scopo dei \textit{gestori di pulizia} (\textit{cleanup handlers}).
@@ -490,7 +490,7 @@ prende un argomento \texttt{int}; se l'argomento è diverso da zero, l'azione di
 pulizia è eseguita e quindi chiusa.
 
 Il frammento di programma nel listato 4.8 mostra come dovresti usare un gestore
-di pulizia per assicurarti che a buffer allocato dinamicamente viene ripulito se
+di pulizia per assicurarti che un buffer allocato dinamicamente venga ripulito se
 il thread termina.\\
 
 \listfromfile{cleanup.c}
@@ -512,9 +512,9 @@ libreria standard \texttt{free} come nostro gestore di pulizia al posto di
 I programmatori C++ sono abituati ad ottenere la pulizia ``gratuitamente''
 raggruppando
 le azioni di pulizia in oggetti distruttori. Quando gli oggetti vanno al di
-fuori del loro campo di operabilità, o perchè un blocco è eseguito per
+fuori del loro campo di operabilità, o perché un blocco è eseguito per
 completamento o perché viene lanciata un'eccezione, il C++ si assicura che i
-distruttori siano chiamati per queel variabili automatiche che loro hanno. Ciò
+distruttori siano chiamati per quelle variabili automatiche che loro hanno. Ciò
 fornisce un meccanismo manuale per assicurarsi che il codice di pulizia venga
 chiamato, senza curarsi di come il blocco è andato in uscita.
 
