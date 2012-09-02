@@ -1,6 +1,21 @@
+% !TEX encoding = ISO-8859-1
+% !TEX root = alp.tex
+% !TEX program = pdflatex
+% !TEX spellcheck = it_IT
+
 \chapter{Comunicazione tra processi}\label{cap:5}
 
-Il \numnameref{cap:3}, ha parlato della creazione dei processi e mostrato come un processo può ottenere lo stato di uscita di un processo figlio. Questa è la forma più semplice di comunicazione tra due processi, ma non è la più potente. Il meccanismo del capitolo 3 non fornisce nessun modo al padre di comunicare con il figlio, tranne che per mezzo degli argomenti della linea di comando e le variabili d'ambiente, nessun altro modo per il figlio di comunicare con il padre, ad eccezione dello stato di uscita del figlio. Nessuno di questi meccanismi fornisce una maniera per comunicare con il processo figlio mentre questo è in esecuzione, questi meccanismi non permettono neppure la comunicazione con un processo al di fuori della relazione padre-figlio.
+\firstsentence{I}{l \numnameref{cap:3}, ha parlato della creazione dei processi}
+e mostrato come un processo può ottenere lo stato di uscita di un processo
+figlio. Questa è la forma più semplice di comunicazione tra due processi,
+ma non è la più potente. Il meccanismo del capitolo 3 non fornisce nessun
+modo al padre di comunicare con il figlio, tranne che per mezzo degli
+argomenti della linea di comando e le variabili d'ambiente, nessun altro
+modo per il figlio di comunicare con il padre, ad eccezione dello stato di
+uscita del figlio. Nessuno di questi meccanismi fornisce una maniera per
+comunicare con il processo figlio mentre questo è in esecuzione, questi
+meccanismi non permettono neppure la comunicazione con un processo al di
+fuori della relazione padre-figlio.
 
 Questo capitolo descrive il significato della comunicazione tra processi che aggira queste limitazioni. Presenteremo vari modi per comunicare tra padri e figli, tra processi ``non collegati'' e anche tra processi su macchine diverse.
 
@@ -85,7 +100,10 @@ Il programma nel listato 5.1 illustra l'uso della memoria condivisa
 \subsection{Debugging}
 Il comando \texttt{ipcs} fornisce informazioni sulle possibilità di comunicazione tra processi, inclusi i segmenti condivisi. Usa il flag \texttt{-m} per ottenere informazioni sulla memoria condivisa. Per esempio, questo codice mostra che è in uso un segmento di memoria condivisa, numero 1627649:
 \begin{listcodeBash}
-% ipcs -m------ Shared Memory Segments --------key		shmid	owner	perms	bytes	nattch	status0x00000000	1627649	user	640	25600	0
+% ipcs -m
+------ Shared Memory Segments --------
+key		shmid	owner	perms	bytes	nattch	status
+0x00000000	1627649	user	640	25600	0
 \end{listcodeBash}
 Se un segmento di memoria è stato erroneamente lasciato da un programma, puoi usare il comando \texttt{ipcrm} per rimuoverlo.
 \begin{listcodeBash}
