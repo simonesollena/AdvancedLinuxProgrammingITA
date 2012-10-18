@@ -701,7 +701,7 @@ void enqueue_job (struct job* new_job)
 \subsection{Stallo del Mutex - Deadlocks}\label{subsec:4.4.3} % 4.4.3
 I mutex forniscono un meccanismo per permettere ad un thread di bloccare
 l'esecuzione di un altro. Ciò apre la possibilità di una nuova classe di bug,
-chiamati \textit{deadlocks}. Uno stallo si verifica quando uno o più thread sono
+chiamati \textit{deadlocks}. Un deadlock, stallo, si verifica quando uno o più thread sono
 fermi in attesa di qualcosa che non si verifica mai.
 Un semplice tipo di stallo può verificarsi quando lo stesso thread cerca di
 bloccare un mutex due volte in una riga. Il comportamento in questo caso dipende
@@ -709,32 +709,33 @@ da quale tipo di mutex viene usato. Esistono tre tipi di mutex:
 \begin{itemize}
 \item Bloccare un \textit{mutex veloce} (\textit{fast mutex}) (il tipo di
 	default) causerà il verificarsi di uno stallo. Un tentativo di chiudere
-un mutex bloccherà finché il mutex non sarà sbloccato. Ma poiché il thread che
+un mutex sarà sospeso finché il mutex non sarà sbloccato. Ma poiché il thread che
 ha chiuso il mutex è bloccato nello stesso mutex, la chiusura non può mai essere
 rilasciata.
 \item Bloccare un \textit{mutex ricorsivo} non causa lo stallo. Un mutex
 ricorsivo può essere chiuso diverse volte senza problemi dallo stesso thread. Il
 mutex ricorda quante volte \texttt{pthread\_mutex\_lock} è stato chiamato su di
-esso dal thread che tiene la chiusura; quel thread deve fare lo stesso numero di
-chiamate a \texttt{pthread\_mutex\_unlock} prima che il mutex venga attualmente
-sbloccato ed un altro threadabbia il permesso di bloccarlo.
+esso dal thread che tiene la chiusura; quel thread deve effettuare lo stesso numero di
+chiamate a \texttt{pthread\_mutex\_unlock} affinché che il mutex venga attualmente
+sbloccato ed un altro thread abbia il permesso di bloccarlo.
 \item GNU/Linux troverà e segnerà una doppia chiusura su un \textit{errore di
 verifica del mutex} (\textit{error-checking mutex}) che potrebbe altrimente
 causare uno stallo. La seconda chiamata consecutiva a
 \texttt{pthread\_mutex\_lock} restituisce il codice d'errore \texttt{EDEADLK}.
 \end{itemize}
 Per default, un mutex GNU/Linux è del tipo veloce. Per creare un mutex di uno
-degli altri due tipi, prima si crea un oggetto attributo mutex dichiarando una
+degli altri due tipi, bisogna prima creare un oggetto attributo mutex dichiarando una
 variabile \texttt{pthread\_mutexattr\_t} e chiamando
 \texttt{pthread\_mutexattr\_init} su un puntatore ad essa. Quindi impostare il
 tipo di mutex chiamando \texttt{pthread\_mutexattr\_setkind\_np}; il primo
 argomento è un puntatore all'oggetto attributo mutex, il secondo è
 \texttt{PTHREAD\_MUTEX\_RECURSIVE\_NP} per un mutex ricorsivo, o
 \texttt{PTHREAD\_MUTEX\_ERRORCHECK\_NP} per un mutex con controllo d'errore.
-Passare un puntatorea questo oggetto attributo a
-\texttt{pthread\_mutex\_destroy}.
+Passare un puntatore a questo oggetto attributo a
+\texttt{pthread\_mutex\_destroy} per creare un mutex di questo tipo, e quindi
+distruggi l'oggetto attributo con \texttt{pthread\_mutexattr\_destroy}
 
-La sequenza di codice illustra la creazione di un mutex con controllo d'errore,
+Questa sequenza di codice illustra la creazione di un mutex con controllo d'errore,
 per esempio:
 \begin{listcodeC}
 pthread_mutexattr_t attr;

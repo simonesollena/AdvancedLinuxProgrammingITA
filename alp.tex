@@ -1,7 +1,15 @@
 % !TEX encoding = ISO-8859-1
 % !TEX root = alp.tex
 % !TEX program = pdflatex
-% !TEX spellcheck = it-IT
+% !TEX spellcheck = it_IT
+
+\includeonly{%
+%cap1,%
+%cap2,%
+%cap3,%
+cap4,%
+%cap5%
+}
 
 \documentclass[11pt,a4paper,draft,openright]{book}
 % bozza: evidenzia con una linea vert. il testo che straripa
@@ -13,7 +21,7 @@
 \usepackage[latin1]{inputenc}		% permette di scrivere le lettere accentate senza \' o \¥
 \usepackage[italian]{babel}
 \usepackage{hyperref}			% per creare l'indice con hyperlink
-\usepackage[T1]{fontenc}			% per ottenere una composizione con font che contenga
+\usepackage[T1]{fontenc}		% per ottenere una composizione con font che contenga
 							% lettere accentate e simboli più usati in Europa
 \usepackage{geometry}			% per impostazioni di margini, larghezza testo, ecc.
 \usepackage[final]{listings}
@@ -25,7 +33,7 @@
 % Impostazioni larghezza note a margine e larghezza testo
 \marginparwidth= 60pt
 \textwidth= 440pt
-
+%\sloppy						% manda a capo stringhe in \texttt{} troppo lunghe
 
 
 % Togliere il segno di commento dalle seguenti due righe
